@@ -200,32 +200,38 @@ export default {
 
       for (const m of updates) {
         const { error } = await ctx.supabaseAdmin
-          .from("matches")
-          .update({
+          .from("match_overrides")
+          .upsert({
+            id: m.id,
+            season: SEASON,
             start_date: m.start_date,
             end_date: m.end_date,
             kickoff_time: m.kickoff_time,
             opponent: m.opponent,
             home: m.home,
-            exact: m.exact,
             possible: false,
+            active: true,
             source: "fcbayern.com",
             source_updated_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          })
-          .eq("season", SEASON)
-          .eq("id", m.id);
+          }, { onConflict: "id" });
 
         if (error) throw error;
         updatedCount++;
       }
 
       if (updates.some((x) => x.id === "dfb04a")) {
-        await ctx.supabaseAdmin
-          .from("matches")
-          .update({ active: false, updated_at: new Date().toISOString() })
-          .eq("id", "dfb04b")
-          .eq("season", SEASON);
+        const { error } = await ctx.supabaseAdmin
+          .from("match_overrides")
+          .upsert({
+            id: "dfb04b",
+            season: SEASON,
+            active: false,
+            source: "fcbayern.com",
+            source_updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "id" });
+        if (error) throw error;
       }
 
       await ctx.supabaseAdmin
