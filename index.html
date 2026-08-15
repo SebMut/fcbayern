@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#071526">
+  <meta name="theme-color" content="#ffffff">
   <title>FC Bayern · Jahreskarten 26/27</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -13,11 +13,10 @@
   <form class="loginbox" id="loginForm">
     <div class="loginbrand">
       <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
-      <span>FCB · 26/27</span>
+      <div><small>FC Bayern</small><b>Jahreskarten 2026/27</b></div>
     </div>
-    <p class="eyebrow">Jahreskarten-Zentrale</p>
-    <h2>Servus zurück.</h2>
-    <p class="loginintro">Namen auswählen, gemeinsames Passwort eingeben und Karten verteilen.</p>
+    <h2>Anmelden</h2>
+    <p class="loginintro">Benutzer auswählen und gemeinsames Passwort eingeben.</p>
     <div class="configwarn" id="configWarn" hidden>Supabase-Konfiguration fehlt.</div>
 
     <label class="fieldlabel" for="loginUser">Benutzer</label>
@@ -28,8 +27,8 @@
     </select>
 
     <label class="fieldlabel" for="loginPassword">Passwort</label>
-    <input id="loginPassword" type="password" placeholder="••••••••••••" autocomplete="current-password" required>
-    <button class="loginbutton" type="submit">Einloggen <span>→</span></button>
+    <input id="loginPassword" type="password" placeholder="Passwort" autocomplete="current-password" required>
+    <button class="loginbutton" type="submit">Einloggen</button>
     <div class="loginerror" id="loginError"></div>
   </form>
 </section>
@@ -53,20 +52,18 @@
 
 <main>
   <section class="hero">
-    <div class="heroGlow"></div>
     <div class="herocontent">
-      <div class="seasonbadge"><span></span> Saison 2026 / 2027</div>
-      <h1>Wer sitzt<br><em>in der Arena?</em></h1>
-      <p>Zwei Jahreskarten. Eine gemeinsame Übersicht. Bundesliga, DFB-Pokal und Champions League.</p>
+      <div class="seasonbadge">Saison 2026 / 2027</div>
+      <h1>Jahreskarten</h1>
+      <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
       <div class="herometa">
-        <span>⚡ Sync alle 3 Stunden</span>
-        <span>● Live gespeichert</span>
+        <span>Bundesliga</span>
+        <span>DFB-Pokal</span>
+        <span>Champions League</span>
+        <span class="syncpill">Sync alle 3 Stunden</span>
       </div>
     </div>
-    <div class="herologo" aria-hidden="true">
-      <div class="ring"></div>
-      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="">
-    </div>
+    <img class="herologo" src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="FC Bayern">
   </section>
 
   <section class="stats" aria-label="Saisonstatus">
@@ -77,7 +74,7 @@
   </section>
 
   <section class="paidpanel" aria-label="Bezahlstatus">
-    <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bereits bezahlt</b></div></div>
+    <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
     <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span></div>
     <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span></div>
     <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span></div>
