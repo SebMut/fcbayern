@@ -12,7 +12,7 @@ const sb=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
 });
 
 const $=id=>document.getElementById(id);
-const app=$("app"),q=$("q"),sv=$("sv"),s1=$("s1"),s2=$("s2"),so=$("so"),sp=$("sp"),
+const app=$("app"),q=$("q"),sv=$("sv"),s1=$("s1"),s2=$("s2"),so=$("so"),sp=$("sp"),spPatrick=$("spPatrick"),spReini=$("spReini"),spGuests=$("spGuests"),
 l1=$("l1"),l2=$("l2"),loginScreen=$("loginScreen"),loginForm=$("loginForm"),
 loginUser=$("loginUser"),loginPassword=$("loginPassword"),loginError=$("loginError"),
 userbar=$("userbar"),userEmail=$("userEmail"),logoutBtn=$("logoutBtn"),syncStatus=$("syncStatus"),lastFixtureSync=$("lastFixtureSync");
@@ -20,7 +20,7 @@ userbar=$("userbar"),userEmail=$("userEmail"),logoutBtn=$("logoutBtn"),syncStatu
 let M=BASE_M.map(x=>({...x}));
 let F="rel";
 let S={p1:"Patrick",p2:"Reini",assignments:{},guests:{},paid:{},notes:{}};
-let currentUser=null,currentActor=null,saveTimer=null,realtimeChannel=null,loadingRemote=false;
+let currentUser=null,currentActor=null,saveTimer=null,realtimeChannel=null,loadingRemote=false,pendingAutoScroll=true;
 
 function normalizeState(x){
   x=x||{};
@@ -122,6 +122,7 @@ function subscribeRealtime(){
 }
 function showApp(user){
   currentUser=user;
+  pendingAutoScroll=true;
   document.body.classList.remove("locked");
   loginScreen.classList.add("hidden");
   userbar.hidden=false;
@@ -148,9 +149,32 @@ function visible(){
   const z=q.value.toLowerCase();
   return M.filter(m=>{
     const a=S.assignments[m.id]||[];
-    const ok=F==="rel"?rel(m):F==="all"?true:F==="open"?!a.length:m.c===F;
+    let ok=false;
+    if(F==="rel") ok=rel(m);
+    else if(F==="all") ok=true;
+    else if(F==="open") ok=rel(m)&&!a.length;
+    else if(F==="bl") ok=m.c==="bl"&&m.h;
+    else ok=m.c===F;
     return ok&&(!z||[m.l,m.o,m.p].join(" ").toLowerCase().includes(z));
   });
+}
+function berlinToday(){
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const get=t=>parts.find(p=>p.type===t)?.value||"";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+function nextVisibleMatch(matches){
+  const today=berlinToday();
+  return matches.find(m=>(m.e||m.s)>=today)||matches.at(-1)||null;
+}
+function scrollToCurrentOrNext(matches){
+  const next=nextVisibleMatch(matches);
+  document.querySelectorAll(".game.nextgame").forEach(el=>el.classList.remove("nextgame"));
+  if(!next)return;
+  const el=document.getElementById(`game-${next.id}`);
+  if(!el)return;
+  el.classList.add("nextgame");
+  setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"center"}),80);
 }
 function club(n,r=""){return`<div class="club ${r}">${r?`<span>${E(n)}</span>${L(n)}`:`${L(n)}<span>${E(n)}</span>`}</div>`}
 function card(m){
@@ -163,7 +187,7 @@ function card(m){
       ${sel?`<label class="paymini ${done?"done":""}"><input type="checkbox" data-pay="${m.id}" data-person="${v}" ${done?"checked":""}> ${done?"bezahlt ✓":"bezahlt"}</label>`:""}
     </div>`;
   };
-  return`<div class="game">
+  return`<div class="game" id="game-${m.id}" data-date="${m.s}">
     <div class="toprow"><div class="date">${d}<small>${sub}</small></div><div class="duel">${club(a)}<b>–</b>${club(b,"r")}</div></div>
     <div class="meta"><span class="tag">${m.c==="bl"?"Bundesliga":m.c==="dfb"?"DFB-Pokal":"Champions League"}</span> · ${E(m.l)} · ${E(m.p)}</div>
     <div class="pick"><button class="openpick ${x.length?"":"sel"}" data-id="${m.id}" data-v="open">Offen</button>${B("p1","Patrick")}${B("p2","Reini")}${B("g1","Gast 1")}${B("g2","Gast 2")}</div>
@@ -180,13 +204,27 @@ function render(){
   });
   app.innerHTML=Object.keys(G).sort().map(k=>`<h2>${MON[+k.slice(5)-1]} ${k.slice(0,4)}</h2>${G[k].map(card).join("")}`).join("");
   bind();
-  const ids=new Set(v.map(m=>m.id));let a=0,b=0,o=0,p=0;
+  const ids=new Set(v.map(m=>m.id));let a=0,b=0,o=0,p=0,pp=0,pr=0,pg=0;
   M.forEach(m=>{
     if(!ids.has(m.id))return;
     const x=S.assignments[m.id]||[],pay=S.paid[m.id]||{};
-    a+=x.includes("p1");b+=x.includes("p2");o+=!x.length;p+=x.filter(v=>pay[v]).length;
+    a+=x.includes("p1");b+=x.includes("p2");o+=!x.length;
+    p+=x.filter(person=>pay[person]).length;
+    if(x.includes("p1")&&pay.p1)pp++;
+    if(x.includes("p2")&&pay.p2)pr++;
+    if(x.includes("g1")&&pay.g1)pg++;
+    if(x.includes("g2")&&pay.g2)pg++;
   });
   sv.textContent=v.length;s1.textContent=a;s2.textContent=b;so.textContent=o;sp.textContent=p;
+  if(spPatrick)spPatrick.textContent=pp;
+  if(spReini)spReini.textContent=pr;
+  if(spGuests)spGuests.textContent=pg;
+  const next=nextVisibleMatch(v);
+  if(next){
+    const el=document.getElementById(`game-${next.id}`);
+    if(el)el.classList.add("nextgame");
+  }
+  if(pendingAutoScroll&&currentUser){pendingAutoScroll=false;scrollToCurrentOrNext(v)}
 }
 function bind(){
   document.querySelectorAll(".choose,.openpick").forEach(b=>b.onclick=()=>{
@@ -211,7 +249,7 @@ function bind(){
 }
 document.querySelectorAll(".tools button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".tools button").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");F=b.dataset.f;render();
+  b.classList.add("on");F=b.dataset.f;pendingAutoScroll=true;render();
 });
 q.oninput=render;
 
