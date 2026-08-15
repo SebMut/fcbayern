@@ -1,71 +1,105 @@
-<!doctype html><html lang="de"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071b35">
-<title>FC Bayern Jahreskarten 26/27</title>
-<link rel="stylesheet" href="styles.css">
-</head><body class="locked">
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071526">
+  <title>FC Bayern · Jahreskarten 26/27</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="locked">
 
 <section class="login" id="loginScreen">
   <form class="loginbox" id="loginForm">
-    <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
-    <h2>Jahreskarten Login</h2>
-    <p>Benutzer auswählen und gemeinsames Passwort eingeben. Eine Registrierung ist nicht möglich.</p>
+    <div class="loginbrand">
+      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
+      <span>FCB · 26/27</span>
+    </div>
+    <p class="eyebrow">Jahreskarten-Zentrale</p>
+    <h2>Servus zurück.</h2>
+    <p class="loginintro">Namen auswählen, gemeinsames Passwort eingeben und Karten verteilen.</p>
     <div class="configwarn" id="configWarn" hidden>Supabase-Konfiguration fehlt.</div>
-    <label style="display:block;text-align:left;font-size:11px;font-weight:850;color:#5f6b7b;margin-top:4px">Benutzer</label>
-    <select id="loginUser" required style="width:100%;border:1px solid #dce2e9;border-radius:10px;padding:11px 12px;margin:5px 0;background:#fff;color:#142033">
+
+    <label class="fieldlabel" for="loginUser">Benutzer</label>
+    <select id="loginUser" required>
       <option value="admin">Admin</option>
       <option value="patrick">Patrick</option>
       <option value="ober">Ober</option>
     </select>
-    <label style="display:block;text-align:left;font-size:11px;font-weight:850;color:#5f6b7b;margin-top:6px">Passwort</label>
-    <input id="loginPassword" type="password" placeholder="Passwort" autocomplete="current-password" required>
-    <button type="submit">Einloggen</button>
+
+    <label class="fieldlabel" for="loginPassword">Passwort</label>
+    <input id="loginPassword" type="password" placeholder="••••••••••••" autocomplete="current-password" required>
+    <button class="loginbutton" type="submit">Einloggen <span>→</span></button>
     <div class="loginerror" id="loginError"></div>
   </form>
 </section>
 
-<header><div>
-  <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128">
-  <b>FC Bayern · Jahreskarten 2026/27</b>
-  <div class="userbar" id="userbar" hidden>
-    <span id="userEmail"></span>
-    <span class="sync" id="syncStatus">gespeichert</span>
-    <span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span>
-    <a href="history.html" style="border:1px solid #ffffff44;background:#ffffff12;color:#fff;text-decoration:none;border-radius:8px;padding:6px 8px;font-weight:800">History</a>
-    <button class="logout" id="logoutBtn">Logout</button>
+<header class="topbar">
+  <div class="topbarinner">
+    <a class="brand" href="index.html" aria-label="Startseite">
+      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
+      <span><small>FC Bayern</small><b>Jahreskarten 26/27</b></span>
+    </a>
+
+    <div class="userbar" id="userbar" hidden>
+      <span class="userpill"><i></i><span id="userEmail"></span></span>
+      <span class="sync" id="syncStatus">gespeichert</span>
+      <span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span>
+      <a class="headerlink" href="history.html">History</a>
+      <button class="logout" id="logoutBtn">Logout</button>
+    </div>
   </div>
-</div></header>
+</header>
 
 <main>
-<section class="hero">
-  <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128">
-  <div>Saison 2026 / 2027</div>
-  <h1>Wer geht ins Stadion?</h1>
-  <p>Zwei Jahreskarten · Bundesliga · DFB-Pokal · Champions League<br>
-  <small>Termine & Gegner werden nachts automatisch mit dem offiziellen FC-Bayern-Spielplan abgeglichen.</small></p>
-</section>
+  <section class="hero">
+    <div class="heroGlow"></div>
+    <div class="herocontent">
+      <div class="seasonbadge"><span></span> Saison 2026 / 2027</div>
+      <h1>Wer sitzt<br><em>in der Arena?</em></h1>
+      <p>Zwei Jahreskarten. Eine gemeinsame Übersicht. Bundesliga, DFB-Pokal und Champions League.</p>
+      <div class="herometa">
+        <span>⚡ Sync alle 3 Stunden</span>
+        <span>● Live gespeichert</span>
+      </div>
+    </div>
+    <div class="herologo" aria-hidden="true">
+      <div class="ring"></div>
+      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="">
+    </div>
+  </section>
 
-<section class="stats">
-  <div class="stat"><small>Termine</small><b id="sv">0</b></div>
-  <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b></div>
-  <div class="stat"><small id="l2">Reini</small><b id="s2">0</b></div>
-  <div class="stat"><small>Offen</small><b id="so">0</b></div>
-  <div class="stat"><small>Bezahlt</small><b id="sp">0</b></div>
-</section>
+  <section class="stats" aria-label="Saisonstatus">
+    <div class="stat statPrimary"><small>Relevante Termine</small><b id="sv">0</b><span>Spiele</span></div>
+    <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div>
+    <div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div>
+    <div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div>
+    <div class="stat statPaid"><small>Bezahlt</small><b id="sp">0</b><span>Tickets</span></div>
+  </section>
 
-<section class="tools">
-  <button class="on" data-f="rel">Jahreskarten</button>
-  <button data-f="all">Alle</button>
-  <button data-f="bl">Bundesliga</button>
-  <button data-f="dfb">DFB-Pokal</button>
-  <button data-f="cl">Champions League</button>
-  <button data-f="open">Nur offen</button>
-  <input id="q" placeholder="Suche …">
-</section>
-<div id="app"></div>
+  <section class="tools">
+    <div class="filtergroup">
+      <button class="on" data-f="rel">Jahreskarten</button>
+      <button data-f="all">Alle</button>
+      <button data-f="bl">Bundesliga</button>
+      <button data-f="dfb">DFB-Pokal</button>
+      <button data-f="cl">Champions League</button>
+      <button data-f="open">Nur offen</button>
+    </div>
+    <label class="searchbox">
+      <span>⌕</span>
+      <input id="q" placeholder="Spiel suchen …">
+    </label>
+  </section>
+
+  <div id="app"></div>
 </main>
 
-<footer class="sitefooter"><a href="history.html">History-Log</a></footer>
+<footer class="sitefooter">
+  <span>FC Bayern · Jahreskarten 2026/27</span>
+  <a href="history.html">History-Log</a>
+</footer>
+
 <script type="module" src="app.js"></script>
-</body></html>
+</body>
+</html>
