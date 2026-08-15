@@ -79,9 +79,18 @@
 
     <section class="paidpanel" aria-label="Bezahlstatus">
       <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
-      <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span></div>
-      <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span></div>
-      <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span></div>
+      <div class="paidstat">
+        <small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span>
+        <div class="paymentMissing" id="missingPatrick"></div>
+      </div>
+      <div class="paidstat">
+        <small>Reini</small><b id="spReini">0</b><span>Tickets</span>
+        <div class="paymentMissing" id="missingReini"></div>
+      </div>
+      <div class="paidstat">
+        <small>Gäste</small><b id="spGuests">0</b><span>Tickets</span>
+        <div class="paymentMissing" id="missingGuests"></div>
+      </div>
       <b id="sp" hidden>0</b>
     </section>
   </section>
