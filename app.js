@@ -194,6 +194,11 @@ function paymentMissingHtml(items){
   if(!items.length)return`<span class="paymentComplete">Alles bezahlt</span>`;
   return`<span class="paymentMissingLabel">Offen:</span>${[...new Set(items)].map(name=>`<span class="missingGame">${E(name)}</span>`).join("")}`;
 }
+function guestPaymentLabel(m,slot){
+  const fallback=slot==="g1"?"Gast 1":"Gast 2";
+  const name=String(S.guests[m.id]?.[slot]||fallback).trim()||fallback;
+  return `${name} – ${m.o}`;
+}
 function render(){
   l1.textContent="Patrick";l2.textContent="Reini";
   const v=visible(),G={};
@@ -209,8 +214,8 @@ function render(){
     a+=x.includes("p1");b+=x.includes("p2");o+=x.length<2;p+=x.filter(person=>pay[person]).length;
     if(x.includes("p1")){if(pay.p1)pp++;else missP.push(m.o)}
     if(x.includes("p2")){if(pay.p2)pr++;else missR.push(m.o)}
-    if(x.includes("g1")){if(pay.g1)pg++;else missG.push(m.o)}
-    if(x.includes("g2")){if(pay.g2)pg++;else missG.push(m.o)}
+    if(x.includes("g1")){if(pay.g1)pg++;else missG.push(guestPaymentLabel(m,"g1"))}
+    if(x.includes("g2")){if(pay.g2)pg++;else missG.push(guestPaymentLabel(m,"g2"))}
   });
   sv.textContent=v.length;s1.textContent=a;s2.textContent=b;so.textContent=o;sp.textContent=p;
   if(spPatrick)spPatrick.textContent=pp;if(spReini)spReini.textContent=pr;if(spGuests)spGuests.textContent=pg;
