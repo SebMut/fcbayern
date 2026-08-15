@@ -581,26 +581,17 @@ export default {
     } catch {
     }
 
-    if (!force && (local.hour < 2 || local.hour > 3)) {
+    // Automatischer Sync alle 3 Stunden in Europe/Berlin:
+    // 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00.
+    // Der Supabase-Cron ruft die Function technisch jede volle Stunde auf.
+    // Dadurch bleibt der Rhythmus auch bei Sommer-/Winterzeit korrekt.
+    // Manueller Test mit force=true darf jederzeit laufen.
+    if (!force && local.hour % 3 !== 0) {
       return Response.json({
         ok: true,
         skipped: true,
-        reason: "outside Berlin 02:00/03:00 window",
-      });
-    }
-
-    const { data: already } = await ctx.supabaseAdmin
-      .from("fixture_sync_runs")
-      .select("id")
-      .eq("local_date", local.date)
-      .eq("status", "success")
-      .limit(1);
-
-    if (!force && already?.length) {
-      return Response.json({
-        ok: true,
-        skipped: true,
-        reason: "already synced today",
+        reason: "not a Berlin 3-hour sync slot",
+        localHour: local.hour,
       });
     }
 
