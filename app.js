@@ -6,21 +6,24 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y";
 const LOGIN_EMAIL="Sebastian.Mutter@outlook.com";
 const SEASON="2026-27";
 const ACTORS={admin:"Admin",patrick:"Patrick",ober:"Ober"};
+const ACTOR_ORDER=["Admin","Patrick","Ober"];
 
 const sb=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 
 const $=id=>document.getElementById(id);
-const app=$("app"),q=$("q"),sv=$("sv"),s1=$("s1"),s2=$("s2"),so=$("so"),sp=$("sp"),spPatrick=$("spPatrick"),spReini=$("spReini"),spGuests=$("spGuests"),
-l1=$("l1"),l2=$("l2"),loginScreen=$("loginScreen"),loginForm=$("loginForm"),
+const app=$("app"),q=$("q"),sv=$("sv"),s1=$("s1"),s2=$("s2"),so=$("so"),sp=$("sp"),
+spPatrick=$("spPatrick"),spReini=$("spReini"),spGuests=$("spGuests"),
+missingPatrick=$("missingPatrick"),missingReini=$("missingReini"),missingGuests=$("missingGuests"),
+onlineUsers=$("onlineUsers"),l1=$("l1"),l2=$("l2"),loginScreen=$("loginScreen"),loginForm=$("loginForm"),
 loginUser=$("loginUser"),loginPassword=$("loginPassword"),loginError=$("loginError"),
 userbar=$("userbar"),userEmail=$("userEmail"),logoutBtn=$("logoutBtn"),syncStatus=$("syncStatus"),lastFixtureSync=$("lastFixtureSync");
 
 let M=BASE_M.map(x=>({...x}));
 let F="rel";
 let S={p1:"Patrick",p2:"Reini",assignments:{},guests:{},paid:{},notes:{}};
-let currentUser=null,currentActor=null,saveTimer=null,realtimeChannel=null,loadingRemote=false,pendingAutoScroll=true;
+let currentUser=null,currentActor=null,saveTimer=null,realtimeChannel=null,presenceChannel=null,loadingRemote=false,pendingAutoScroll=true;
 
 function normalizeState(x){
   x=x||{};
@@ -41,43 +44,23 @@ async function loadLastFixtureSync(){
     .order("finished_at",{ascending:false})
     .limit(1)
     .maybeSingle();
-
-  if(error){
-    console.error("Letzter Spieltagssync konnte nicht geladen werden:",error);
-    lastFixtureSync.textContent="Letzter Spieltagssync: –";
-    return;
-  }
-
-  if(!data?.finished_at){
-    lastFixtureSync.textContent="Letzter Spieltagssync: noch nie";
-    return;
-  }
-
+  if(error){console.error("Letzter Spieltagssync konnte nicht geladen werden:",error);lastFixtureSync.textContent="Letzter Spieltagssync: –";return}
+  if(!data?.finished_at){lastFixtureSync.textContent="Letzter Spieltagssync: noch nie";return}
   const formatted=new Intl.DateTimeFormat("de-DE",{
-    timeZone:"Europe/Berlin",
-    day:"2-digit",month:"2-digit",year:"numeric",
-    hour:"2-digit",minute:"2-digit"
+    timeZone:"Europe/Berlin",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"
   }).format(new Date(data.finished_at));
-
   lastFixtureSync.textContent=`Letzter Spieltagssync: ${formatted}`;
 }
 async function loadRemoteState(){
   const {data,error}=await sb.from("season_state").select("data").eq("season",SEASON).single();
-  if(error){
-    const detail=error?.message||error?.code||"Unbekannter Supabase-Fehler";
-    throw new Error("season_state: "+detail);
-  }
+  if(error)throw new Error("season_state: "+(error?.message||error?.code||"Unbekannter Supabase-Fehler"));
   S=normalizeState(data.data);render();
 }
 async function loadRemoteMatches(){
   const {data,error}=await sb.from("match_overrides")
     .select("id,start_date,end_date,kickoff_time,opponent,home,possible,active")
     .eq("season",SEASON);
-  if(error){
-    console.warn("Match-Overrides nicht verfügbar, verwende Grundspielplan:",error);
-    M=BASE_M.map(x=>({...x}));
-    return;
-  }
+  if(error){console.warn("Match-Overrides nicht verfügbar, verwende Grundspielplan:",error);M=BASE_M.map(x=>({...x}));return}
   const byId=new Map((data||[]).map(x=>[x.id,x]));
   M=BASE_M.map(base=>{
     const x=byId.get(base.id);
@@ -95,16 +78,12 @@ async function loadRemoteMatches(){
 }
 function queueSave(){
   if(!currentUser||loadingRemote)return;
-  setSync("speichert …");
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(saveRemoteState,350);
+  setSync("speichert …");clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteState,350);
 }
 async function saveRemoteState(){
   if(!currentUser)return;
   const {error}=await sb.from("season_state").update({
-    data:JSON.parse(JSON.stringify(S)),
-    updated_by:currentActor||"Admin",
-    updated_at:new Date().toISOString()
+    data:JSON.parse(JSON.stringify(S)),updated_by:currentActor||"Admin",updated_at:new Date().toISOString()
   }).eq("season",SEASON);
   if(error){console.error(error);setSync("Fehler beim Speichern",true);return}
   setSync("gespeichert");
@@ -120,40 +99,63 @@ function subscribeRealtime(){
       try{await loadRemoteMatches();await loadLastFixtureSync();render();setSync("Termine aktualisiert")}catch(e){console.error(e)}
     }).subscribe();
 }
+function renderPresence(){
+  if(!onlineUsers||!presenceChannel)return;
+  const state=presenceChannel.presenceState();
+  const actors=[...new Set(Object.values(state).flat().map(p=>p?.actor).filter(a=>ACTOR_ORDER.includes(a)))]
+    .sort((a,b)=>ACTOR_ORDER.indexOf(a)-ACTOR_ORDER.indexOf(b));
+  onlineUsers.innerHTML=actors.length
+    ?`<i></i><span>Online: ${actors.map(E).join(", ")}</span>`
+    :`<span>Online: –</span>`;
+}
+function subscribePresence(){
+  if(presenceChannel)sb.removeChannel(presenceChannel);
+  const random=globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2);
+  presenceChannel=sb.channel("fcb-online-2026-27",{config:{presence:{key:`${currentActor}-${random}`}}})
+    .on("presence",{event:"sync"},renderPresence)
+    .on("presence",{event:"join"},renderPresence)
+    .on("presence",{event:"leave"},renderPresence)
+    .subscribe(async status=>{
+      if(status==="SUBSCRIBED"){
+        await presenceChannel.track({actor:currentActor,online_at:new Date().toISOString()});
+        renderPresence();
+      }
+    });
+}
 function showApp(user){
-  currentUser=user;
-  pendingAutoScroll=true;
-  document.body.classList.remove("locked");
-  loginScreen.classList.add("hidden");
-  userbar.hidden=false;
-  userEmail.textContent=currentActor||"angemeldet";
+  currentUser=user;pendingAutoScroll=true;document.body.classList.remove("locked");loginScreen.classList.add("hidden");userbar.hidden=false;userEmail.textContent=currentActor||"angemeldet";
 }
 function showLogin(message=""){
-  currentUser=null;currentActor=null;
-  document.body.classList.add("locked");
-  loginScreen.classList.remove("hidden");
-  userbar.hidden=true;
-  loginError.textContent=message;
+  currentUser=null;currentActor=null;document.body.classList.add("locked");loginScreen.classList.remove("hidden");userbar.hidden=true;loginError.textContent=message;
 }
 function E(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function L(n){const d=D[n];return d?`<img class="logo" src="https://www.google.com/s2/favicons?domain=${d}&sz=128">`:`<i class="ph">?</i>`}
-function T(m){if(m.c==="bl"||(m.c==="dfb"&&m.id==="dfb01"))return m.h?["FC Bayern",m.o]:[m.o,"FC Bayern"];return["FC Bayern","?"]}
+function L(n){const d=D[n];return d?`<img class="logo" src="https://www.google.com/s2/favicons?domain=${d}&sz=128" alt="">`:`<i class="ph">?</i>`}
+function concreteOpponent(m){return m.o&&!/(gegner offen|möglich|tabellenplatz|termin)/i.test(m.o)}
+function T(m){
+  if(concreteOpponent(m))return m.h?["FC Bayern",m.o]:[m.o,"FC Bayern"];
+  return["FC Bayern","?"];
+}
 function dt(m){
   const a=new Date(m.s+"T12:00:00"),b=new Date(m.e+"T12:00:00");
   return m.s===m.e
     ?[`${String(a.getDate()).padStart(2,"0")}.${String(a.getMonth()+1).padStart(2,"0")}.${String(a.getFullYear()).slice(2)}`,m.t?m.t+" Uhr":""]
     :[`${a.getDate()}.–${b.getDate()}. ${MON[a.getMonth()]}`,String(a.getFullYear())];
 }
-function rel(m){return m.c==="bl"&&m.h||(m.c!=="bl"&&m.pos&&!m.n)}
+function rel(m){return (m.c==="bl"&&m.h)||(m.c!=="bl"&&m.pos&&!m.n)}
+function noAway(m){
+  if(m.c==="bl")return m.h===true;
+  if(m.n)return true;
+  return m.h===true||m.pos===true;
+}
 function visible(){
-  const z=q.value.toLowerCase();
+  const z=q.value.trim().toLowerCase();
   return M.filter(m=>{
-    const a=S.assignments[m.id]||[];
+    const assigned=S.assignments[m.id]||[];
     let ok=false;
-    if(F==="rel") ok=rel(m);
-    else if(F==="all") ok=true;
-    else if(F==="open") ok=rel(m)&&!a.length;
-    else if(F==="bl") ok=m.c==="bl"&&m.h;
+    if(F==="rel")ok=rel(m);
+    else if(F==="all")ok=noAway(m);
+    else if(F==="open")ok=rel(m)&&assigned.length<2;
+    else if(F==="bl")ok=m.c==="bl"&&m.h===true;
     else ok=m.c===F;
     return ok&&(!z||[m.l,m.o,m.p].join(" ").toLowerCase().includes(z));
   });
@@ -163,22 +165,15 @@ function berlinToday(){
   const get=t=>parts.find(p=>p.type===t)?.value||"";
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
-function nextVisibleMatch(matches){
-  const today=berlinToday();
-  return matches.find(m=>(m.e||m.s)>=today)||matches.at(-1)||null;
-}
+function nextVisibleMatch(matches){const today=berlinToday();return matches.find(m=>(m.e||m.s)>=today)||matches.at(-1)||null}
 function scrollToCurrentOrNext(matches){
-  const next=nextVisibleMatch(matches);
-  document.querySelectorAll(".game.nextgame").forEach(el=>el.classList.remove("nextgame"));
-  if(!next)return;
-  const el=document.getElementById(`game-${next.id}`);
-  if(!el)return;
-  el.classList.add("nextgame");
-  setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"center"}),80);
+  const next=nextVisibleMatch(matches);document.querySelectorAll(".game.nextgame").forEach(el=>el.classList.remove("nextgame"));
+  if(!next)return;const el=document.getElementById(`game-${next.id}`);if(!el)return;el.classList.add("nextgame");setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"center"}),100);
 }
 function club(n,r=""){return`<div class="club ${r}">${r?`<span>${E(n)}</span>${L(n)}`:`${L(n)}<span>${E(n)}</span>`}</div>`}
 function card(m){
   const [d,sub]=dt(m),[a,b]=T(m),x=S.assignments[m.id]||[],g=S.guests[m.id]||{},pay=S.paid[m.id]||{},full=x.length===2;
+  const fullyPaid=full&&x.every(v=>!!pay[v]);
   const B=(v,n)=>{
     const sel=x.includes(v),blocked=full&&!sel,done=!!pay[v],guest=v==="g1"||v==="g2",guestName=g[v]||"";
     return`<div class="pickcell ${sel?"sel":blocked?"blocked":""}">
@@ -187,7 +182,7 @@ function card(m){
       ${sel?`<label class="paymini ${done?"done":""}"><input type="checkbox" data-pay="${m.id}" data-person="${v}" ${done?"checked":""}> ${done?"bezahlt ✓":"bezahlt"}</label>`:""}
     </div>`;
   };
-  return`<div class="game" id="game-${m.id}" data-date="${m.s}">
+  return`<div class="game ${fullyPaid?"fullypaid":""}" id="game-${m.id}" data-date="${m.s}">
     <div class="toprow"><div class="date">${d}<small>${sub}</small></div><div class="duel">${club(a)}<b>–</b>${club(b,"r")}</div></div>
     <div class="meta"><span class="tag">${m.c==="bl"?"Bundesliga":m.c==="dfb"?"DFB-Pokal":"Champions League"}</span> · ${E(m.l)} · ${E(m.p)}</div>
     <div class="pick"><button class="openpick ${x.length?"":"sel"}" data-id="${m.id}" data-v="open">Offen</button>${B("p1","Patrick")}${B("p2","Reini")}${B("g1","Gast 1")}${B("g2","Gast 2")}</div>
@@ -195,35 +190,34 @@ function card(m){
     <textarea class="note" data-note="${m.id}" placeholder="Notiz">${E(S.notes[m.id]||"")}</textarea>
   </div>`;
 }
+function paymentMissingHtml(items){
+  if(!items.length)return`<span class="paymentComplete">Alles bezahlt</span>`;
+  return`<span class="paymentMissingLabel">Offen:</span>${[...new Set(items)].map(name=>`<span class="missingGame">${E(name)}</span>`).join("")}`;
+}
 function render(){
   l1.textContent="Patrick";l2.textContent="Reini";
   const v=visible(),G={};
   v.forEach(m=>{
-    const d=new Date(m.s+"T12:00:00"),k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-    (G[k]||=[]).push(m);
+    const d=new Date(m.s+"T12:00:00"),k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");(G[k]||=[]).push(m);
   });
   app.innerHTML=Object.keys(G).sort().map(k=>`<h2>${MON[+k.slice(5)-1]} ${k.slice(0,4)}</h2>${G[k].map(card).join("")}`).join("");
   bind();
-  const ids=new Set(v.map(m=>m.id));let a=0,b=0,o=0,p=0,pp=0,pr=0,pg=0;
-  M.forEach(m=>{
-    if(!ids.has(m.id))return;
+  let a=0,b=0,o=0,p=0,pp=0,pr=0,pg=0;
+  const missP=[],missR=[],missG=[];
+  v.forEach(m=>{
     const x=S.assignments[m.id]||[],pay=S.paid[m.id]||{};
-    a+=x.includes("p1");b+=x.includes("p2");o+=!x.length;
-    p+=x.filter(person=>pay[person]).length;
-    if(x.includes("p1")&&pay.p1)pp++;
-    if(x.includes("p2")&&pay.p2)pr++;
-    if(x.includes("g1")&&pay.g1)pg++;
-    if(x.includes("g2")&&pay.g2)pg++;
+    a+=x.includes("p1");b+=x.includes("p2");o+=x.length<2;p+=x.filter(person=>pay[person]).length;
+    if(x.includes("p1")){if(pay.p1)pp++;else missP.push(m.o)}
+    if(x.includes("p2")){if(pay.p2)pr++;else missR.push(m.o)}
+    if(x.includes("g1")){if(pay.g1)pg++;else missG.push(m.o)}
+    if(x.includes("g2")){if(pay.g2)pg++;else missG.push(m.o)}
   });
   sv.textContent=v.length;s1.textContent=a;s2.textContent=b;so.textContent=o;sp.textContent=p;
-  if(spPatrick)spPatrick.textContent=pp;
-  if(spReini)spReini.textContent=pr;
-  if(spGuests)spGuests.textContent=pg;
-  const next=nextVisibleMatch(v);
-  if(next){
-    const el=document.getElementById(`game-${next.id}`);
-    if(el)el.classList.add("nextgame");
-  }
+  if(spPatrick)spPatrick.textContent=pp;if(spReini)spReini.textContent=pr;if(spGuests)spGuests.textContent=pg;
+  if(missingPatrick)missingPatrick.innerHTML=paymentMissingHtml(missP);
+  if(missingReini)missingReini.innerHTML=paymentMissingHtml(missR);
+  if(missingGuests)missingGuests.innerHTML=paymentMissingHtml(missG);
+  const next=nextVisibleMatch(v);if(next){const el=document.getElementById(`game-${next.id}`);if(el)el.classList.add("nextgame")}
   if(pendingAutoScroll&&currentUser){pendingAutoScroll=false;scrollToCurrentOrNext(v)}
 }
 function bind(){
@@ -238,8 +232,7 @@ function bind(){
     e.onclick=ev=>ev.stopPropagation();
     e.oninput=()=>{
       S.guests[e.dataset.id]||={};S.guests[e.dataset.id][e.dataset.g]=e.value;queueSave();
-      const btn=e.closest(".pickcell")?.querySelector(".choose");
-      if(btn)btn.textContent=e.value.trim()||(e.dataset.g==="g1"?"Gast 1":"Gast 2");
+      const btn=e.closest(".pickcell")?.querySelector(".choose");if(btn)btn.textContent=e.value.trim()||(e.dataset.g==="g1"?"Gast 1":"Gast 2");
     };
   });
   document.querySelectorAll("[data-pay]").forEach(e=>e.onchange=()=>{
@@ -248,54 +241,34 @@ function bind(){
   document.querySelectorAll("[data-note]").forEach(e=>e.oninput=()=>{S.notes[e.dataset.note]=e.value;queueSave()});
 }
 document.querySelectorAll(".tools button").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".tools button").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");F=b.dataset.f;pendingAutoScroll=true;render();
+  document.querySelectorAll(".tools button").forEach(x=>x.classList.remove("on"));b.classList.add("on");F=b.dataset.f;pendingAutoScroll=true;render();
 });
 q.oninput=render;
 
 loginForm.addEventListener("submit",async e=>{
   e.preventDefault();loginError.textContent="";
-  const actor=ACTORS[loginUser.value];
-  if(!actor){loginError.textContent="Bitte einen Benutzer auswählen.";return}
+  const actor=ACTORS[loginUser.value];if(!actor){loginError.textContent="Bitte einen Benutzer auswählen.";return}
   const {data,error}=await sb.auth.signInWithPassword({email:LOGIN_EMAIL,password:loginPassword.value});
   if(error){loginError.textContent="Passwort ist nicht korrekt.";return}
   try{
-    currentActor=actor;
-    sessionStorage.setItem("fcb-current-actor",actor);
-    showApp(data.user);
-    await loadRemoteMatches();
-    await loadLastFixtureSync();
-    await loadRemoteState();
-    subscribeRealtime();
-    loginPassword.value="";
-  }catch(err){
-    console.error(err);
-    await sb.auth.signOut();
-    showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"));
-  }
+    currentActor=actor;sessionStorage.setItem("fcb-current-actor",actor);showApp(data.user);subscribePresence();
+    await loadRemoteMatches();await loadLastFixtureSync();await loadRemoteState();subscribeRealtime();loginPassword.value="";
+  }catch(err){console.error(err);if(presenceChannel)await sb.removeChannel(presenceChannel);await sb.auth.signOut();showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"))}
 });
 
 logoutBtn.addEventListener("click",async()=>{
+  if(presenceChannel){try{await presenceChannel.untrack()}catch{}await sb.removeChannel(presenceChannel);presenceChannel=null}
   if(realtimeChannel)await sb.removeChannel(realtimeChannel);
-  await sb.auth.signOut();
-  sessionStorage.removeItem("fcb-current-actor");
-  showLogin();
+  await sb.auth.signOut();sessionStorage.removeItem("fcb-current-actor");showLogin();
 });
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session?.user){showLogin();return}
   currentActor=sessionStorage.getItem("fcb-current-actor");
-  if(!["Admin","Patrick","Ober"].includes(currentActor)){
-    await sb.auth.signOut();showLogin();return;
-  }
+  if(!ACTOR_ORDER.includes(currentActor)){await sb.auth.signOut();showLogin();return}
   try{
-    showApp(session.user);await loadRemoteMatches();await loadLastFixtureSync();await loadRemoteState();subscribeRealtime();
-  }catch(err){
-    console.error(err);
-    await sb.auth.signOut();
-    sessionStorage.removeItem("fcb-current-actor");
-    showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"));
-  }
+    showApp(session.user);subscribePresence();await loadRemoteMatches();await loadLastFixtureSync();await loadRemoteState();subscribeRealtime();
+  }catch(err){console.error(err);if(presenceChannel)await sb.removeChannel(presenceChannel);await sb.auth.signOut();sessionStorage.removeItem("fcb-current-actor");showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"))}
 }
 boot();
