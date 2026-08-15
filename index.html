@@ -24,6 +24,51 @@
     <div class="loginerror" id="loginError"></div>
   </form>
 </section>
-<header><div><img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128"><b>FC Bayern · Jahreskarten 2026/27</b><div class="userbar" id="userbar" hidden><span id="userEmail"></span><span class="sync" id="syncStatus">gespeichert</span><button class="logout" id="logoutBtn">Logout</button></div></div></header><main><section class="hero"><img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128"><div>Saison 2026 / 2027</div><h1>Wer geht ins Stadion?</h1><p>Zwei Jahreskarten · Bundesliga · DFB-Pokal · Champions League<br><small>Termine & Gegner werden nachts automatisch mit dem offiziellen FC-Bayern-Spielplan abgeglichen.</small></p><div class="names"><div class="fixedname"><small>Person 1</small><b>Patrick</b></div><div class="fixedname"><small>Person 2</small><b>Reini</b></div></div></section><section class="stats"><div class="stat"><small>Termine</small><b id="sv">0</b></div><div class="stat"><small id="l1">Patrick</small><b id="s1">0</b></div><div class="stat"><small id="l2">Reini</small><b id="s2">0</b></div><div class="stat"><small>Offen</small><b id="so">0</b></div><div class="stat"><small>Bezahlt</small><b id="sp">0</b></div></section><section class="tools"><button class="on" data-f="rel">Jahreskarten</button><button data-f="all">Alle</button><button data-f="bl">Bundesliga</button><button data-f="dfb">DFB-Pokal</button><button data-f="cl">Champions League</button><button data-f="open">Nur offen</button><input id="q" placeholder="Suche …"></section><div id="app"></div></main><footer class="sitefooter"><a href="history.html">History-Log</a></footer>
+
+<header><div>
+  <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128">
+  <b>FC Bayern · Jahreskarten 2026/27</b>
+  <div class="userbar" id="userbar" hidden>
+    <span id="userEmail"></span>
+    <span class="sync" id="syncStatus">gespeichert</span>
+    <span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </div>
+</div></header>
+
+<main>
+<section class="hero">
+  <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128">
+  <div>Saison 2026 / 2027</div>
+  <h1>Wer geht ins Stadion?</h1>
+  <p>Zwei Jahreskarten · Bundesliga · DFB-Pokal · Champions League<br>
+  <small>Termine & Gegner werden nachts automatisch mit dem offiziellen FC-Bayern-Spielplan abgeglichen.</small></p>
+  <div class="names">
+    <div class="fixedname"><small>Person 1</small><b>Patrick</b></div>
+    <div class="fixedname"><small>Person 2</small><b>Reini</b></div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat"><small>Termine</small><b id="sv">0</b></div>
+  <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b></div>
+  <div class="stat"><small id="l2">Reini</small><b id="s2">0</b></div>
+  <div class="stat"><small>Offen</small><b id="so">0</b></div>
+  <div class="stat"><small>Bezahlt</small><b id="sp">0</b></div>
+</section>
+
+<section class="tools">
+  <button class="on" data-f="rel">Jahreskarten</button>
+  <button data-f="all">Alle</button>
+  <button data-f="bl">Bundesliga</button>
+  <button data-f="dfb">DFB-Pokal</button>
+  <button data-f="cl">Champions League</button>
+  <button data-f="open">Nur offen</button>
+  <input id="q" placeholder="Suche …">
+</section>
+<div id="app"></div>
+</main>
+
+<footer class="sitefooter"><a href="history.html">History-Log</a></footer>
 <script type="module" src="app.js"></script>
 </body></html>
