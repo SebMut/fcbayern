@@ -42,7 +42,7 @@
     </a>
 
     <div class="userbar" id="userbar" hidden>
-      <span class="userpill"><i></i><span id="userEmail"></span></span>
+      <span class="userpill" hidden><span id="userEmail"></span></span>
       <span class="onlineUsers" id="onlineUsers"><span>Online: –</span></span>
       <span class="sync" id="syncStatus">gespeichert</span>
       <span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span>
@@ -58,6 +58,7 @@
 
     <section class="hero">
       <div class="herocontent">
+        <div class="helloUser" id="greeting" hidden></div>
         <div class="seasonbadge">Saison 2026 / 2027</div>
         <h1>Jahreskarten</h1>
         <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
@@ -130,5 +131,6 @@
 </footer>
 
 <script type="module" src="app.js"></script>
+<script src="ui-live.js" defer></script>
 </body>
 </html>
