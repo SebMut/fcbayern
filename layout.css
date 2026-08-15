@@ -1,5 +1,8 @@
 .overviewShell{margin-bottom:24px}.sectionLabel{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#8a95a5;margin:0 2px 8px}.scheduleShell{padding-top:22px;border-top:1px solid #dde2e8}.scheduleIntro{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:8px}.scheduleIntro h3{margin:0;font-size:18px;letter-spacing:-.025em;color:#1f2f45}.nextHint{font-size:9px;color:#8c97a7;text-align:right}.game.nextgame{border-color:#9db4cb;box-shadow:0 0 0 2px rgba(7,27,53,.045),0 6px 18px rgba(15,31,51,.05)}.game.nextgame:after{content:"NÄCHSTES SPIEL";position:absolute;top:-8px;left:12px;background:#071b35;color:#fff;border-radius:999px;padding:3px 7px;font-size:7px;font-weight:900;letter-spacing:.08em}.overviewShell .stats{margin-top:10px}.overviewShell .paidpanel{margin-bottom:0}
 
+/* Current user greeting */
+.helloUser{display:inline-flex;align-items:center;margin-bottom:7px;color:#46556a;font-size:12px;font-weight:750}.helloUser[hidden]{display:none}
+
 /* Live presence */
 .onlineUsers{display:flex;align-items:center;gap:6px;border:1px solid #dfe4e9;background:#f8faf9;border-radius:999px;padding:6px 9px;font-size:9px;font-weight:800;color:#526171;white-space:nowrap}.onlineUsers i{width:6px;height:6px;border-radius:50%;background:#29a85a;box-shadow:0 0 0 2px #dff3e6}
 
