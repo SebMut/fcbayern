@@ -5,11 +5,20 @@
 </head><body>
 <header><div class="head"><img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt=""><b>History-Log</b><a href="index.html">← Zur Übersicht</a></div></header>
 <main>
-<section class="hero"><div>FC Bayern · Jahreskarten 2026/27</div><h1>Änderungsverlauf</h1><p>Protokoll aller Änderungen an Kartenverteilung, Gästen, Zahlungsstatus, Notizen sowie der automatischen Aktualisierung von Spielterminen und Gegnern.</p></section>
+<section class="hero">
+  <div>FC Bayern · Jahreskarten 2026/27</div>
+  <h1>Änderungsverlauf</h1>
+  <p>Kartenverteilung, Gastnamen, Zahlungsstatus, Notizen sowie automatische und manuelle Spieltagssynchronisierungen.</p>
+</section>
 <section class="filters">
 <select id="userFilter"><option value="">Alle Benutzer</option></select>
-<select id="typeFilter"><option value="">Alle Änderungen</option><option value="season_state">Karten & Notizen</option><option value="fixture">Termine & Gegner</option></select>
-<input id="search" type="search" placeholder="Spiel oder Änderung suchen …">
+<select id="typeFilter">
+  <option value="">Alle Änderungen</option>
+  <option value="season_state">Karten & Notizen</option>
+  <option value="fixture">Termine & Gegner</option>
+  <option value="sync_run">Spieltagssync</option>
+</select>
+<input id="search" type="search" placeholder="Spiel, Benutzer oder Änderung suchen …">
 </section>
 <div id="content" class="loading">History wird geladen …</div>
 </main>
