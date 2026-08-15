@@ -5,7 +5,6 @@
 -- Danach fehlt nur noch:
 --   1) Edge Function "sync-fixtures" deployen
 --   2) Supabase SECRET KEY in Vault speichern
---   3) den Job am Ende aktivieren
 -- ============================================================
 
 -- 1) Benötigte Extensions
@@ -60,41 +59,60 @@ end $$;
 -- );
 -- ============================================================
 
--- 4) Erst NACHDEM fcb_cron_secret_key existiert:
--- Vorhandenen Job gleichen Namens sicher entfernen.
-select cron.unschedule(jobid)
-from cron.job
-where jobname = 'fcb-nightly-fixture-sync';
+-- 4) Job nur dann anlegen, wenn der Secret Key bereits im Vault liegt.
+do $cron_setup$
+declare
+  existing_job bigint;
+begin
+  if not exists (
+    select 1
+    from vault.decrypted_secrets
+    where name = 'fcb_cron_secret_key'
+      and decrypted_secret is not null
+      and length(decrypted_secret) > 10
+  ) then
+    raise notice 'fcb_cron_secret_key fehlt noch. Extensions und Log-Tabelle sind eingerichtet; Cronjob wurde noch NICHT angelegt.';
+    return;
+  end if;
 
--- Der Scheduler arbeitet in UTC.
--- Wir rufen 00:00, 01:00 und 02:00 UTC auf.
--- Die Edge Function entscheidet anhand Europe/Berlin,
--- welcher Lauf der echte Tageslauf ist und führt max. 1 Sync/Tag aus.
-select cron.schedule(
-  'fcb-nightly-fixture-sync',
-  '0 0,1,2 * * *',
-  $$
-  select net.http_post(
-    url := (
-      select decrypted_secret
-      from vault.decrypted_secrets
-      where name = 'fcb_project_url'
-      limit 1
-    ) || '/functions/v1/sync-fixtures',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'apikey', (
+  select jobid into existing_job
+  from cron.job
+  where jobname = 'fcb-nightly-fixture-sync'
+  limit 1;
+
+  if existing_job is not null then
+    perform cron.unschedule(existing_job);
+  end if;
+
+  perform cron.schedule(
+    'fcb-nightly-fixture-sync',
+    '0 0,1,2 * * *',
+    $job$
+    select net.http_post(
+      url := (
         select decrypted_secret
         from vault.decrypted_secrets
-        where name = 'fcb_cron_secret_key'
+        where name = 'fcb_project_url'
         limit 1
-      )
-    ),
-    body := jsonb_build_object('scheduled_at', now()),
-    timeout_milliseconds := 30000
-  ) as request_id;
-  $$
-);
+      ) || '/functions/v1/sync-fixtures',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'apikey', (
+          select decrypted_secret
+          from vault.decrypted_secrets
+          where name = 'fcb_cron_secret_key'
+          limit 1
+        )
+      ),
+      body := jsonb_build_object('scheduled_at', now()),
+      timeout_milliseconds := 30000
+    ) as request_id;
+    $job$
+  );
+
+  raise notice 'Cronjob fcb-nightly-fixture-sync wurde angelegt.';
+end
+$cron_setup$;
 
 -- ============================================================
 -- KONTROLLE
