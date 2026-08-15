@@ -12,100 +12,17 @@
 
 <section class="login" id="loginScreen">
   <form class="loginbox" id="loginForm">
-    <div class="loginbrand">
-      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
-      <div><small>FC Bayern</small><b>Jahreskarten 2026/27</b></div>
-    </div>
-    <h2>Anmelden</h2>
-    <p class="loginintro">Benutzer auswählen und gemeinsames Passwort eingeben.</p>
-    <div class="configwarn" id="configWarn" hidden>Supabase-Konfiguration fehlt.</div>
-
-    <label class="fieldlabel" for="loginUser">Benutzer</label>
-    <select id="loginUser" required>
-      <option value="admin">Admin</option>
-      <option value="patrick">Patrick</option>
-      <option value="ober">Ober</option>
-    </select>
-
-    <label class="fieldlabel" for="loginPassword">Passwort</label>
-    <input id="loginPassword" type="password" placeholder="Passwort" autocomplete="current-password" required>
-    <button class="loginbutton" type="submit">Einloggen</button>
-    <div class="loginerror" id="loginError"></div>
+    <div class="loginbrand"><img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern"><div><small>FC Bayern</small><b>Jahreskarten 2026/27</b></div></div>
+    <h2>Anmelden</h2><p class="loginintro">Benutzer auswählen und gemeinsames Passwort eingeben.</p><div class="configwarn" id="configWarn" hidden>Supabase-Konfiguration fehlt.</div>
+    <label class="fieldlabel" for="loginUser">Benutzer</label><select id="loginUser" required><option value="admin">Admin</option><option value="patrick">Patrick</option><option value="ober">Ober</option></select>
+    <label class="fieldlabel" for="loginPassword">Passwort</label><input id="loginPassword" type="password" placeholder="Passwort" autocomplete="current-password" required><button class="loginbutton" type="submit">Einloggen</button><div class="loginerror" id="loginError"></div>
   </form>
 </section>
-
-<header class="topbar">
-  <div class="topbarinner">
-    <a class="brand" href="index.html" aria-label="Startseite">
-      <img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern">
-      <span><small>FC Bayern</small><b>Jahreskarten 26/27</b></span>
-    </a>
-
-    <div class="userbar" id="userbar" hidden>
-      <span class="userpill" hidden><span id="userEmail"></span></span>
-      <span class="onlineUsers" id="onlineUsers"><span>Online: –</span></span>
-      <span class="sync" id="syncStatus">gespeichert</span>
-      <span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span>
-      <a class="headerlink" href="history.html">History</a>
-      <button class="logout" id="logoutBtn">Logout</button>
-    </div>
-  </div>
-</header>
-
+<header class="topbar"><div class="topbarinner"><a class="brand" href="index.html" aria-label="Startseite"><img src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=128" alt="FC Bayern"><span><small>FC Bayern</small><b>Jahreskarten 26/27</b></span></a><div class="userbar" id="userbar" hidden><span class="userpill" hidden><span id="userEmail"></span></span><span class="onlineUsers" id="onlineUsers"><span>Online: –</span></span><span class="sync" id="syncStatus">gespeichert</span><span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span><a class="headerlink" href="history.html">History</a><button class="logout" id="logoutBtn">Logout</button></div></div></header>
 <main>
-  <section class="overviewShell">
-    <div class="sectionLabel">Saisonübersicht</div>
-
-    <section class="hero">
-      <div class="herocontent">
-        <div class="helloUser" id="greeting"></div>
-        <div class="seasonbadge">Saison 2026 / 2027</div>
-        <h1>Jahreskarten</h1>
-        <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
-        <div class="herometa">
-          <span>Bundesliga</span>
-          <span>DFB-Pokal</span>
-          <span>Champions League</span>
-          <span class="syncpill">Sync alle 3 Stunden</span>
-        </div>
-      </div>
-      <img class="herologo" src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="FC Bayern">
-    </section>
-
-    <section class="stats" aria-label="Saisonstatus">
-      <div class="stat statPrimary"><small>Relevante Termine</small><b id="sv">0</b><span>Spiele</span></div>
-      <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div>
-      <div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div>
-      <div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div>
-    </section>
-
-    <section class="paidpanel" aria-label="Bezahlstatus">
-      <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
-      <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span><div class="paymentMissing" id="missingPatrick"></div></div>
-      <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span><div class="paymentMissing" id="missingReini"></div></div>
-      <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span><div class="paymentMissing" id="missingGuests"></div></div>
-      <b id="sp" hidden>0</b>
-    </section>
-  </section>
-
-  <section class="scheduleShell">
-    <div class="scheduleIntro">
-      <div><div class="sectionLabel">Spielplan</div><h3>Heimspiele & Kartenverteilung</h3></div>
-      <button class="currentMatchBtn" id="currentMatchBtn" type="button">Zum aktuellen Spieltag</button>
-    </div>
-
-    <section class="tools">
-      <div class="filtergroup">
-        <button class="on" data-f="all">Alle</button><button data-f="bl">Bundesliga</button><button data-f="dfb">DFB-Pokal</button><button data-f="cl">Champions League</button><button data-f="open">Karten verfügbar</button>
-      </div>
-      <label class="searchbox"><span>⌕</span><input id="q" placeholder="Spiel suchen …"></label>
-    </section>
-    <div id="app"></div>
-  </section>
+<section class="overviewShell"><div class="sectionLabel">Saisonübersicht</div><section class="hero"><div class="herocontent"><div class="helloUser" id="greeting"></div><div class="seasonbadge">Saison 2026 / 2027</div><h1>Jahreskarten</h1><p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p><div class="herometa"><span>Bundesliga</span><span>DFB-Pokal</span><span>Champions League</span><span class="syncpill">Sync alle 3 Stunden</span></div></div><img class="herologo" src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="FC Bayern"></section>
+<section class="stats" aria-label="Saisonstatus"><div class="stat statPrimary"><small>Relevante Termine</small><b id="sv">0</b><span>Spiele</span></div><div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div><div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div><div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div></section>
+<section class="paidpanel" aria-label="Bezahlstatus"><div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div><div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span><div class="paymentMissing" id="missingPatrick"></div></div><div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span><div class="paymentMissing" id="missingReini"></div></div><div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span><div class="paymentMissing" id="missingGuests"></div></div><b id="sp" hidden>0</b></section></section>
+<section class="scheduleShell"><div class="scheduleIntro"><div><div class="sectionLabel">Spielplan</div><h3>Heimspiele & Kartenverteilung</h3></div><button class="currentMatchBtn" id="currentMatchBtn" type="button">Zum nächsten Spieltag</button></div><section class="tools"><div class="filtergroup"><button class="on" data-f="all">Alle</button><button data-f="bl">Bundesliga</button><button data-f="dfb">DFB-Pokal</button><button data-f="cl">Champions League</button><button data-f="open">Karten verfügbar</button></div><label class="searchbox"><span>⌕</span><input id="q" placeholder="Spiel suchen …"></label></section><div id="app"></div></section>
 </main>
-
-<footer class="sitefooter"><span>FC Bayern · Jahreskarten 2026/27</span><a href="history.html">History-Log</a></footer>
-<script type="module" src="app.js"></script>
-<script src="ui-live.js" defer></script>
-</body>
-</html>
+<footer class="sitefooter"><span>FC Bayern · Jahreskarten 2026/27</span><a href="history.html">History-Log</a></footer><script type="module" src="app.js"></script><script src="ui-live.js" defer></script></body></html>
