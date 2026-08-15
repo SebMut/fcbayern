@@ -74,7 +74,14 @@
     <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div>
     <div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div>
     <div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div>
-    <div class="stat statPaid"><small>Bezahlt</small><b id="sp">0</b><span>Tickets</span></div>
+  </section>
+
+  <section class="paidpanel" aria-label="Bezahlstatus">
+    <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bereits bezahlt</b></div></div>
+    <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span></div>
+    <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span></div>
+    <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span></div>
+    <b id="sp" hidden>0</b>
   </section>
 
   <section class="tools">
@@ -101,5 +108,6 @@
 </footer>
 
 <script type="module" src="app.js"></script>
+<script type="module" src="stats-paid.js"></script>
 </body>
 </html>
