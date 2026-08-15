@@ -15,7 +15,7 @@ const $=id=>document.getElementById(id);
 const app=$("app"),q=$("q"),sv=$("sv"),s1=$("s1"),s2=$("s2"),so=$("so"),sp=$("sp"),
 l1=$("l1"),l2=$("l2"),loginScreen=$("loginScreen"),loginForm=$("loginForm"),
 loginUser=$("loginUser"),loginPassword=$("loginPassword"),loginError=$("loginError"),
-userbar=$("userbar"),userEmail=$("userEmail"),logoutBtn=$("logoutBtn"),syncStatus=$("syncStatus");
+userbar=$("userbar"),userEmail=$("userEmail"),logoutBtn=$("logoutBtn"),syncStatus=$("syncStatus"),lastFixtureSync=$("lastFixtureSync");
 
 let M=BASE_M.map(x=>({...x}));
 let F="rel";
@@ -33,6 +33,34 @@ function normalizeState(x){
   return {p1:"Patrick",p2:"Reini",assignments:A,guests:x.guests||{},paid:P,notes:x.notes||{}};
 }
 function setSync(text,error=false){syncStatus.textContent=text;syncStatus.classList.toggle("err",error)}
+async function loadLastFixtureSync(){
+  const {data,error}=await sb.from("fixture_sync_runs")
+    .select("finished_at")
+    .eq("status","success")
+    .not("finished_at","is",null)
+    .order("finished_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+
+  if(error){
+    console.error("Letzter Spieltagssync konnte nicht geladen werden:",error);
+    lastFixtureSync.textContent="Letzter Spieltagssync: –";
+    return;
+  }
+
+  if(!data?.finished_at){
+    lastFixtureSync.textContent="Letzter Spieltagssync: noch nie";
+    return;
+  }
+
+  const formatted=new Intl.DateTimeFormat("de-DE",{
+    timeZone:"Europe/Berlin",
+    day:"2-digit",month:"2-digit",year:"numeric",
+    hour:"2-digit",minute:"2-digit"
+  }).format(new Date(data.finished_at));
+
+  lastFixtureSync.textContent=`Letzter Spieltagssync: ${formatted}`;
+}
 async function loadRemoteState(){
   const {data,error}=await sb.from("season_state").select("data").eq("season",SEASON).single();
   if(error) throw error;
@@ -82,7 +110,7 @@ function subscribeRealtime(){
       loadingRemote=true;S=normalizeState(payload.new.data);render();loadingRemote=false;setSync("synchron");
     })
     .on("postgres_changes",{event:"*",schema:"public",table:"match_overrides",filter:`season=eq.${SEASON}`},async()=>{
-      try{await loadRemoteMatches();render();setSync("Termine aktualisiert")}catch(e){console.error(e)}
+      try{await loadRemoteMatches();await loadLastFixtureSync();render();setSync("Termine aktualisiert")}catch(e){console.error(e)}
     }).subscribe();
 }
 function showApp(user){
@@ -191,6 +219,7 @@ loginForm.addEventListener("submit",async e=>{
     sessionStorage.setItem("fcb-current-actor",actor);
     showApp(data.user);
     await loadRemoteMatches();
+    await loadLastFixtureSync();
     await loadRemoteState();
     subscribeRealtime();
     loginPassword.value="";
@@ -214,7 +243,7 @@ async function boot(){
     await sb.auth.signOut();showLogin();return;
   }
   try{
-    showApp(session.user);await loadRemoteMatches();await loadRemoteState();subscribeRealtime();
+    showApp(session.user);await loadRemoteMatches();await loadLastFixtureSync();await loadRemoteState();subscribeRealtime();
   }catch(err){
     console.error(err);await sb.auth.signOut();sessionStorage.removeItem("fcb-current-actor");
     showLogin("Zugriff auf die Jahreskarten-Daten ist nicht freigeschaltet.");
