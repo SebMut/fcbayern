@@ -58,7 +58,7 @@
 
     <section class="hero">
       <div class="herocontent">
-        <div class="helloUser" id="greeting" hidden></div>
+        <div class="helloUser" id="greeting"></div>
         <div class="seasonbadge">Saison 2026 / 2027</div>
         <h1>Jahreskarten</h1>
         <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
@@ -81,55 +81,30 @@
 
     <section class="paidpanel" aria-label="Bezahlstatus">
       <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
-      <div class="paidstat">
-        <small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span>
-        <div class="paymentMissing" id="missingPatrick"></div>
-      </div>
-      <div class="paidstat">
-        <small>Reini</small><b id="spReini">0</b><span>Tickets</span>
-        <div class="paymentMissing" id="missingReini"></div>
-      </div>
-      <div class="paidstat">
-        <small>Gäste</small><b id="spGuests">0</b><span>Tickets</span>
-        <div class="paymentMissing" id="missingGuests"></div>
-      </div>
+      <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span><div class="paymentMissing" id="missingPatrick"></div></div>
+      <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span><div class="paymentMissing" id="missingReini"></div></div>
+      <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span><div class="paymentMissing" id="missingGuests"></div></div>
       <b id="sp" hidden>0</b>
     </section>
   </section>
 
   <section class="scheduleShell">
     <div class="scheduleIntro">
-      <div>
-        <div class="sectionLabel">Spielplan</div>
-        <h3>Heimspiele & Kartenverteilung</h3>
-      </div>
-      <span class="nextHint">Beim Öffnen springt die Ansicht automatisch zum nächsten Spiel.</span>
+      <div><div class="sectionLabel">Spielplan</div><h3>Heimspiele & Kartenverteilung</h3></div>
+      <button class="currentMatchBtn" id="currentMatchBtn" type="button">Zum aktuellen Spieltag</button>
     </div>
 
     <section class="tools">
       <div class="filtergroup">
-        <button class="on" data-f="rel">Jahreskarten</button>
-        <button data-f="all">Alle</button>
-        <button data-f="bl">Bundesliga</button>
-        <button data-f="dfb">DFB-Pokal</button>
-        <button data-f="cl">Champions League</button>
-        <button data-f="open">Nur offen</button>
+        <button class="on" data-f="rel">Jahreskarten</button><button data-f="all">Alle</button><button data-f="bl">Bundesliga</button><button data-f="dfb">DFB-Pokal</button><button data-f="cl">Champions League</button><button data-f="open">Nur offen</button>
       </div>
-      <label class="searchbox">
-        <span>⌕</span>
-        <input id="q" placeholder="Spiel suchen …">
-      </label>
+      <label class="searchbox"><span>⌕</span><input id="q" placeholder="Spiel suchen …"></label>
     </section>
-
     <div id="app"></div>
   </section>
 </main>
 
-<footer class="sitefooter">
-  <span>FC Bayern · Jahreskarten 2026/27</span>
-  <a href="history.html">History-Log</a>
-</footer>
-
+<footer class="sitefooter"><span>FC Bayern · Jahreskarten 2026/27</span><a href="history.html">History-Log</a></footer>
 <script type="module" src="app.js"></script>
 <script src="ui-live.js" defer></script>
 </body>
