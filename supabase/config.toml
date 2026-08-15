@@ -1,0 +1,4 @@
+project_id = "kmhadzujovvxvpgblgkk"
+
+[functions.sync-fixtures]
+verify_jwt = false
