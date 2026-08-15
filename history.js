@@ -11,9 +11,45 @@ function gameName(id){return GAME_LABELS[id]||id||"Saisonübersicht"}
 function names(arr,g){return (arr||[]).map(v=>v==="g1"||v==="g2"?(g?.[v]||PERSON[v]):PERSON[v]||v).join(", ")||"Offen"}
 function stateChanges(log){const a=log.before_data||{},b=log.after_data||{},out=[];const ids=new Set([...Object.keys(a.assignments||{}),...Object.keys(b.assignments||{}),...Object.keys(a.guests||{}),...Object.keys(b.guests||{}),...Object.keys(a.paid||{}),...Object.keys(b.paid||{}),...Object.keys(a.notes||{}),...Object.keys(b.notes||{})]);for(const id of ids){const aa=(a.assignments||{})[id]||[],ba=(b.assignments||{})[id]||[];const ag=(a.guests||{})[id]||{},bg=(b.guests||{})[id]||{};if(!same(aa,ba))out.push({id,text:`Belegung: ${names(aa,ag)} → ${names(ba,bg)}`});for(const g of ["g1","g2"])if((ag[g]||"")!==(bg[g]||""))out.push({id,text:`${PERSON[g]}: "${ag[g]||"–"}" → "${bg[g]||"–"}"`});const ap=(a.paid||{})[id]||{},bp=(b.paid||{})[id]||{};for(const p of ["p1","p2","g1","g2"])if(!!ap[p]!==!!bp[p])out.push({id,text:`${PERSON[p]}: ${bp[p]?"bezahlt":"nicht bezahlt"}`});if(((a.notes||{})[id]||"")!==((b.notes||{})[id]||""))out.push({id,text:"Notiz geändert"});}return out.length?out:[{id:null,text:"Saisonübersicht geändert"}];}
 function fixtureChanges(log){const a=log.before_data||{},b=log.after_data||{},out=[],id=log.entity_id;const fields=[["opponent","Gegner"],["start_date","Datum"],["end_date","Datumsende"],["kickoff_time","Anstoß"],["home","Heim/Auswärts"],["active","Aktiv"]];for(const [k,label] of fields){if(!same(a[k],b[k])){let av=a[k]??"–",bv=b[k]??"–";if(k==="home"){av=a[k]===true?"Heim":a[k]===false?"Auswärts":"–";bv=b[k]===true?"Heim":b[k]===false?"Auswärts":"–"}if(k==="active"){av=a[k]===false?"Nein":"Ja";bv=b[k]===false?"Nein":"Ja"}out.push({id,text:`${label}: ${av} → ${bv}`});}}return out.length?out:[{id,text:"Offizielle Termindaten aktualisiert"}];}
-function syncChanges(log){const b=log.after_data||{};const status=b.status==="success"?"erfolgreich":b.status==="failed"?"fehlgeschlagen":(b.status||"ausgeführt");const out=[{id:null,text:`Spieltagssync ${status}`}];if(Number.isFinite(Number(b.found_count)))out.push({id:null,text:`Gefundene Spiele: ${b.found_count}`});if(Number.isFinite(Number(b.updated_count)))out.push({id:null,text:`Aktualisierte Einträge: ${b.updated_count}`});if(b.message)out.push({id:null,text:String(b.message)});return out;}
+function syncFixtureLogs(syncLog){
+  const syncTime=Date.parse(syncLog.created_at);
+  if(!Number.isFinite(syncTime))return[];
+  const syncs=LOGS.filter(x=>x.entity_type==="sync_run");
+  return LOGS.filter(f=>{
+    if(f.entity_type!=="fixture")return false;
+    const fixtureTime=Date.parse(f.created_at);
+    if(!Number.isFinite(fixtureTime)||fixtureTime>syncTime||syncTime-fixtureTime>60000)return false;
+    const owner=syncs
+      .filter(s=>{const t=Date.parse(s.created_at);return Number.isFinite(t)&&t>=fixtureTime&&t-fixtureTime<=60000})
+      .sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at))[0];
+    return owner?.id===syncLog.id;
+  }).sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at));
+}
+function syncFixtureSummary(log){
+  const b=log.after_data||{};
+  const changed=fixtureChanges(log).map(x=>String(x.text).split(":")[0]).filter(Boolean);
+  const base=gameName(log.entity_id);
+  const opponent=b.opponent&& !base.toLowerCase().includes(String(b.opponent).toLowerCase())?` · ${b.opponent}`:"";
+  const details=[...new Set(changed)].join(", ");
+  return `Aktualisiert: ${base}${opponent}${details?` (${details})`:""}`;
+}
+function syncChanges(log){
+  const b=log.after_data||{};
+  const status=b.status==="success"?"erfolgreich":b.status==="failed"?"fehlgeschlagen":(b.status||"ausgeführt");
+  const out=[{id:null,text:`Spieltagssync ${status}`}];
+  if(Number.isFinite(Number(b.found_count)))out.push({id:null,text:`Gefundene Spiele: ${b.found_count}`});
+  const fixtures=syncFixtureLogs(log);
+  if(fixtures.length){
+    out.push({id:null,text:`Tatsächlich geänderte Einträge: ${fixtures.length}`});
+    fixtures.forEach(f=>out.push({id:f.entity_id,text:syncFixtureSummary(f)}));
+  }else if(b.status==="success"){
+    out.push({id:null,text:"Keine Termindaten geändert"});
+  }
+  if(b.message)out.push({id:null,text:String(b.message)});
+  return out;
+}
 function changesFor(log){if(log.entity_type==="fixture")return fixtureChanges(log);if(log.entity_type==="sync_run")return syncChanges(log);return stateChanges(log)}
 function typeLabel(log){if(log.entity_type==="fixture")return "Termin-Sync";if(log.entity_type==="sync_run")return "Spieltagssync";return "Änderung"}
-function render(){const uf=userFilter.value,tf=typeFilter.value,q=search.value.trim().toLowerCase();const rows=LOGS.filter(log=>{if(uf&&log.actor_name!==uf)return false;if(tf&&log.entity_type!==tf)return false;const changes=changesFor(log);const hay=[log.actor_name,gameName(log.entity_id),...changes.map(x=>x.text)].join(" ").toLowerCase();return !q||hay.includes(q);});if(!rows.length){content.className="empty";content.textContent="Noch keine History-Einträge vorhanden.";return}content.className="log";content.innerHTML=rows.map(log=>{const changes=changesFor(log);const ids=[...new Set(changes.map(x=>x.id).filter(Boolean))];const games=log.entity_type==="sync_run"?"Spieltagssynchronisierung":(ids.length?ids.map(gameName).join(" · "):gameName(log.entity_id));const system=log.actor_name==="System";return `<article class="entry"><div class="row"><div><div class="who">Ausgeführt von ${esc(log.actor_name||"Benutzer")}</div><div class="time">${fmtDate(log.created_at)}</div></div><span class="badge ${system?"system":""}">${typeLabel(log)}</span></div><div class="game">${esc(games)}</div><ul class="changes">${changes.map(c=>`<li>${esc(c.text)}</li>`).join("")}</ul></article>`;}).join("");}
+function render(){const uf=userFilter.value,tf=typeFilter.value,q=search.value.trim().toLowerCase();const rows=LOGS.filter(log=>{if(uf&&log.actor_name!==uf)return false;if(tf&&log.entity_type!==tf)return false;const changes=changesFor(log);const hay=[log.actor_name,gameName(log.entity_id),...changes.map(x=>x.text)].join(" ").toLowerCase();return !q||hay.includes(q);});if(!rows.length){content.className="empty";content.textContent="Noch keine History-Einträge vorhanden.";return}content.className="log";content.innerHTML=rows.map(log=>{const changes=changesFor(log);const ids=[...new Set(changes.map(x=>x.id).filter(Boolean))];const syncFixtures=log.entity_type==="sync_run"?syncFixtureLogs(log):[];const games=log.entity_type==="sync_run"?(syncFixtures.length?syncFixtures.map(f=>gameName(f.entity_id)).join(" · "):"Spieltagssynchronisierung"):(ids.length?ids.map(gameName).join(" · "):gameName(log.entity_id));const system=log.actor_name==="System";return `<article class="entry"><div class="row"><div><div class="who">Ausgeführt von ${esc(log.actor_name||"Benutzer")}</div><div class="time">${fmtDate(log.created_at)}</div></div><span class="badge ${system?"system":""}">${typeLabel(log)}</span></div><div class="game">${esc(games)}</div><ul class="changes">${changes.map(c=>`<li>${esc(c.text)}</li>`).join("")}</ul></article>`;}).join("");}
 async function boot(){const {data:{session}}=await sb.auth.getSession();if(!session){location.replace("index.html");return}const {data,error}=await sb.from("history_log").select("id,created_at,actor_name,entity_type,entity_id,before_data,after_data").order("created_at",{ascending:false}).limit(1000);if(error){content.className="empty";content.textContent="History konnte nicht geladen werden. Bitte History-Migration in Supabase ausführen.";console.error(error);return}LOGS=data||[];[...new Set(LOGS.map(x=>x.actor_name).filter(Boolean))].sort().forEach(n=>userFilter.insertAdjacentHTML("beforeend",`<option value="${esc(n)}">${esc(n)}</option>`));userFilter.onchange=typeFilter.onchange=search.oninput=render;render();}
 boot();
