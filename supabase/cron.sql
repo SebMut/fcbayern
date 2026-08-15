@@ -1,30 +1,44 @@
--- FC Bayern Termin-Sync: täglich um 02:00 Uhr Europe/Berlin
--- Aus DST-Gründen wird die Edge Function um 00:00, 01:00 und 02:00 UTC aufgerufen.
--- Die Function führt pro Berliner Kalendertag exakt einen echten Sync aus.
--- Beim Sprung auf Sommerzeit existiert 02:00 lokal nicht; an diesem Tag läuft sie um 03:00.
+-- FC Bayern Spieltagssync
+-- Echte Syncs in Europe/Berlin:
+-- 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00.
+--
+-- Supabase-Datenbanken laufen standardmäßig in UTC.
+-- Deshalb ruft pg_cron die Edge Function JEDE volle Stunde auf.
+-- Die Edge Function prüft Europe/Berlin und führt nur bei Stunde % 3 = 0
+-- einen echten Sync aus. So bleibt der Rhythmus bei Sommer-/Winterzeit korrekt.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- EINMALIG im SQL Editor:
--- 1) Im Dashboard unter Settings > API Keys einen SECRET Key verwenden.
--- 2) Diesen Secret Key NICHT in GitHub speichern.
--- 3) Die folgenden beiden Secrets in Vault anlegen; SECRET_KEY_HIER vorher ersetzen.
+-- Alten Job entfernen, falls vorhanden.
+do $$
+declare
+  jid bigint;
+begin
+  for jid in
+    select jobid
+    from cron.job
+    where jobname in (
+      'fcb-nightly-fixture-sync',
+      'fcb-3hour-fixture-sync'
+    )
+  loop
+    perform cron.unschedule(jid);
+  end loop;
+end $$;
 
-select vault.create_secret(
-  'https://kmhadzujovvxvpgblgkk.supabase.co',
-  'fcb_project_url'
-);
-
--- Nur im Supabase SQL Editor ersetzen und ausführen:
--- select vault.create_secret('SECRET_KEY_HIER', 'fcb_cron_secret_key');
-
--- Erst ausführen, NACHDEM fcb_cron_secret_key in Vault existiert
--- und die Edge Function "sync-fixtures" deployed wurde.
+-- Voraussetzung:
+-- Vault-Secrets:
+--   fcb_project_url
+--   fcb_cron_secret_key
 
 select cron.schedule(
-  'fcb-nightly-fixture-sync',
-  '0 0,1,2 * * *',
+  'fcb-3hour-fixture-sync',
+
+  -- Technischer Aufruf stündlich.
+  -- Die Edge Function lässt nur 00/03/06/09/12/15/18/21 Uhr Berlin durch.
+  '0 * * * *',
+
   $$
   select net.http_post(
     url := (
@@ -33,6 +47,7 @@ select cron.schedule(
       where name = 'fcb_project_url'
       limit 1
     ) || '/functions/v1/sync-fixtures',
+
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'apikey', (
@@ -42,13 +57,29 @@ select cron.schedule(
         limit 1
       )
     ),
-    body := jsonb_build_object('scheduled_at', now()),
+
+    body := jsonb_build_object(
+      'scheduled_at', now()
+    ),
+
     timeout_milliseconds := 30000
   ) as request_id;
   $$
 );
 
 -- Kontrolle:
--- select * from cron.job where jobname = 'fcb-nightly-fixture-sync';
--- select * from cron.job_run_details order by start_time desc limit 20;
--- select * from public.fixture_sync_runs order by started_at desc limit 20;
+select jobid, jobname, schedule, active
+from cron.job
+where jobname = 'fcb-3hour-fixture-sync';
+
+-- Letzte technischen Cron-Aufrufe:
+select jobid, status, return_message, start_time, end_time
+from cron.job_run_details
+order by start_time desc
+limit 20;
+
+-- Letzte ECHTEN Spieltagssyncs:
+select *
+from public.fixture_sync_runs
+order by started_at desc
+limit 20;
