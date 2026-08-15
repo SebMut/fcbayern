@@ -63,14 +63,21 @@ async function loadLastFixtureSync(){
 }
 async function loadRemoteState(){
   const {data,error}=await sb.from("season_state").select("data").eq("season",SEASON).single();
-  if(error) throw error;
+  if(error){
+    const detail=error?.message||error?.code||"Unbekannter Supabase-Fehler";
+    throw new Error("season_state: "+detail);
+  }
   S=normalizeState(data.data);render();
 }
 async function loadRemoteMatches(){
   const {data,error}=await sb.from("match_overrides")
     .select("id,start_date,end_date,kickoff_time,opponent,home,possible,active")
     .eq("season",SEASON);
-  if(error) throw error;
+  if(error){
+    console.warn("Match-Overrides nicht verfügbar, verwende Grundspielplan:",error);
+    M=BASE_M.map(x=>({...x}));
+    return;
+  }
   const byId=new Map((data||[]).map(x=>[x.id,x]));
   M=BASE_M.map(base=>{
     const x=byId.get(base.id);
@@ -224,7 +231,9 @@ loginForm.addEventListener("submit",async e=>{
     subscribeRealtime();
     loginPassword.value="";
   }catch(err){
-    console.error(err);await sb.auth.signOut();showLogin("Zugriff auf die Jahreskarten-Daten ist nicht freigeschaltet.");
+    console.error(err);
+    await sb.auth.signOut();
+    showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"));
   }
 });
 
@@ -245,8 +254,10 @@ async function boot(){
   try{
     showApp(session.user);await loadRemoteMatches();await loadLastFixtureSync();await loadRemoteState();subscribeRealtime();
   }catch(err){
-    console.error(err);await sb.auth.signOut();sessionStorage.removeItem("fcb-current-actor");
-    showLogin("Zugriff auf die Jahreskarten-Daten ist nicht freigeschaltet.");
+    console.error(err);
+    await sb.auth.signOut();
+    sessionStorage.removeItem("fcb-current-actor");
+    showLogin("Saisondaten konnten nicht geladen werden: "+(err?.message||"unbekannter Fehler"));
   }
 }
 boot();
