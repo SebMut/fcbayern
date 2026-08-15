@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>FC Bayern · Jahreskarten 26/27</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="layout.css">
 </head>
 <body class="locked">
 
@@ -51,52 +52,66 @@
 </header>
 
 <main>
-  <section class="hero">
-    <div class="herocontent">
-      <div class="seasonbadge">Saison 2026 / 2027</div>
-      <h1>Jahreskarten</h1>
-      <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
-      <div class="herometa">
-        <span>Bundesliga</span>
-        <span>DFB-Pokal</span>
-        <span>Champions League</span>
-        <span class="syncpill">Sync alle 3 Stunden</span>
+  <section class="overviewShell">
+    <div class="sectionLabel">Saisonübersicht</div>
+
+    <section class="hero">
+      <div class="herocontent">
+        <div class="seasonbadge">Saison 2026 / 2027</div>
+        <h1>Jahreskarten</h1>
+        <p>Wer geht zu welchem Heimspiel? Zwei Karten, eine gemeinsame Übersicht.</p>
+        <div class="herometa">
+          <span>Bundesliga</span>
+          <span>DFB-Pokal</span>
+          <span>Champions League</span>
+          <span class="syncpill">Sync alle 3 Stunden</span>
+        </div>
       </div>
+      <img class="herologo" src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="FC Bayern">
+    </section>
+
+    <section class="stats" aria-label="Saisonstatus">
+      <div class="stat statPrimary"><small>Relevante Termine</small><b id="sv">0</b><span>Spiele</span></div>
+      <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div>
+      <div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div>
+      <div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div>
+    </section>
+
+    <section class="paidpanel" aria-label="Bezahlstatus">
+      <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
+      <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span></div>
+      <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span></div>
+      <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span></div>
+      <b id="sp" hidden>0</b>
+    </section>
+  </section>
+
+  <section class="scheduleShell">
+    <div class="scheduleIntro">
+      <div>
+        <div class="sectionLabel">Spielplan</div>
+        <h3>Heimspiele & Kartenverteilung</h3>
+      </div>
+      <span class="nextHint">Beim Öffnen springt die Ansicht automatisch zum nächsten Spiel.</span>
     </div>
-    <img class="herologo" src="https://www.google.com/s2/favicons?domain=fcbayern.com&sz=256" alt="FC Bayern">
-  </section>
 
-  <section class="stats" aria-label="Saisonstatus">
-    <div class="stat statPrimary"><small>Relevante Termine</small><b id="sv">0</b><span>Spiele</span></div>
-    <div class="stat"><small id="l1">Patrick</small><b id="s1">0</b><span>Tickets</span></div>
-    <div class="stat"><small id="l2">Reini</small><b id="s2">0</b><span>Tickets</span></div>
-    <div class="stat statOpen"><small>Noch offen</small><b id="so">0</b><span>Spiele</span></div>
-  </section>
+    <section class="tools">
+      <div class="filtergroup">
+        <button class="on" data-f="rel">Jahreskarten</button>
+        <button data-f="all">Alle</button>
+        <button data-f="bl">Bundesliga</button>
+        <button data-f="dfb">DFB-Pokal</button>
+        <button data-f="cl">Champions League</button>
+        <button data-f="open">Nur offen</button>
+      </div>
+      <label class="searchbox">
+        <span>⌕</span>
+        <input id="q" placeholder="Spiel suchen …">
+      </label>
+    </section>
 
-  <section class="paidpanel" aria-label="Bezahlstatus">
-    <div class="paidtitle"><span class="paidicon">✓</span><div><small>Bezahlstatus</small><b>Bezahlt</b></div></div>
-    <div class="paidstat"><small>Patrick</small><b id="spPatrick">0</b><span>Tickets</span></div>
-    <div class="paidstat"><small>Reini</small><b id="spReini">0</b><span>Tickets</span></div>
-    <div class="paidstat"><small>Gäste</small><b id="spGuests">0</b><span>Tickets</span></div>
-    <b id="sp" hidden>0</b>
+    <div id="app"></div>
   </section>
-
-  <section class="tools">
-    <div class="filtergroup">
-      <button class="on" data-f="rel">Jahreskarten</button>
-      <button data-f="all">Alle</button>
-      <button data-f="bl">Bundesliga</button>
-      <button data-f="dfb">DFB-Pokal</button>
-      <button data-f="cl">Champions League</button>
-      <button data-f="open">Nur offen</button>
-    </div>
-    <label class="searchbox">
-      <span>⌕</span>
-      <input id="q" placeholder="Spiel suchen …">
-    </label>
-  </section>
-
-  <div id="app"></div>
 </main>
 
 <footer class="sitefooter">
@@ -105,6 +120,5 @@
 </footer>
 
 <script type="module" src="app.js"></script>
-<script type="module" src="stats-paid.js"></script>
 </body>
 </html>
