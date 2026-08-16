@@ -7,6 +7,7 @@
   <title>FC Bayern · Jahreskarten 26/27</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="layout.css?v=20260816-paypal1">
+  <link rel="stylesheet" href="ober.css?v=20260816-parity1">
 </head>
 <body class="locked">
 <section class="login" id="loginScreen">
@@ -18,7 +19,7 @@
     <button class="loginbutton" type="submit">Einloggen</button><div class="loginerror" id="loginError"></div>
   </form>
 </section>
-<header class="topbar"><div class="topbarinner"><div class="userbar" id="userbar" hidden><div class="presenceWrap"><button class="onlineUsers" id="onlineUsers" type="button" aria-expanded="false"><span>Online: –</span></button><div class="presenceDropdown" id="presenceDropdown" hidden></div></div><span class="sync" id="syncStatus">gespeichert</span><span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span><a class="headerlink" href="history.html">History</a><button class="logout" id="logoutBtn">Logout</button></div><span id="userEmail" hidden></span></div></header>
+<header class="topbar"><div class="topbarinner"><div class="userbar" id="userbar" hidden><div class="presenceWrap"><button class="onlineUsers" id="onlineUsers" type="button" aria-expanded="false"><span>Online: –</span></button><div class="presenceDropdown" id="presenceDropdown" hidden></div></div><span class="sync" id="syncStatus">gespeichert</span><span class="lastsync" id="lastFixtureSync">Letzter Spieltagssync: –</span><a class="headerlink" href="history.html">History</a><button class="logout" id="logoutBtn">Logout</button></div></div></header>
 <main>
   <section class="overviewShell">
     <div class="sectionLabel">Saisonübersicht</div>
@@ -34,14 +35,12 @@
     <div class="paypalInfo"><b id="paypalPerson">–</b><span id="paypalMatch">–</span></div>
     <label class="fieldlabel" for="paypalAmount">Betrag pro Karte</label>
     <div class="paypalAmountWrap"><input id="paypalAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="50,00"><span>€</span></div>
-    <p class="paypalHint">Der Betrag wird für dieses Spiel gespeichert. Beim Teilen wird dein PayPal.Me-Link automatisch mit dem Betrag ergänzt.</p>
+    <p class="paypalHint">Der Betrag wird für dieses Spiel gespeichert.</p>
     <div class="paypalPreview" id="paypalPreview"></div>
     <div class="paypalActions"><button class="paypalSecondary" id="paypalCopy" type="button">Link kopieren</button><button class="paypalShare" id="paypalShare" type="button">Zahlungsaufforderung teilen</button></div>
     <div class="paypalStatus" id="paypalStatus" aria-live="polite"></div>
   </form>
 </dialog>
 <footer class="sitefooter"><span>FC Bayern · Jahreskarten 2026/27</span><a href="history.html">History-Log</a></footer>
-<script type="module" src="app.js?v=20260816-guestname1"></script>
-<script type="module" src="paypal-history.js?v=20260816-paypalhistory1"></script>
-<script src="ui-live.js?v=20260816-renderfix1" defer></script>
+<script type="module" src="app.js?v=20260816-parity1"></script>
 </body></html>
