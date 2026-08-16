@@ -314,9 +314,21 @@ $('createInviteBtn').addEventListener('click',async()=>{
   activeInvite=data?.[0]||null;setStatus($('settingsStatus'),'Neue Einladung erstellt ✓',true);await renderInviteAdmin();
 });
 async function decideRequest(id,approve,role){
-  if(!isAdmin())return;const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
-  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});if(error){setStatus($('settingsStatus'),error.message);return}
-  await loadAdminData();const {data:ms}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');members=ms||[];await enrichMembers();renderSettings();showToast(approve?`Person ${role==='admin'?'als Admin':'als Gast'} freigegeben`:'Bewerbung abgelehnt');
+  if(!isAdmin())return;
+  const request=pendingRequests.find(r=>r.id===id);
+  const person=request?.display_name||request?.username||'Person';
+  const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
+  if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
+  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});
+  if(error){setStatus($('settingsStatus'),error.message);return}
+  pendingRequests=pendingRequests.filter(r=>r.id!==id);
+  const {data:ms,error:memberError}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');
+  if(memberError){setStatus($('settingsStatus'),memberError.message);return}
+  members=ms||[];
+  await enrichMembers();
+  await loadAdminData();
+  renderSettings();
+  showToast(approve?`${person} ist jetzt ${role==='admin'?'Admin':'Gast'}`:`${person} wurde abgelehnt`);
 }
 async function deleteTicket(id){if(!confirm('Dauerkarte wirklich löschen? Vorhandene Belegungen dieser Karte werden ebenfalls entfernt.'))return;const {error}=await sb.from('sc_tickets').delete().eq('id',id).eq('group_id',currentGroup.id);if(error){setStatus($('settingsStatus'),error.message);return}tickets=tickets.filter(t=>t.id!==id);allocations=allocations.filter(a=>a.ticket_id!==id);render();setStatus($('settingsStatus'),'Karte gelöscht',true)}
 
