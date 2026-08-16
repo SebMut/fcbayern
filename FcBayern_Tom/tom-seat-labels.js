@@ -18,18 +18,24 @@
   function enhance(){
     document.querySelectorAll('.choose[data-v]').forEach(button=>{
       const info=TICKETS[button.dataset.v];
-      if(!info)return;
+      if(!info||button.dataset.seatEnhanced==='1')return;
       button.innerHTML=`<span class="ticketOwner">${info.name}</span><small class="ticketSeat">${info.seat}</small>`;
       button.setAttribute('aria-label',`${info.name}, Platz ${info.seat}`);
+      button.dataset.seatEnhanced='1';
     });
 
     document.querySelectorAll('[data-ticket-name][data-slot]').forEach(input=>{
       const info=TICKETS[input.dataset.slot];
-      if(info)input.placeholder=`Name für ${info.name} (${info.seat})`;
+      if(!info)return;
+      const placeholder=`Name für ${info.name} (${info.seat})`;
+      if(input.placeholder!==placeholder)input.placeholder=placeholder;
     });
 
     const paypalPerson=document.getElementById('paypalPerson');
-    if(paypalPerson&&paypalPerson.textContent)paypalPerson.textContent=replaceTicketText(paypalPerson.textContent);
+    if(paypalPerson&&paypalPerson.textContent){
+      const next=replaceTicketText(paypalPerson.textContent);
+      if(next!==paypalPerson.textContent)paypalPerson.textContent=next;
+    }
   }
 
   if(typeof navigator.share==='function'){
