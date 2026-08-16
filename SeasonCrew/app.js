@@ -368,7 +368,7 @@ async function cleanupChannels(){if(presenceChannel){try{await presenceChannel.u
 async function boot(){
   const invite=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(invite)localStorage.setItem('seasoncrew-pending-invite',invite);
   const {data:{session:s}}=await sb.auth.getSession();session=s;user=s?.user||null;
-  if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}return}
+  if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}else{setStatus(els.authStatus,'')}return}
   await enterApp();
 }
 boot();
