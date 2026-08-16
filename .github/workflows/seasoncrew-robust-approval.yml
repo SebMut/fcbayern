@@ -1,0 +1,31 @@
+name: SeasonCrew robust approval
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-robust-approval.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch approval RPC
+        shell: bash
+        run: |
+          python -c "import base64,pathlib; p=pathlib.Path('SeasonCrew/app.js'); s=p.read_text(); old=base64.b64decode('YXN5bmMgZnVuY3Rpb24gZGVjaWRlUmVxdWVzdChpZCxhcHByb3ZlLHJvbGUpewogIGlmKCFpc0FkbWluKCkpcmV0dXJuOwogIGNvbnN0IHJlcXVlc3Q9cGVuZGluZ1JlcXVlc3RzLmZpbmQocj0+ci5pZD09PWlkKTsKICBjb25zdCBwZXJzb249cmVxdWVzdD8uZGlzcGxheV9uYW1lfHxyZXF1ZXN0Py51c2VybmFtZXx8J1BlcnNvbic7CiAgY29uc3QgbGFiZWw9YXBwcm92ZT8ocm9sZT09PSdhZG1pbic/J2FscyBBZG1pbic6J2FscyBHYXN0Jyk6J2FibGVobmVuJzsKICBpZighY29uZmlybShgQmV3ZXJidW5nIHdpcmtsaWNoICR7bGFiZWx9JHthcHByb3ZlPycgZnJlaWdlYmVuJzonJ30/YCkpcmV0dXJuOwogIGNvbnN0IHtlcnJvcn09YXdhaXQgc2IucnBjKCdzY19kZWNpZGVfam9pbl9yZXF1ZXN0Jyx7cF9yZXF1ZXN0OmlkLHBfYXBwcm92ZTphcHByb3ZlLHBfcm9sZTpyb2xlfSk7CiAgaWYoZXJyb3Ipe3NldFN0YXR1cygkKCdzZXR0aW5nc1N0YXR1cycpLGVycm9yLm1lc3NhZ2UpO3JldHVybn0KICBwZW5kaW5nUmVxdWVzdHM9cGVuZGluZ1JlcXVlc3RzLmZpbHRlcihyPT5yLmlkIT09aWQpOwogIGNvbnN0IHtkYXRhOm1zLGVycm9yOm1lbWJlckVycm9yfT1hd2FpdCBzYi5mcm9tKCdzY19ncm91cF9tZW1iZXJzJykuc2VsZWN0KCdncm91cF9pZCx1c2VyX2lkLHJvbGUsam9pbmVkX2F0JykuZXEoJ2dyb3VwX2lkJyxjdXJyZW50R3JvdXAuaWQpLm9yZGVyKCdqb2luZWRfYXQnKTsKICBpZihtZW1iZXJFcnJvcil7c2V0U3RhdHVzKCQoJ3NldHRpbmdzU3RhdHVzJyksbWVtYmVyRXJyb3IubWVzc2FnZSk7cmV0dXJufQogIG1lbWJlcnM9bXN8fFtdOwogIGF3YWl0IGVucmljaE1lbWJlcnMoKTsKICBhd2FpdCBsb2FkQWRtaW5EYXRhKCk7CiAgcmVuZGVyU2V0dGluZ3MoKTsKICBzaG93VG9hc3QoYXBwcm92ZT9gJHtwZXJzb259IGlzdCBqZXR6dCAke3JvbGU9PT0nYWRtaW4nPydBZG1pbic6J0dhc3QnfWA6YCR7cGVyc29ufSB3dXJkZSBhYmdlbGVobnRgKTsKfQ==').decode(); new=base64.b64decode('YXN5bmMgZnVuY3Rpb24gZGVjaWRlUmVxdWVzdChpZCxhcHByb3ZlLHJvbGUsdXNlcklkPW51bGwpewogIGlmKCFpc0FkbWluKCkpcmV0dXJuOwogIGNvbnN0IHJlcXVlc3Q9cGVuZGluZ1JlcXVlc3RzLmZpbmQocj0+ci5pZD09PWlkKTsKICBjb25zdCBhcHBsaWNhbnRJZD11c2VySWR8fHJlcXVlc3Q/LnVzZXJfaWQ7CiAgY29uc3QgcGVyc29uPXJlcXVlc3Q/LmRpc3BsYXlfbmFtZXx8cmVxdWVzdD8udXNlcm5hbWV8fCdQZXJzb24nOwogIGlmKCFhcHBsaWNhbnRJZCl7YXdhaXQgbG9hZEFkbWluRGF0YSgpO3JlbmRlclNldHRpbmdzKCk7c2V0U3RhdHVzKCQoJ3NldHRpbmdzU3RhdHVzJyksJ0Jld2VyYnVuZyB3dXJkZSBha3R1YWxpc2llcnQuIEJpdHRlIGVybmV1dCB2ZXJzdWNoZW4uJyk7cmV0dXJufQogIGNvbnN0IGxhYmVsPWFwcHJvdmU/KHJvbGU9PT0nYWRtaW4nPydhbHMgQWRtaW4nOidhbHMgR2FzdCcpOidhYmxlaG5lbic7CiAgaWYoIWNvbmZpcm0oYEJld2VyYnVuZyB3aXJrbGljaCAke2xhYmVsfSR7YXBwcm92ZT8nIGZyZWlnZWJlbic6Jyd9P2ApKXJldHVybjsKICBjb25zdCB7ZXJyb3J9PWF3YWl0IHNiLnJwYygnc2NfZGVjaWRlX2pvaW5fcmVxdWVzdF92Micse3BfcmVxdWVzdDppZCxwX2dyb3VwOmN1cnJlbnRHcm91cC5pZCxwX3VzZXI6YXBwbGljYW50SWQscF9hcHByb3ZlOmFwcHJvdmUscF9yb2xlOnJvbGV9KTsKICBpZihlcnJvcil7YXdhaXQgbG9hZEFkbWluRGF0YSgpO3JlbmRlclNldHRpbmdzKCk7c2V0U3RhdHVzKCQoJ3NldHRpbmdzU3RhdHVzJyksZXJyb3IubWVzc2FnZSk7cmV0dXJufQogIHBlbmRpbmdSZXF1ZXN0cz1wZW5kaW5nUmVxdWVzdHMuZmlsdGVyKHI9PnIuaWQhPT1pZCYmci51c2VyX2lkIT09YXBwbGljYW50SWQpOwogIGNvbnN0IHtkYXRhOm1zLGVycm9yOm1lbWJlckVycm9yfT1hd2FpdCBzYi5mcm9tKCdzY19ncm91cF9tZW1iZXJzJykuc2VsZWN0KCdncm91cF9pZCx1c2VyX2lkLHJvbGUsam9pbmVkX2F0JykuZXEoJ2dyb3VwX2lkJyxjdXJyZW50R3JvdXAuaWQpLm9yZGVyKCdqb2luZWRfYXQnKTsKICBpZihtZW1iZXJFcnJvcil7c2V0U3RhdHVzKCQoJ3NldHRpbmdzU3RhdHVzJyksbWVtYmVyRXJyb3IubWVzc2FnZSk7cmV0dXJufQogIG1lbWJlcnM9bXN8fFtdOwogIGF3YWl0IGVucmljaE1lbWJlcnMoKTsKICBhd2FpdCBsb2FkQWRtaW5EYXRhKCk7CiAgcmVuZGVyU2V0dGluZ3MoKTsKICBzaG93VG9hc3QoYXBwcm92ZT9gJHtwZXJzb259IGlzdCBqZXR6dCAke3JvbGU9PT0nYWRtaW4nPydBZG1pbic6J0dhc3QnfWA6YCR7cGVyc29ufSB3dXJkZSBhYmdlbGVobnRgKTsKfQ==').decode(); assert old in s, 'approval block not found'; p.write_text(s.replace(old,new,1)); h=pathlib.Path('SeasonCrew/index.html'); x=h.read_text(); x=x.replace('Build approve-refresh-1','Build approval-fix-2').replace('./app.js?v=20260816-approve-refresh1','./app.js?v=20260816-approvalfix2'); h.write_text(x)"
+      - name: Verify JavaScript syntax
+        run: node --check SeasonCrew/app.js
+      - name: Commit changes
+        run: |
+          git config user.name "SebMut"
+          git config user.email "sebastian.mutter@outlook.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git commit -m "Use robust SeasonCrew join approval RPC"
+          git push
