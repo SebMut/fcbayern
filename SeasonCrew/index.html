@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1f">
+  <meta name="description" content="SeasonCrew – gemeinsam genutzte Dauerkarten organisieren.">
+  <title>SeasonCrew · App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body class="auth-locked">
+  <section class="authScreen" id="authScreen">
+    <div class="authShell">
+      <div class="authBrand">
+        <span class="brandMark"><i></i><i></i><i></i></span>
+        <div><strong>SeasonCrew</strong><small>season tickets, sorted.</small></div>
+      </div>
+      <div class="authTabs" role="tablist">
+        <button class="active" type="button" data-auth-tab="login">Einloggen</button>
+        <button type="button" data-auth-tab="signup">Account erstellen</button>
+      </div>
+      <form class="authForm" id="loginForm">
+        <h1>Willkommen zurück.</h1>
+        <p>Mit deinem eigenen Account. Deine Gruppen und Dauerkarten bleiben sauber getrennt.</p>
+        <label>E-Mail<input id="loginEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
+        <label>Passwort<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Passwort"></label>
+        <button class="primaryButton" type="submit">Einloggen</button>
+      </form>
+      <form class="authForm hidden" id="signupForm">
+        <h1>Deine erste Crew.</h1>
+        <p>Account erstellen und anschließend eine Gruppe anlegen oder per Code beitreten.</p>
+        <label>Dein Name<input id="signupName" autocomplete="name" required placeholder="z. B. Mika"></label>
+        <label>E-Mail<input id="signupEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
+        <label>Passwort<input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="mindestens 8 Zeichen"></label>
+        <button class="primaryButton" type="submit">Account erstellen</button>
+      </form>
+      <div class="authStatus" id="authStatus" aria-live="polite"></div>
+      <small class="authFoot">Pilot V1 · Multi-User · Multi-Group · Supabase RLS</small>
+    </div>
+  </section>
+
+  <header class="topbar" id="topbar">
+    <div class="topbarInner">
+      <a class="appBrand" href="index.html"><span class="brandMark small"><i></i><i></i><i></i></span><strong>SeasonCrew</strong></a>
+      <div class="groupSwitch">
+        <label for="groupSelect">Crew</label>
+        <select id="groupSelect"></select>
+        <button class="iconButton" id="groupMenuBtn" type="button" title="Gruppe verwalten">•••</button>
+      </div>
+      <div class="topActions">
+        <div class="onlineBadge" id="onlineBadge"><i></i><span>Online: –</span></div>
+        <a class="headerButton" href="history.html">History</a>
+        <button class="headerButton" id="settingsBtn" type="button">Einstellungen</button>
+        <button class="headerButton" id="logoutBtn" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainApp">
+    <section class="noGroups hidden" id="noGroups">
+      <div class="emptyIcon">SC</div>
+      <h1>Noch keine Crew.</h1>
+      <p>Lege deine erste Jahreskarten-Gruppe an oder tritt einer bestehenden Crew per Code bei.</p>
+      <div class="emptyActions"><button class="primaryButton" data-open-create>Gruppe erstellen</button><button class="secondaryButton" data-open-join>Mit Code beitreten</button></div>
+    </section>
+
+    <div id="workspace" class="hidden">
+      <section class="groupHero">
+        <div class="heroCopy">
+          <div class="hello" id="helloUser">Hallo</div>
+          <span class="seasonPill" id="seasonPill">Saison 2026/27</span>
+          <h1 id="groupTitle">Crew</h1>
+          <p><span id="clubName">FC Bayern München</span> · <span id="memberRole">Mitglied</span></p>
+          <div class="joinLine"><span>Beitrittscode</span><button id="copyJoinCode" class="codeButton" type="button">––––––––</button></div>
+        </div>
+        <div class="heroActions"><button class="secondaryButton" data-open-join>Anderer Crew beitreten</button><button class="primaryButton" data-open-create>Neue Crew</button></div>
+      </section>
+
+      <section class="statsGrid" aria-label="Saisonstatus">
+        <article class="statCard primary"><small>Heimtermine</small><strong id="statFixtures">0</strong><span>Spiele</span></article>
+        <article class="statCard"><small>Dauerkarten</small><strong id="statTickets">0</strong><span>Plätze</span></article>
+        <article class="statCard"><small>Vergeben</small><strong id="statAssigned">0</strong><span>Tickets</span></article>
+        <article class="statCard warn"><small>Noch offen</small><strong id="statOpen">0</strong><span>Tickets</span></article>
+        <article class="statCard money"><small>Zahlungen offen</small><strong id="statUnpaid">0 €</strong><span id="statUnpaidCount">0 Tickets</span></article>
+      </section>
+
+      <section class="scheduleShell">
+        <div class="scheduleHead">
+          <div><span class="sectionLabel">Spielplan</span><h2>Heimspiele & Kartenverteilung</h2></div>
+          <button class="secondaryButton" id="nextMatchBtn" type="button">Zum nächsten Spieltag</button>
+        </div>
+        <div class="tools">
+          <div class="filterGroup" id="filterGroup">
+            <button class="active" data-filter="all">Alle</button>
+            <button data-filter="bl">Bundesliga</button>
+            <button data-filter="dfb">DFB-Pokal</button>
+            <button data-filter="cl">Champions League</button>
+            <button data-filter="open">Karten verfügbar</button>
+          </div>
+          <label class="searchBox"><span>⌕</span><input id="searchInput" placeholder="Spiel oder Gegner suchen …"></label>
+        </div>
+        <div class="syncInfo"><span id="syncInfo">Spielplan wird geladen …</span></div>
+        <div id="games"></div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="createGroupDialog" class="dialog">
+    <form method="dialog" class="dialogCard" id="createGroupForm">
+      <div class="dialogHead"><div><small>Neue Crew</small><h3>Gruppe erstellen</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
+      <label>Gruppenname<input id="newGroupName" required placeholder="z. B. Südkurve Crew"></label>
+      <label>Verein<select id="newGroupClub"><option value="fcbayern">FC Bayern München</option></select></label>
+      <label>Saison<input id="newGroupSeason" value="2026-27" required></label>
+      <label>PayPal.Me Name <span>(optional)</span><div class="prefixInput"><span>paypal.me/</span><input id="newGroupPaypal" placeholder="deinname"></div></label>
+      <label>Standardpreis pro Karte<div class="suffixInput"><input id="newGroupPrice" inputmode="decimal" value="50,00"><span>€</span></div></label>
+      <button class="primaryButton" type="submit">Crew erstellen</button>
+      <div class="dialogStatus" id="createGroupStatus"></div>
+    </form>
+  </dialog>
+
+  <dialog id="joinGroupDialog" class="dialog">
+    <form method="dialog" class="dialogCard small" id="joinGroupForm">
+      <div class="dialogHead"><div><small>Bestehende Crew</small><h3>Per Code beitreten</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
+      <label>Beitrittscode<input id="joinCode" required autocomplete="off" maxlength="12" placeholder="AB12CD34"></label>
+      <button class="primaryButton" type="submit">Beitreten</button>
+      <div class="dialogStatus" id="joinGroupStatus"></div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" class="dialog wide">
+    <form method="dialog" class="dialogCard settingsCard" id="settingsForm">
+      <div class="dialogHead"><div><small>Crew-Einstellungen</small><h3 id="settingsTitle">Crew verwalten</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
+      <div class="settingsGrid">
+        <section>
+          <h4>Dein Profil</h4>
+          <label>Anzeigename<input id="profileName"></label>
+          <button class="secondaryButton" id="saveProfileBtn" type="button">Profil speichern</button>
+        </section>
+        <section id="adminSettings">
+          <h4>Crew</h4>
+          <label>Name<input id="settingsGroupName"></label>
+          <label>PayPal.Me<div class="prefixInput"><span>paypal.me/</span><input id="settingsPaypal"></div></label>
+          <label>Standardpreis<div class="suffixInput"><input id="settingsPrice" inputmode="decimal"><span>€</span></div></label>
+          <button class="secondaryButton" id="saveGroupBtn" type="button">Crew speichern</button>
+        </section>
+      </div>
+      <section class="ticketSettings" id="ticketSettings">
+        <div class="settingsSectionHead"><div><h4>Dauerkarten</h4><p>Block, Reihe und Sitz werden als eindeutige Kartenbezeichnung verwendet.</p></div></div>
+        <div id="ticketList" class="ticketList"></div>
+        <div class="newTicketRow" id="newTicketRow">
+          <input id="ticketBlock" placeholder="Block">
+          <input id="ticketRow" placeholder="Reihe">
+          <input id="ticketSeat" placeholder="Sitz">
+          <button class="primaryButton compact" id="addTicketBtn" type="button">Karte hinzufügen</button>
+        </div>
+      </section>
+      <section class="membersSettings"><h4>Mitglieder</h4><div id="memberList"></div></section>
+      <div class="dialogStatus" id="settingsStatus"></div>
+    </form>
+  </dialog>
+
+  <dialog id="paymentDialog" class="dialog">
+    <form method="dialog" class="dialogCard small" id="paymentForm">
+      <div class="dialogHead"><div><small>PayPal.Me</small><h3>Zahlung anfordern</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
+      <div class="paymentContext"><b id="paymentPerson">–</b><span id="paymentMatch">–</span></div>
+      <label>Betrag<div class="suffixInput"><input id="paymentAmount" inputmode="decimal"><span>€</span></div></label>
+      <div class="paymentPreview" id="paymentPreview"></div>
+      <div class="dialogActions"><button class="secondaryButton" id="copyPaymentBtn" type="button">Nachricht kopieren</button><button class="primaryButton" id="sharePaymentBtn" type="button">Teilen</button></div>
+      <div class="dialogStatus" id="paymentStatus"></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+  <script type="module" src="app.js?v=1"></script>
+</body>
+</html>
