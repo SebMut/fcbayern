@@ -8,15 +8,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
 <header class="topbar"><div class="topbarInner"><a class="appBrand" href="index.html"><span class="brandMark small"><i></i><i></i><i></i></span><strong>SeasonCrew</strong></a><div class="groupSwitch"><label for="historyGroup">Crew</label><select id="historyGroup"></select></div><div class="topActions"><a class="headerButton" href="index.html">← Übersicht</a></div></div></header>
 <main class="historyPage">
-  <section class="historyHero"><span class="sectionLabel">History</span><h1>Änderungsverlauf</h1><p>Belegungen, Namen, Zahlstatus, Notizen, Karten und PayPal-Aktionen – gruppenweise nachvollziehbar.</p></section>
-  <section class="historyTools"><select id="historyType"><option value="">Alle Änderungen</option><option value="allocations">Belegungen</option><option value="fixture_notes">Notizen</option><option value="tickets">Dauerkarten</option><option value="paypal">PayPal</option></select><input id="historySearch" type="search" placeholder="Suchen …"></section>
+  <section class="historyHero"><span class="sectionLabel">History</span><h1>Änderungsverlauf</h1><p>Belegungen, Zahlstatus, Notizen, Karten, PayPal, Einladungen und Mitglieder-Freigaben – gruppenweise nachvollziehbar.</p></section>
+  <section class="historyTools"><select id="historyType"><option value="">Alle Änderungen</option><option value="allocations">Belegungen</option><option value="fixture_notes">Notizen</option><option value="tickets">Dauerkarten</option><option value="paypal">PayPal</option><option value="invite">Einladungen</option><option value="membership_request">Bewerbungen</option></select><input id="historySearch" type="search" placeholder="Suchen …"></section>
   <div id="historyContent" class="historyList"><div class="loadingCard">History wird geladen …</div></div>
 </main>
-<script type="module" src="history.js?v=1"></script>
+<script type="module" src="history.js?v=2"></script>
 </body>
 </html>
