@@ -1,0 +1,36 @@
+name: Bump SeasonCrew login-fix-6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bump-seasoncrew-loginfix6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bump SeasonCrew browser cache version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('SeasonCrew/index.html')
+          s = p.read_text()
+          s = s.replace('Build login-fix-5', 'Build login-fix-6')
+          s = s.replace('app.js?v=20260816-loginfix5', 'app.js?v=20260816-loginfix6')
+          s = s.replace('auth-fallback-v5.js?v=2', 'auth-fallback-v5.js?v=3')
+          p.write_text(s)
+          PY
+      - name: Commit cache bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html
+          git commit -m "Bump SeasonCrew to login-fix-6"
+          git push
