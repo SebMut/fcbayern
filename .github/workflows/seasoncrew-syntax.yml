@@ -1,0 +1,22 @@
+name: SeasonCrew syntax check
+
+on:
+  push:
+    paths:
+      - 'SeasonCrew/**'
+      - '.github/workflows/seasoncrew-syntax.yml'
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check SeasonCrew JavaScript syntax
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/auth-fallback-v5.js
+          node --check SeasonCrew/app-compat-loader.js
+          node --check SeasonCrew/schedule.js
