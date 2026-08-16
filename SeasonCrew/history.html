@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1f">
+  <title>SeasonCrew · History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+<header class="topbar"><div class="topbarInner"><a class="appBrand" href="index.html"><span class="brandMark small"><i></i><i></i><i></i></span><strong>SeasonCrew</strong></a><div class="groupSwitch"><label for="historyGroup">Crew</label><select id="historyGroup"></select></div><div class="topActions"><a class="headerButton" href="index.html">← Übersicht</a></div></div></header>
+<main class="historyPage">
+  <section class="historyHero"><span class="sectionLabel">History</span><h1>Änderungsverlauf</h1><p>Belegungen, Namen, Zahlstatus, Notizen, Karten und PayPal-Aktionen – gruppenweise nachvollziehbar.</p></section>
+  <section class="historyTools"><select id="historyType"><option value="">Alle Änderungen</option><option value="allocations">Belegungen</option><option value="fixture_notes">Notizen</option><option value="tickets">Dauerkarten</option><option value="paypal">PayPal</option></select><input id="historySearch" type="search" placeholder="Suchen …"></section>
+  <div id="historyContent" class="historyList"><div class="loadingCard">History wird geladen …</div></div>
+</main>
+<script type="module" src="history.js?v=1"></script>
+</body>
+</html>
