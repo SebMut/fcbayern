@@ -154,7 +154,10 @@ function bind(){
     e.onkeydown=ev=>{if(ev.key==="Enter"){ev.preventDefault();e.blur()}};
   });
   document.querySelectorAll("[data-pay]").forEach(e=>e.onchange=()=>{const id=e.dataset.pay,v=e.dataset.person;S.paid[id]||={};S.paid[id][v]=e.checked;queueSave();render()});
-  document.querySelectorAll("[data-note]").forEach(e=>e.oninput=()=>{S.notes[e.dataset.note]=e.value;queueSave()});
+  document.querySelectorAll("[data-note]").forEach(e=>{
+    e.oninput=()=>{S.notes[e.dataset.note]=e.value};
+    e.onchange=()=>queueSave();
+  });
   document.querySelectorAll("[data-paypal-id]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPaypalRequest(b.dataset.paypalId,b.dataset.paypalPerson)});
 }
 
