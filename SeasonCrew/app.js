@@ -63,7 +63,7 @@ els.loginForm.addEventListener('submit',async e=>{
 
 els.signupForm.addEventListener('submit',async e=>{
   e.preventDefault();
-  const username=$('signupUsername').value.trim(),display_name=$('signupName').value.trim(),email=$('signupEmail').value.trim();
+  const username=$('signupUsername').value.trim(),email=$('signupEmail').value.trim();
   if(!validUsername(username)){setStatus(els.authStatus,'Nutzername: 3–24 Zeichen, nur Buchstaben, Zahlen, Punkt, Minus oder Unterstrich.');return}
   setStatus(els.authStatus,'Nutzername wird geprüft …');
   const {data:available,error:checkError}=await sb.rpc('sc_username_available',{p_username:username});
@@ -71,7 +71,7 @@ els.signupForm.addEventListener('submit',async e=>{
   if(!available){setStatus(els.authStatus,'Dieser Nutzername ist bereits vergeben.');return}
   setStatus(els.authStatus,'Account wird erstellt …');
   const redirectTo=new URL('./',location.href);redirectTo.search='';redirectTo.hash='';
-  const {data,error}=await sb.auth.signUp({email,password:$('signupPassword').value,options:{emailRedirectTo:redirectTo.href,data:{display_name,username}}});
+  const {data,error}=await sb.auth.signUp({email,password:$('signupPassword').value,options:{emailRedirectTo:redirectTo.href,data:{username}}});
   if(error){setStatus(els.authStatus,error.message);return}
   setAuthTab('login');
   if(!data.session){setStatus(els.authStatus,'Account angelegt. Bitte öffne jetzt die Bestätigungs-Mail und bestätige deine E-Mail-Adresse.',true);return}
@@ -88,9 +88,9 @@ async function enterApp(){
 }
 
 async function loadProfile(){
-  const {data,error}=await sb.from('sc_profiles').select('id,display_name,username,is_superadmin').eq('id',user.id).maybeSingle();
+  const {data,error}=await sb.from('sc_profiles').select('id,username,is_superadmin').eq('id',user.id).maybeSingle();
   if(error)console.error(error);
-  profile=data||{id:user.id,display_name:user.email?.split('@')[0]||'Fan',username:user.email?.split('@')[0]||'fan',is_superadmin:false};
+  profile=data||{id:user.id,username:user.email?.split('@')[0]||'fan',is_superadmin:false};
   els.superadminBadge.classList.toggle('hidden',!profile.is_superadmin);
 }
 
@@ -147,8 +147,8 @@ async function loadCurrentGroup(){
 
 async function enrichMembers(){
   const ids=members.map(m=>m.user_id);if(!ids.length)return;
-  const {data}=await sb.from('sc_profiles').select('id,display_name,username').in('id',ids);
-  const map=new Map((data||[]).map(p=>[p.id,p]));members=members.map(m=>({...m,...(map.get(m.user_id)||{display_name:'Mitglied',username:'mitglied'})}));
+  const {data}=await sb.from('sc_profiles').select('id,username').in('id',ids);
+  const map=new Map((data||[]).map(p=>[p.id,p]));members=members.map(m=>({...m,...(map.get(m.user_id)||{username:'mitglied'})}));
 }
 
 async function loadAdminData(){
@@ -159,7 +159,7 @@ async function loadAdminData(){
   ]);
   activeInvite=invites?.[0]||null;pendingRequests=reqs||[];
   const ids=pendingRequests.map(r=>r.user_id);
-  if(ids.length){const {data:ps}=await sb.from('sc_profiles').select('id,display_name,username').in('id',ids);const pm=new Map((ps||[]).map(p=>[p.id,p]));pendingRequests=pendingRequests.map(r=>({...r,...(pm.get(r.user_id)||{display_name:'Bewerber',username:'bewerber'})}))}
+  if(ids.length){const {data:ps}=await sb.from('sc_profiles').select('id,username').in('id',ids);const pm=new Map((ps||[]).map(p=>[p.id,p]));pendingRequests=pendingRequests.map(r=>({...r,...(pm.get(r.user_id)||{username:'bewerber'})}))}
 }
 
 async function loadFixtures(){
@@ -182,7 +182,7 @@ function filteredFixtures(){
 
 function render(){
   if(!currentGroup)return;
-  els.helloUser.textContent=`Hallo ${profile?.username||profile?.display_name||'Fan'}`;
+  els.helloUser.textContent=`Hallo ${profile?.username||'Fan'}`;
   els.seasonPill.textContent=`Saison ${currentGroup.season.replace('-', ' / ')}`;
   els.groupTitle.textContent=currentGroup.name;els.clubName.textContent=currentGroup.club_name;els.memberRole.textContent=profile?.is_superadmin?'Superadmin':roleLabel(memberships.get(currentGroup.id));
   els.heroInviteBtn.classList.toggle('hidden',!isAdmin());
@@ -227,7 +227,7 @@ function bindGameEvents(){
 }
 
 async function assignTicket(fixtureId,ticketId){
-  const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:profile?.display_name||profile?.username||'',attendee_user_id:user.id,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
+  const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:profile?.username||'',attendee_user_id:user.id,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
   const {data,error}=await sb.from('sc_allocations').upsert(row,{onConflict:'group_id,fixture_id,ticket_id'}).select().single();
   if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return}allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==allocationKey(fixtureId,ticketId));allocations.push(data);render();
 }
@@ -264,24 +264,24 @@ $('copyPaymentBtn').addEventListener('click',async()=>{const d=paymentData();if(
 $('sharePaymentBtn').addEventListener('click',async()=>{const d=paymentData();if(!d)return;try{if(navigator.share)await navigator.share({title:d.match,text:d.text});else await navigator.clipboard.writeText(d.text);await savePaymentAmountAndLog(d,navigator.share?'share_opened':'message_copied');setStatus($('paymentStatus'),navigator.share?'Teilen geöffnet ✓':'Nachricht kopiert ✓',true)}catch(e){if(e?.name!=='AbortError')setStatus($('paymentStatus'),'Teilen nicht möglich')}});
 async function savePaymentAmountAndLog(d,action){
   await sb.from('sc_allocations').update({amount:d.amount,updated_by:user.id,updated_at:new Date().toISOString()}).eq('group_id',currentGroup.id).eq('fixture_id',d.m.id).eq('ticket_id',d.t.id);
-  await sb.from('sc_history').insert({group_id:currentGroup.id,actor_user_id:user.id,actor_name:profile.display_name,entity_type:'paypal',entity_id:d.m.id,action,before_data:{},after_data:{person:d.a.attendee_name,ticket:ticketLabel(d.t),opponent:d.m.o,match_label:d.match,amount:d.amount,paypal_me:cleanPaypal(currentGroup.paypal_me)}});
+  await sb.from('sc_history').insert({group_id:currentGroup.id,actor_user_id:user.id,actor_name:profile.username,entity_type:'paypal',entity_id:d.m.id,action,before_data:{},after_data:{person:d.a.attendee_name,ticket:ticketLabel(d.t),opponent:d.m.o,match_label:d.match,amount:d.amount,paypal_me:cleanPaypal(currentGroup.paypal_me)}});
   const a=allocationByIds(d.m.id,d.t.id);if(a)a.amount=d.amount;renderStats();
 }
 
 function renderSettings(){
   if(!currentGroup)return;
-  $('settingsTitle').textContent=currentGroup.name;$('profileUsername').value=profile?.username||'';$('profileName').value=profile?.display_name||'';$('profileEmail').value=user?.email||'';$('settingsGroupName').value=currentGroup.name;$('settingsPaypal').value=cleanPaypal(currentGroup.paypal_me);$('settingsPrice').value=Number(currentGroup.default_price||50).toFixed(2).replace('.',',');
+  $('settingsTitle').textContent=currentGroup.name;$('profileUsername').value=profile?.username||'';$('profileEmail').value=user?.email||'';$('settingsGroupName').value=currentGroup.name;$('settingsPaypal').value=cleanPaypal(currentGroup.paypal_me);$('settingsPrice').value=Number(currentGroup.default_price||50).toFixed(2).replace('.',',');
   $('adminSettings').classList.toggle('hidden',!isAdmin());$('ticketSettings').classList.toggle('hidden',!isAdmin());$('inviteAdminSettings').classList.toggle('hidden',!isAdmin());
   $('ticketList').innerHTML=tickets.map(t=>`<div class="ticketSettingRow"><div><b>${esc(ticketLabel(t))}</b><small>${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}</small></div><button class="dangerButton" type="button" data-delete-ticket="${t.id}">Löschen</button></div>`).join('')||'<div class="loadingCard">Noch keine Karten.</div>';
   document.querySelectorAll('[data-delete-ticket]').forEach(b=>b.onclick=()=>deleteTicket(b.dataset.deleteTicket));
-  $('memberList').innerHTML=members.map(m=>`<div class="memberRow"><div class="memberIdentity"><b>${esc(m.display_name||m.username||'Mitglied')}</b><small>@${esc(m.username||'mitglied')}</small></div><span class="roleBadge ${m.role==='owner'?'owner':m.role==='admin'?'admin':'guest'}">${roleLabel(m.role)}</span></div>`).join('');
+  $('memberList').innerHTML=members.map(m=>`<div class="memberRow"><div class="memberIdentity"><b>@${esc(m.username||'mitglied')}</b></div><span class="roleBadge ${m.role==='owner'?'owner':m.role==='admin'?'admin':'guest'}">${roleLabel(m.role)}</span></div>`).join('');
   renderInviteAdmin();
 }
 
 async function renderInviteAdmin(){
   if(!isAdmin())return;
   $('requestCount').textContent=String(pendingRequests.length);
-  $('joinRequestList').innerHTML=pendingRequests.length?pendingRequests.map(r=>`<div class="joinRequestRow"><div class="joinRequestUser"><b>${esc(r.display_name||r.username||'Bewerber')}</b><small>@${esc(r.username||'bewerber')} · Anfrage ${new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'}).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Gast</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join(''):'<div class="loadingCard">Keine offenen Bewerbungen.</div>';
+  $('joinRequestList').innerHTML=pendingRequests.length?pendingRequests.map(r=>`<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username||'bewerber')}</b><small>Anfrage ${new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'}).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Gast</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join(''):'<div class="loadingCard">Keine offenen Bewerbungen.</div>';
   document.querySelectorAll('[data-approve-guest]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveGuest,true,'guest'));
   document.querySelectorAll('[data-approve-admin]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveAdmin,true,'admin'));
   document.querySelectorAll('[data-reject-request]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.rejectRequest,false,'guest'));
@@ -299,12 +299,12 @@ $('settingsBtn').addEventListener('click',()=>{renderSettings();els.settingsDial
 els.heroInviteBtn.addEventListener('click',()=>{renderSettings();els.settingsDialog.showModal();setTimeout(()=>$('inviteAdminSettings')?.scrollIntoView({behavior:'smooth',block:'start'}),120)});
 
 $('saveProfileBtn').addEventListener('click',async()=>{
-  const name=$('profileName').value.trim(),username=$('profileUsername').value.trim();if(!name||!validUsername(username)){setStatus($('settingsStatus'),'Bitte gültigen Anzeigenamen und Nutzernamen eingeben.');return}
+  const username=$('profileUsername').value.trim();if(!validUsername(username)){setStatus($('settingsStatus'),'Bitte einen gültigen Nutzernamen eingeben.');return}
   if(username.toLowerCase()!==String(profile.username||'').toLowerCase()){
     const {data:available,error:checkError}=await sb.rpc('sc_username_available',{p_username:username});if(checkError||!available){setStatus($('settingsStatus'),checkError?.message||'Dieser Nutzername ist bereits vergeben.');return}
   }
-  const {error}=await sb.from('sc_profiles').update({display_name:name,username,updated_at:new Date().toISOString()}).eq('id',user.id);if(error){setStatus($('settingsStatus'),error.message);return}
-  await sb.auth.updateUser({data:{display_name:name,username}});profile.display_name=name;profile.username=username;setStatus($('settingsStatus'),'Profil gespeichert ✓',true);render();
+  const {error}=await sb.from('sc_profiles').update({username,updated_at:new Date().toISOString()}).eq('id',user.id);if(error){setStatus($('settingsStatus'),error.message);return}
+  await sb.auth.updateUser({data:{username}});profile.username=username;setStatus($('settingsStatus'),'Profil gespeichert ✓',true);render();
 });
 $('saveGroupBtn').addEventListener('click',async()=>{if(!isAdmin())return;const price=parseMoney($('settingsPrice').value);const update={name:$('settingsGroupName').value.trim(),paypal_me:cleanPaypal($('settingsPaypal').value)||null,default_price:price??50,updated_at:new Date().toISOString()};const {data,error}=await sb.from('sc_groups').update(update).eq('id',currentGroup.id).select().single();if(error){setStatus($('settingsStatus'),error.message);return}currentGroup=data;groups=groups.map(g=>g.id===data.id?data:g);renderGroupSelector();els.groupSelect.value=data.id;setStatus($('settingsStatus'),'Crew gespeichert ✓',true);render()});
 $('addTicketBtn').addEventListener('click',async()=>{if(!isAdmin())return;const block=$('ticketBlock').value.trim(),row=$('ticketRow').value.trim(),seat=$('ticketSeat').value.trim();if(!block&&!row&&!seat){setStatus($('settingsStatus'),'Bitte Block, Reihe oder Sitz angeben.');return}const label=[block,row,seat].filter(Boolean).join('/');const {data,error}=await sb.from('sc_tickets').insert({group_id:currentGroup.id,label,block:block||null,row_label:row||null,seat:seat||null,sort_order:tickets.length+1}).select().single();if(error){setStatus($('settingsStatus'),error.message);return}tickets.push(data);$('ticketBlock').value=$('ticketRow').value=$('ticketSeat').value='';setStatus($('settingsStatus'),'Karte hinzugefügt ✓',true);render()});
@@ -317,7 +317,7 @@ async function decideRequest(id,approve,role,userId=null){
   if(!isAdmin())return;
   const request=pendingRequests.find(r=>r.id===id);
   const applicantId=userId||request?.user_id;
-  const person=request?.display_name||request?.username||'Person';
+  const person=request?.username||'Person';
   if(!applicantId){await loadAdminData();renderSettings();setStatus($('settingsStatus'),'Bewerbung wurde aktualisiert. Bitte erneut versuchen.');return}
   const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
   if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
@@ -375,7 +375,7 @@ els.searchInput.addEventListener('input',renderGames);
 $('nextMatchBtn').addEventListener('click',()=>{const list=filteredFixtures(),today=todayBerlin(),next=list.find(m=>(m.e||m.s)>=today)||list.at(-1);if(!next)return;const el=$(`game-${next.id}`);if(!el)return;const y=window.scrollY+el.getBoundingClientRect().top-document.querySelector('.topbar').offsetHeight-18;window.scrollTo({top:Math.max(0,y),behavior:'smooth'})});
 
 async function setupPresence(){
-  if(!currentGroup)return;presenceChannel=sb.channel(`seasoncrew-presence-${currentGroup.id}`,{config:{presence:{key:user.id}}});presenceChannel.on('presence',{event:'sync'},()=>{const state=presenceChannel.presenceState();const names=[...new Set(Object.values(state).flat().map(x=>x.name).filter(Boolean))];els.onlineBadge.innerHTML=`<i></i><span>Online: ${names.length?names.map(esc).join(', '):'–'}</span>`}).subscribe(async status=>{if(status==='SUBSCRIBED')await presenceChannel.track({name:profile.username||profile.display_name,group_id:currentGroup.id,at:new Date().toISOString()})});
+  if(!currentGroup)return;presenceChannel=sb.channel(`seasoncrew-presence-${currentGroup.id}`,{config:{presence:{key:user.id}}});presenceChannel.on('presence',{event:'sync'},()=>{const state=presenceChannel.presenceState();const names=[...new Set(Object.values(state).flat().map(x=>x.name).filter(Boolean))];els.onlineBadge.innerHTML=`<i></i><span>Online: ${names.length?names.map(esc).join(', '):'–'}</span>`}).subscribe(async status=>{if(status==='SUBSCRIBED')await presenceChannel.track({name:profile.username,group_id:currentGroup.id,at:new Date().toISOString()})});
 }
 function setupRealtime(){
   if(!currentGroup)return;const gid=currentGroup.id;realtimeChannel=sb.channel(`seasoncrew-data-${gid}`)

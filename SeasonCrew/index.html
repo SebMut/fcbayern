@@ -39,13 +39,12 @@
         <small class="fieldHint">Pflichtfeld · Du kannst auch den kompletten Einladungslink einfügen.</small>
         <label>Nutzername<input id="signupUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}" required placeholder="z. B. Mika87"></label>
         <small class="fieldHint">3–24 Zeichen · Buchstaben, Zahlen, Punkt, Minus und Unterstrich.</small>
-        <label>Anzeigename<input id="signupName" autocomplete="name" required placeholder="z. B. Mika"></label>
         <label>E-Mail<input id="signupEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
         <label>Passwort<input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="mindestens 8 Zeichen"></label>
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build crew-settings-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build username-only-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -150,7 +149,6 @@
         <section>
           <h4>Dein Profil</h4>
           <label>Nutzername<input id="profileUsername" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}"></label>
-          <label>Anzeigename<input id="profileName"></label>
           <label>E-Mail<input id="profileEmail" type="email" readonly></label>
           <button class="secondaryButton" id="saveProfileBtn" type="button">Profil speichern</button>
         </section>
@@ -201,7 +199,7 @@
   <script src="ui-v2.js?v=1"></script>
   <script>window.seasonCrewModuleLoaded=false;window.seasonCrewModuleFailed=false;</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-  <script src="auth-fallback-v5.js?v=4"></script>
+  <script src="auth-fallback-v5.js?v=5"></script>
   <script type="importmap">
     {
       "imports": {
@@ -210,7 +208,7 @@
     }
   </script>
   <script type="module">
-    import('./app.js?v=20260816-approvalfix2')
+    import('./app.js?v=20260816-usernameonly1')
       .then(() => {
         window.seasonCrewModuleLoaded = true;
         window.seasonCrewModuleFailed = false;

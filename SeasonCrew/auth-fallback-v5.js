@@ -83,7 +83,6 @@
 
     const token = inviteToken($('signupInvite')?.value);
     const username = $('signupUsername')?.value.trim() || '';
-    const display_name = $('signupName')?.value.trim() || '';
     const email = $('signupEmail')?.value.trim() || '';
     const password = $('signupPassword')?.value || '';
 
@@ -95,7 +94,7 @@
       setStatus('Nutzername: 3–24 Zeichen, nur Buchstaben, Zahlen, Punkt, Minus oder Unterstrich.');
       return;
     }
-    if (!display_name || !email || password.length < 8) {
+    if (!email || password.length < 8) {
       setStatus('Bitte alle Pflichtfelder ausfüllen. Das Passwort braucht mindestens 8 Zeichen.');
       return;
     }
@@ -136,7 +135,7 @@
         password,
         options: {
           emailRedirectTo: redirectTo.href,
-          data: { display_name, username, invite_token: token }
+          data: { username, invite_token: token }
         }
       });
 

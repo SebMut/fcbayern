@@ -15,8 +15,8 @@ function summary(log){const a=log.before_data||{},b=log.after_data||{};
  if(log.entity_type==='invite'){return{title:'Neue Einladung erstellt',sub:b.expires_at?`Gültig bis ${fmt(b.expires_at)}`:'Einladungslink erzeugt'}}
  if(log.entity_type==='membership_request'){
    if(log.action==='join_requested')return{title:'Neue Beitrittsanfrage',sub:b.username?`@${b.username}`:'Freigabe ausstehend'};
-   if(log.action==='join_approved')return{title:`${b.name||'Bewerber'} freigegeben`,sub:`Rolle: ${roleText(b.role)}`};
-   if(log.action==='join_rejected')return{title:`${b.name||'Bewerber'} abgelehnt`,sub:'Beitrittsanfrage wurde abgelehnt'};
+   if(log.action==='join_approved')return{title:`@${b.username||b.name||'Bewerber'} freigegeben`,sub:`Rolle: ${roleText(b.role)}`};
+   if(log.action==='join_rejected')return{title:`@${b.username||b.name||'Bewerber'} abgelehnt`,sub:'Beitrittsanfrage wurde abgelehnt'};
  }
  if(log.entity_type==='allocations'){
    const fixture=b.fixture_id||a.fixture_id||String(log.entity_id||'').split(':')[0],ticket=b.ticket_id||a.ticket_id||String(log.entity_id||'').split(':')[1],name=ticketName(ticket,a,b);
