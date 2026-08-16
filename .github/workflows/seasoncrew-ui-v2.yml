@@ -1,0 +1,34 @@
+name: SeasonCrew UI v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-ui-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Wire UI enhancements
+        run: |
+          sed -i '/invite.css?v=3/a\  <link rel="stylesheet" href="ui-v2.css?v=1">' SeasonCrew/index.html
+          sed -i '/<script>window.seasonCrewModuleLoaded/i\  <script src="ui-v2.js?v=1"></script>' SeasonCrew/index.html
+          sed -i 's/Build approval-fix-2/Build guest-readonly-1/' SeasonCrew/index.html
+      - name: Verify JavaScript
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/ui-v2.js
+      - name: Commit changes
+        run: |
+          git config user.name "SebMut"
+          git config user.email "sebastian.mutter@outlook.com"
+          git add SeasonCrew/index.html
+          git commit -m "Enable guest read-only UI and enhanced profile button"
+          git push
