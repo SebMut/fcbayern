@@ -12,49 +12,15 @@ permissions:
 jobs:
   patch:
     runs-on: ubuntu-latest
+    env:
+      OLD_B64: YXN5bmMgZnVuY3Rpb24gZGVjaWRlUmVxdWVzdChpZCxhcHByb3ZlLHJvbGUpewogIGlmKCFpc0FkbWluKCkpcmV0dXJuO2NvbnN0IGxhYmVsPWFwcHJvdmU/KHJvbGU9PT0nYWRtaW4nPydhbHMgQWRtaW4nOidhbHMgR2FzdCcpOidhYmxlaG5lbic7aWYoIWNvbmZpcm0oYEJld2VyYnVuZyB3aXJrbGljaCAke2xhYmVsfSR7YXBwcm92ZT8nIGZyZWlnZWJlbic6Jyd9P2ApKXJldHVybjsKICBjb25zdCB7ZXJyb3J9PWF3YWl0IHNiLnJwYygnc2NfZGVjaWRlX2pvaW5fcmVxdWVzdCcse3BfcmVxdWVzdDppZCxwX2FwcHJvdmU6YXBwcm92ZSxwX3JvbGU6cm9sZX0pO2lmKGVycm9yKXtzZXRTdGF0dXMoJCgnc2V0dGluZ3NTdGF0dXMnKSxlcnJvci5tZXNzYWdlKTtyZXR1cm59CiAgYXdhaXQgbG9hZEFkbWluRGF0YSgpO2NvbnN0IHtkYXRhOm1zfT1hd2FpdCBzYi5mcm9tKCdzY19ncm91cF9tZW1iZXJzJykuc2VsZWN0KCdncm91cF9pZCx1c2VyX2lkLHJvbGUsam9pbmVkX2F0JykuZXEoJ2dyb3VwX2lkJyxjdXJyZW50R3JvdXAuaWQpLm9yZGVyKCdqb2luZWRfYXQnKTttZW1iZXJzPW1zfHxbXTthd2FpdCBlbnJpY2hNZW1iZXJzKCk7cmVuZGVyU2V0dGluZ3MoKTtzaG93VG9hc3QoYXBwcm92ZT9gUGVyc29uICR7cm9sZT09PSdhZG1pbic/J2FscyBBZG1pbic6J2FscyBHYXN0J30gZnJlaWdlZ2ViZW5gOidCZXdlcmJ1bmcgYWJnZWxlaG50Jyk7Cn0=
+      NEW_B64: YXN5bmMgZnVuY3Rpb24gZGVjaWRlUmVxdWVzdChpZCxhcHByb3ZlLHJvbGUpewogIGlmKCFpc0FkbWluKCkpcmV0dXJuOwogIGNvbnN0IHJlcXVlc3Q9cGVuZGluZ1JlcXVlc3RzLmZpbmQocj0+ci5pZD09PWlkKTsKICBjb25zdCBwZXJzb249cmVxdWVzdD8uZGlzcGxheV9uYW1lfHxyZXF1ZXN0Py51c2VybmFtZXx8J1BlcnNvbic7CiAgY29uc3QgbGFiZWw9YXBwcm92ZT8ocm9sZT09PSdhZG1pbic/J2FscyBBZG1pbic6J2FscyBHYXN0Jyk6J2FibGVobmVuJzsKICBpZighY29uZmlybShgQmV3ZXJidW5nIHdpcmtsaWNoICR7bGFiZWx9JHthcHByb3ZlPycgZnJlaWdlYmVuJzonJ30/YCkpcmV0dXJuOwogIGNvbnN0IHtlcnJvcn09YXdhaXQgc2IucnBjKCdzY19kZWNpZGVfam9pbl9yZXF1ZXN0Jyx7cF9yZXF1ZXN0OmlkLHBfYXBwcm92ZTphcHByb3ZlLHBfcm9sZTpyb2xlfSk7CiAgaWYoZXJyb3Ipe3NldFN0YXR1cygkKCdzZXR0aW5nc1N0YXR1cycpLGVycm9yLm1lc3NhZ2UpO3JldHVybn0KICBwZW5kaW5nUmVxdWVzdHM9cGVuZGluZ1JlcXVlc3RzLmZpbHRlcihyPT5yLmlkIT09aWQpOwogIGNvbnN0IHtkYXRhOm1zLGVycm9yOm1lbWJlckVycm9yfT1hd2FpdCBzYi5mcm9tKCdzY19ncm91cF9tZW1iZXJzJykuc2VsZWN0KCdncm91cF9pZCx1c2VyX2lkLHJvbGUsam9pbmVkX2F0JykuZXEoJ2dyb3VwX2lkJyxjdXJyZW50R3JvdXAuaWQpLm9yZGVyKCdqb2luZWRfYXQnKTsKICBpZihtZW1iZXJFcnJvcil7c2V0U3RhdHVzKCQoJ3NldHRpbmdzU3RhdHVzJyksbWVtYmVyRXJyb3IubWVzc2FnZSk7cmV0dXJufQogIG1lbWJlcnM9bXN8fFtdOwogIGF3YWl0IGVucmljaE1lbWJlcnMoKTsKICBhd2FpdCBsb2FkQWRtaW5EYXRhKCk7CiAgcmVuZGVyU2V0dGluZ3MoKTsKICBzaG93VG9hc3QoYXBwcm92ZT9gJHtwZXJzb259IGlzdCBqZXR6dCAke3JvbGU9PT0nYWRtaW4nPydBZG1pbic6J0dhc3QnfWA6YCR7cGVyc29ufSB3dXJkZSBhYmdlbGVobnRgKTsKfQ==
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch approval UI refresh
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          app = Path('SeasonCrew/app.js')
-          s = app.read_text()
-          old = """async function decideRequest(id,approve,role){
-  if(!isAdmin())return;const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
-  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});if(error){setStatus($('settingsStatus'),error.message);return}
-  await loadAdminData();const {data:ms}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');members=ms||[];await enrichMembers();renderSettings();showToast(approve?`Person ${role==='admin'?'als Admin':'als Gast'} freigegeben`:'Bewerbung abgelehnt');
-}"""
-          new = """async function decideRequest(id,approve,role){
-  if(!isAdmin())return;
-  const request=pendingRequests.find(r=>r.id===id);
-  const person=request?.display_name||request?.username||'Person';
-  const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
-  if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
-  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});
-  if(error){setStatus($('settingsStatus'),error.message);return}
-
-  pendingRequests=pendingRequests.filter(r=>r.id!==id);
-  const {data:ms,error:memberError}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');
-  if(memberError){setStatus($('settingsStatus'),memberError.message);return}
-  members=ms||[];
-  await enrichMembers();
-  await loadAdminData();
-  renderSettings();
-  showToast(approve?`${person} ist jetzt ${role==='admin'?'Admin':'Gast'}`:`${person} wurde abgelehnt`);
-}"""
-          if old not in s:
-              raise SystemExit('decideRequest block not found')
-          app.write_text(s.replace(old,new,1))
-
-          html=Path('SeasonCrew/index.html')
-          h=html.read_text()
-          h=h.replace('Build mobile-scroll-1','Build approve-refresh-1')
-          h=h.replace('./app.js?v=20260816-loginfix9','./app.js?v=20260816-approve-refresh1')
-          html.write_text(h)
-          PY
+      - name: Patch approval refresh
+        run: python -c "import os,base64; from pathlib import Path; p=Path('SeasonCrew/app.js'); s=p.read_text(); old=base64.b64decode(os.environ['OLD_B64']).decode(); new=base64.b64decode(os.environ['NEW_B64']).decode(); assert old in s, 'decideRequest block not found'; p.write_text(s.replace(old,new,1)); h=Path('SeasonCrew/index.html'); t=h.read_text().replace('Build mobile-scroll-1','Build approve-refresh-1').replace('./app.js?v=20260816-loginfix9','./app.js?v=20260816-approve-refresh1'); h.write_text(t)"
       - name: Verify JavaScript syntax
         run: node --check SeasonCrew/app.js
       - name: Commit changes
