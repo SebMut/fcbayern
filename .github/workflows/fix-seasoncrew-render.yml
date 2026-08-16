@@ -1,0 +1,39 @@
+name: Fix SeasonCrew render syntax
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-seasoncrew-render.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix missing parenthesis in renderGame
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('SeasonCrew/app.js')
+          s = p.read_text()
+          old = "tickets.map(t=>renderTicket(m,t,amap.get(allocationKey(m.id,t.id))).join('')"
+          new = "tickets.map(t=>renderTicket(m,t,amap.get(allocationKey(m.id,t.id)))).join('')"
+          if old not in s:
+              raise SystemExit('Expected broken render expression not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js
+          git commit -m "Fix SeasonCrew renderGame syntax"
+          git push
