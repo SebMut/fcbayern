@@ -46,7 +46,36 @@ form?.addEventListener('submit',e=>{
   form.reset();
 });
 
-// Small ambient product interaction: cycle the unpaid ticket status in the hero demo.
+// Replace the early hand-built mockups with product shots based on the current app UI.
+function productShot(src,alt,extra=''){
+  const img=document.createElement('img');
+  img.src=src;img.alt=alt;img.loading='lazy';img.decoding='async';
+  img.style.cssText=`display:block;width:100%;height:auto;border-radius:18px;${extra}`;
+  return img;
+}
+
+const heroDemo=document.querySelector('.app-demo');
+if(heroDemo){
+  heroDemo.innerHTML='';
+  heroDemo.style.cssText='display:block;min-height:0;background:#f5f6f8;overflow:hidden';
+  heroDemo.append(productShot('assets/app-overview.svg','SeasonCrew Saisonübersicht – echte Produktansicht','border-radius:0'));
+}
+
+const miniBoard=document.querySelector('.mini-board');
+if(miniBoard){
+  const shot=productShot('assets/app-schedule.svg','SeasonCrew Spieltag und Kartenverteilung – echte Produktansicht','box-shadow:0 20px 50px rgba(10,15,31,.16)');
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:0;border-radius:20px;overflow:hidden;background:#f5f6f8';
+  wrap.append(shot);miniBoard.replaceWith(wrap);
+}
+
+const paymentMessage=document.querySelector('.payment-message');
+if(paymentMessage){
+  const shot=productShot('assets/app-paypal.svg','SeasonCrew PayPal Zahlungsaufforderung – echte Produktansicht','margin-top:18px;box-shadow:0 18px 44px rgba(0,0,0,.28)');
+  paymentMessage.replaceWith(shot);
+}
+
+// Small ambient interaction is only used when the legacy demo is still present.
 const unpaid=document.querySelector('.seat.unpaid span');
 if(unpaid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
   const states=['50 € offen','PayPal angefordert','bezahlt ✓'];let i=0;
