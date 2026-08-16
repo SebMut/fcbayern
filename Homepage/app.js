@@ -58,12 +58,12 @@ const heroDemo=document.querySelector('.app-demo');
 if(heroDemo){
   heroDemo.innerHTML='';
   heroDemo.style.cssText='display:block;min-height:0;background:#f5f6f8;overflow:hidden';
-  heroDemo.append(productShot('assets/app-overview.svg','SeasonCrew Saisonübersicht – echte Produktansicht','border-radius:0'));
+  heroDemo.append(productShot('assets/app-overview.svg?v=2','SeasonCrew Saisonübersicht – Produktansicht mit fiktiven Beispieldaten','border-radius:0'));
 }
 
 const miniBoard=document.querySelector('.mini-board');
 if(miniBoard){
-  const shot=productShot('assets/app-schedule.svg','SeasonCrew Spieltag und Kartenverteilung – echte Produktansicht','box-shadow:0 20px 50px rgba(10,15,31,.16)');
+  const shot=productShot('assets/app-schedule.svg?v=2','SeasonCrew Spieltag und Kartenverteilung – Produktansicht mit fiktiven Beispieldaten','box-shadow:0 20px 50px rgba(10,15,31,.16)');
   const wrap=document.createElement('div');
   wrap.style.cssText='padding:0;border-radius:20px;overflow:hidden;background:#f5f6f8';
   wrap.append(shot);miniBoard.replaceWith(wrap);
@@ -71,7 +71,7 @@ if(miniBoard){
 
 const paymentMessage=document.querySelector('.payment-message');
 if(paymentMessage){
-  const shot=productShot('assets/app-paypal.svg','SeasonCrew PayPal Zahlungsaufforderung – echte Produktansicht','margin-top:18px;box-shadow:0 18px 44px rgba(0,0,0,.28)');
+  const shot=productShot('assets/app-paypal.svg?v=2','SeasonCrew PayPal Zahlungsaufforderung – Produktansicht mit fiktiven Beispieldaten','margin-top:18px;box-shadow:0 18px 44px rgba(0,0,0,.28)');
   paymentMessage.replaceWith(shot);
 }
 
