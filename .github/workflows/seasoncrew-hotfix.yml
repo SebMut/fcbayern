@@ -14,32 +14,27 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Remove blocking QR module import
+      - name: Make QR loading non-blocking
         shell: python
         run: |
           from pathlib import Path
           import re
           p=Path('SeasonCrew/app.js')
           s=p.read_text()
-          old=s
           s=s.replace("import * as QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm';\n","")
-          s=s.replace("  let qr='';try{qr=await QRCode.toDataURL(link,{width:260,margin:1})}catch(e){console.error(e)}\n","  let qr='';\n")
+          s=s.replace("  let qr='';\n", "  let qr='';try{const QRCode=await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm');qr=await QRCode.toDataURL(link,{width:260,margin:1})}catch(e){console.warn('QR-Code konnte nicht geladen werden',e)}\n", 1)
           p.write_text(s)
           h=Path('SeasonCrew/index.html')
           x=h.read_text()
-          x=re.sub(r'app\.js\?v=\d+', 'app.js?v=4', x)
+          x=re.sub(r'app\.js\?v=\d+', 'app.js?v=5', x)
           h.write_text(x)
-          print('app changed:', s != old)
+          Path('.github/workflows/seasoncrew-hotfix.yml').unlink()
       - name: Syntax check
         run: node --check SeasonCrew/app.js
-      - name: Commit hotfix if needed
+      - name: Commit final hotfix
         run: |
-          if git diff --quiet; then
-            echo "No hotfix needed"
-            exit 0
-          fi
           git config user.name "SeasonCrew Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add SeasonCrew/app.js SeasonCrew/index.html
-          git commit -m "Fix SeasonCrew browser startup and bust cache"
+          git add -A
+          git commit -m "Finalize SeasonCrew auth startup and safe QR loading"
           git push
