@@ -33,7 +33,7 @@ async function logLogin(){
   if(error)console.error("Login-History:",error);
 }
 async function logPaypal(action,data){
-  const {error}=await sb.from("history_log").insert({actor_name:currentActor||"Admin",entity_type:"paypal",entity_id:data.m.id,before_data:{},after_data:{action,person:data.person,ticket:slotName(data.slot),opponent:data.m.o,amount:data.amount,currency:"EUR",paypal_me:"tommaerz",variant:VARIANT}});
+  const {error}=await sb.from("history_log").insert({actor_name:currentActor||"Admin",entity_type:"paypal",entity_id:data.m.id,before_data:{},after_data:{action,person:data.person,ticket:slotName(data.slot),opponent:data.m.o,match_label:data.matchLabel,amount:data.amount,currency:"EUR",paypal_me:"tommaerz",variant:VARIANT}});
   if(error)console.error("PayPal-History:",error);
 }
 async function loadLastFixtureSync(){
@@ -123,13 +123,19 @@ function paypalData(){
   if(!paymentRequest)return null;
   const amount=parseAmount(paypalAmount?.value);if(!amount)return null;
   const m=M.find(x=>x.id===paymentRequest.id);if(!m)return null;
-  const slot=paymentRequest.person,person=attendeeName(m.id,slot),amountText=new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(amount),link=`${PAYPAL_ME}/${amount.toFixed(2)}`,date=dt(m)[0],message=`Hi ${person}, für dein Ticket ${slotName(slot)} bei FC Bayern – ${m.o} am ${date} sind noch ${amountText} offen. Du kannst hier per PayPal bezahlen: ${link}`;
-  return{m,slot,person,amount,amountText,link,message};
+  const slot=paymentRequest.person;
+  const person=attendeeName(m.id,slot);
+  const amountText=new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(amount);
+  const link=`${PAYPAL_ME}/${amount.toFixed(2)}`;
+  const date=dt(m)[0];
+  const matchLabel=`${m.l} · ${m.o}`;
+  const message=`Hi ${person},\n\n${matchLabel}\nTicket: ${slotName(slot)}\nDatum: ${date}\nBetrag: ${amountText}\n\nPayPal: ${link}`;
+  return{m,slot,person,amount,amountText,link,date,matchLabel,message};
 }
-function updatePaypalPreview(){const data=paypalData();if(!data){paypalPreview.textContent="Bitte einen gültigen Betrag eingeben.";return}paypalPreview.innerHTML=`<b>${E(data.amountText)}</b><span>${E(data.link)}</span>`;S.prices[data.m.id]=data.amount;queueSave()}
-function openPaypalRequest(id,person){const m=M.find(x=>x.id===id);if(!m)return;paymentRequest={id,person};paypalPerson.textContent=`${attendeeName(id,person)} · ${slotName(person)}`;paypalMatch.textContent=`FC Bayern – ${m.o} · ${dt(m)[0]}`;paypalAmount.value=S.prices[id]??50;paypalStatus.textContent="";updatePaypalPreview();paypalDialog.showModal();setTimeout(()=>paypalAmount.focus(),50)}
+function updatePaypalPreview(){const data=paypalData();if(!data){paypalPreview.textContent="Bitte einen gültigen Betrag eingeben.";return}paypalPreview.innerHTML=`<b>${E(data.amountText)}</b><span>${E(data.matchLabel)}</span><span>${E(data.link)}</span>`;S.prices[data.m.id]=data.amount;queueSave()}
+function openPaypalRequest(id,person){const m=M.find(x=>x.id===id);if(!m)return;paymentRequest={id,person};paypalPerson.textContent=`${attendeeName(id,person)} · ${slotName(person)}`;paypalMatch.textContent=`${m.l} · ${m.o} · ${dt(m)[0]}`;paypalAmount.value=S.prices[id]??50;paypalStatus.textContent="";updatePaypalPreview();paypalDialog.showModal();setTimeout(()=>paypalAmount.focus(),50)}
 async function copyPaypal(){const data=paypalData();if(!data){paypalStatus.textContent="Bitte zuerst einen gültigen Betrag eingeben.";return}try{await navigator.clipboard.writeText(data.link);await logPaypal("link_copied",data);paypalStatus.textContent="PayPal-Link kopiert ✓"}catch{paypalStatus.textContent="Link konnte nicht kopiert werden."}}
-async function sharePaypal(){const data=paypalData();if(!data){paypalStatus.textContent="Bitte zuerst einen gültigen Betrag eingeben.";return}try{if(navigator.share)await navigator.share({title:`FC Bayern – ${data.m.o}`,text:data.message});else await navigator.clipboard.writeText(data.message);await logPaypal(navigator.share?"share_opened":"message_copied",data);paypalStatus.textContent=navigator.share?"Zahlungsaufforderung geteilt ✓":"Zahlungsaufforderung kopiert ✓"}catch(e){if(e?.name!=="AbortError")paypalStatus.textContent="Teilen war nicht möglich."}}
+async function sharePaypal(){const data=paypalData();if(!data){paypalStatus.textContent="Bitte zuerst einen gültigen Betrag eingeben.";return}try{if(navigator.share)await navigator.share({title:data.matchLabel,text:data.message});else await navigator.clipboard.writeText(data.message);await logPaypal(navigator.share?"share_opened":"message_copied",data);paypalStatus.textContent=navigator.share?"Zahlungsaufforderung geteilt ✓":"Zahlungsaufforderung kopiert ✓"}catch(e){if(e?.name!=="AbortError")paypalStatus.textContent="Teilen war nicht möglich."}}
 
 function bind(){
   document.querySelectorAll(".choose,.openpick").forEach(b=>b.onclick=()=>{
