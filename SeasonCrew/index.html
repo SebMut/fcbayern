@@ -43,7 +43,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite">Login wird geladen …</div>
-      <small class="authFoot">Pilot V1 · Build login-fix-5 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build login-fix-6 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -198,7 +198,7 @@
 
   <script>window.seasonCrewModuleLoaded=false;window.seasonCrewModuleFailed=false;</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-  <script src="auth-fallback-v5.js?v=2"></script>
+  <script src="auth-fallback-v5.js?v=3"></script>
   <script type="importmap">
     {
       "imports": {
@@ -207,7 +207,7 @@
     }
   </script>
   <script type="module">
-    import('./app.js?v=20260816-loginfix5')
+    import('./app.js?v=20260816-loginfix6')
       .then(() => {
         window.seasonCrewModuleLoaded = true;
         window.seasonCrewModuleFailed = false;
