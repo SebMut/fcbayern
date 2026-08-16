@@ -1,0 +1,61 @@
+name: SeasonCrew invite code copy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-invite-code-copy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add visible invitation code and copy button
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('SeasonCrew/app.js')
+          s = app.read_text()
+          old = '''box.className='inviteBox';box.innerHTML=`<div class="inviteGrid">${qr?`<img class="inviteQr" src="${qr}" alt="QR-Code für Einladung">`:''}<div class="inviteMeta"><small>Aktiver Einladungslink</small><strong>${esc(currentGroup.name)}</strong><span class="inviteLink">${esc(link)}</span><div class="inviteActions"><button type="button" data-copy-invite>Link kopieren</button><button type="button" data-share-invite>Teilen</button></div><div class="inviteExpiry">Gültig bis ${esc(expires)} · danach automatisch ungültig</div></div></div>`;
+  box.querySelector('[data-copy-invite]')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(link);showToast('Einladungslink kopiert')});
+  box.querySelector('[data-share-invite]')?.addEventListener('click',async()=>{try{if(navigator.share)await navigator.share({title:`Einladung zu ${currentGroup.name}`,text:'Bewirb dich für unsere SeasonCrew.',url:link});else await navigator.clipboard.writeText(link)}catch(e){if(e?.name!=='AbortError')showToast('Teilen nicht möglich')}});'''
+          new = '''box.className='inviteBox';box.innerHTML=`<div class="inviteGrid">${qr?`<img class="inviteQr" src="${qr}" alt="QR-Code für Einladung">`:''}<div class="inviteMeta"><small>Aktive Einladung</small><strong>${esc(currentGroup.name)}</strong><div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><code>${esc(activeInvite.token)}</code><button type="button" data-copy-invite-code>Code kopieren</button></div></div><small class="inviteLinkLabel">Einladungslink</small><span class="inviteLink">${esc(link)}</span><div class="inviteActions"><button type="button" data-copy-invite>Link kopieren</button><button type="button" data-share-invite>Teilen</button></div><div class="inviteExpiry">Gültig bis ${esc(expires)} · danach automatisch ungültig</div></div></div>`;
+  box.querySelector('[data-copy-invite-code]')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(activeInvite.token);showToast('Einladungscode kopiert')});
+  box.querySelector('[data-copy-invite]')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(link);showToast('Einladungslink kopiert')});
+  box.querySelector('[data-share-invite]')?.addEventListener('click',async()=>{try{if(navigator.share)await navigator.share({title:`Einladung zu ${currentGroup.name}`,text:`SeasonCrew Einladungscode: ${activeInvite.token}`,url:link});else await navigator.clipboard.writeText(link)}catch(e){if(e?.name!=='AbortError')showToast('Teilen nicht möglich')}});'''
+          if old not in s:
+              raise SystemExit('Invite render block not found')
+          app.write_text(s.replace(old, new, 1))
+
+          css = Path('SeasonCrew/invite.css')
+          c = css.read_text()
+          extra = '''\n.inviteCodeBlock{margin:8px 0 10px}.inviteCodeBlock>small,.inviteLinkLabel{display:block;margin-bottom:5px;color:#8994a3;font-size:8px;font-weight:850;text-transform:uppercase;letter-spacing:.07em}.inviteCodeRow{display:flex;align-items:center;gap:7px}.inviteCodeRow code{flex:1;display:block;padding:10px 12px;border:1px solid #d7dde4;border-radius:10px;background:#fff;color:#0a0f1f;font:800 15px Space Grotesk;letter-spacing:.12em;text-align:center}.inviteCodeRow button{border:1px solid #dfe4e9;background:#0a0f1f;color:#fff;border-radius:9px;padding:10px 11px;font-size:8.5px;font-weight:850;white-space:nowrap}@media(max-width:480px){.inviteCodeRow{align-items:stretch;flex-direction:column}.inviteCodeRow button{width:100%}}\n'''
+          if '.inviteCodeBlock{' not in c:
+              css.write_text(c + extra)
+
+          html = Path('SeasonCrew/index.html')
+          h = html.read_text()
+          h = h.replace('invite.css?v=2', 'invite.css?v=3')
+          h = h.replace('Build login-fix-7', 'Build login-fix-8')
+          h = h.replace("./app.js?v=20260816-loginfix7", "./app.js?v=20260816-loginfix8")
+          html.write_text(h)
+          PY
+
+      - name: Verify JavaScript syntax
+        run: node --check SeasonCrew/app.js
+
+      - name: Commit changes
+        run: |
+          git config user.name "SebMut"
+          git config user.email "sebastian.mutter@outlook.com"
+          git add SeasonCrew/app.js SeasonCrew/invite.css SeasonCrew/index.html
+          git commit -m "Show and copy SeasonCrew invitation code"
+          git push
