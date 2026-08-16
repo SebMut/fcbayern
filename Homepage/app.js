@@ -46,38 +46,43 @@ form?.addEventListener('submit',e=>{
   form.reset();
 });
 
-// Replace the early hand-built mockups with product shots based on the current app UI.
-function productShot(src,alt,extra=''){
-  const img=document.createElement('img');
-  img.src=src;img.alt=alt;img.loading='lazy';img.decoding='async';
-  img.style.cssText=`display:block;width:100%;height:auto;border-radius:18px;${extra}`;
-  return img;
+// These are not redraws: the frames load static demo pages that use the exact CSS
+// and DOM classes of the current FC Bayern app. Only the example data is fictional.
+function appFrame(src,title,baseWidth,baseHeight){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative;width:100%;overflow:hidden;background:#f5f6f8;border-radius:18px';
+  const frame=document.createElement('iframe');
+  frame.src=src;frame.title=title;frame.loading='lazy';frame.tabIndex=-1;
+  frame.setAttribute('aria-hidden','false');
+  frame.style.cssText=`position:absolute;left:0;top:0;width:${baseWidth}px;height:${baseHeight}px;border:0;transform-origin:0 0;pointer-events:none;background:#f5f6f8`;
+  wrap.append(frame);
+  const resize=()=>{
+    const scale=wrap.clientWidth/baseWidth;
+    wrap.style.height=`${Math.ceil(baseHeight*scale)}px`;
+    frame.style.transform=`scale(${scale})`;
+  };
+  new ResizeObserver(resize).observe(wrap);requestAnimationFrame(resize);
+  return wrap;
 }
 
 const heroDemo=document.querySelector('.app-demo');
 if(heroDemo){
   heroDemo.innerHTML='';
   heroDemo.style.cssText='display:block;min-height:0;background:#f5f6f8;overflow:hidden';
-  heroDemo.append(productShot('assets/app-overview.svg?v=2','SeasonCrew Saisonübersicht – Produktansicht mit fiktiven Beispieldaten','border-radius:0'));
+  const frame=appFrame('demo-overview.html?v=1','SeasonCrew Saisonübersicht im Original-App-Design',1080,620);
+  frame.style.borderRadius='0';heroDemo.append(frame);
 }
 
 const miniBoard=document.querySelector('.mini-board');
 if(miniBoard){
-  const shot=productShot('assets/app-schedule.svg?v=2','SeasonCrew Spieltag und Kartenverteilung – Produktansicht mit fiktiven Beispieldaten','box-shadow:0 20px 50px rgba(10,15,31,.16)');
-  const wrap=document.createElement('div');
-  wrap.style.cssText='padding:0;border-radius:20px;overflow:hidden;background:#f5f6f8';
-  wrap.append(shot);miniBoard.replaceWith(wrap);
+  const frame=appFrame('demo-schedule.html?v=1','SeasonCrew Spieltag und Kartenverteilung im Original-App-Design',1080,690);
+  frame.style.boxShadow='0 20px 50px rgba(10,15,31,.16)';
+  miniBoard.replaceWith(frame);
 }
 
 const paymentMessage=document.querySelector('.payment-message');
 if(paymentMessage){
-  const shot=productShot('assets/app-paypal.svg?v=2','SeasonCrew PayPal Zahlungsaufforderung – Produktansicht mit fiktiven Beispieldaten','margin-top:18px;box-shadow:0 18px 44px rgba(0,0,0,.28)');
-  paymentMessage.replaceWith(shot);
-}
-
-// Small ambient interaction is only used when the legacy demo is still present.
-const unpaid=document.querySelector('.seat.unpaid span');
-if(unpaid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  const states=['50 € offen','PayPal angefordert','bezahlt ✓'];let i=0;
-  setInterval(()=>{i=(i+1)%states.length;unpaid.textContent=states[i];unpaid.parentElement.classList.toggle('unpaid',i!==2)},3200);
+  const frame=appFrame('demo-paypal.html?v=1','SeasonCrew PayPal-Zahlungsaufforderung im Original-App-Design',900,620);
+  frame.style.marginTop='18px';frame.style.boxShadow='0 18px 44px rgba(0,0,0,.28)';
+  paymentMessage.replaceWith(frame);
 }
