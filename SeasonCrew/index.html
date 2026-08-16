@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="invite.css?v=1">
 </head>
 <body class="auth-locked">
   <section class="authScreen" id="authScreen">
@@ -24,21 +25,23 @@
       </div>
       <form class="authForm" id="loginForm">
         <h1>Willkommen zurück.</h1>
-        <p>Mit deinem eigenen Account. Deine Gruppen und Dauerkarten bleiben sauber getrennt.</p>
+        <p>Login mit deiner bestätigten E-Mail-Adresse.</p>
         <label>E-Mail<input id="loginEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
         <label>Passwort<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Passwort"></label>
         <button class="primaryButton" type="submit">Einloggen</button>
       </form>
       <form class="authForm hidden" id="signupForm">
-        <h1>Deine erste Crew.</h1>
-        <p>Account erstellen und anschließend eine Gruppe anlegen oder per Code beitreten.</p>
-        <label>Dein Name<input id="signupName" autocomplete="name" required placeholder="z. B. Mika"></label>
+        <h1>Dein SeasonCrew Account.</h1>
+        <p>Du brauchst eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.</p>
+        <label>Nutzername<input id="signupUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}" required placeholder="z. B. Mika87"></label>
+        <small class="fieldHint">3–24 Zeichen · Buchstaben, Zahlen, Punkt, Minus und Unterstrich.</small>
+        <label>Anzeigename<input id="signupName" autocomplete="name" required placeholder="z. B. Mika"></label>
         <label>E-Mail<input id="signupEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
         <label>Passwort<input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="mindestens 8 Zeichen"></label>
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Multi-User · Multi-Group · Supabase RLS</small>
+      <small class="authFoot">Pilot V1 · Multi-User · Freigabe-Workflow · Supabase RLS</small>
     </div>
   </section>
 
@@ -51,6 +54,7 @@
         <button class="iconButton" id="groupMenuBtn" type="button" title="Gruppe verwalten">•••</button>
       </div>
       <div class="topActions">
+        <span class="superadminBadge hidden" id="superadminBadge">Superadmin</span>
         <div class="onlineBadge" id="onlineBadge"><i></i><span>Online: –</span></div>
         <a class="headerButton" href="history.html">History</a>
         <button class="headerButton" id="settingsBtn" type="button">Einstellungen</button>
@@ -63,8 +67,9 @@
     <section class="noGroups hidden" id="noGroups">
       <div class="emptyIcon">SC</div>
       <h1>Noch keine Crew.</h1>
-      <p>Lege deine erste Jahreskarten-Gruppe an oder tritt einer bestehenden Crew per Code bei.</p>
-      <div class="emptyActions"><button class="primaryButton" data-open-create>Gruppe erstellen</button><button class="secondaryButton" data-open-join>Mit Code beitreten</button></div>
+      <p>Lege eine eigene Gruppe an oder bewirb dich über einen Einladungslink bzw. QR-Code.</p>
+      <div id="pendingNotice" class="pendingNotice hidden"></div>
+      <div class="emptyActions"><button class="primaryButton" data-open-create>Gruppe erstellen</button><button class="secondaryButton" data-open-join>Einladung verwenden</button></div>
     </section>
 
     <div id="workspace" class="hidden">
@@ -73,10 +78,13 @@
           <div class="hello" id="helloUser">Hallo</div>
           <span class="seasonPill" id="seasonPill">Saison 2026/27</span>
           <h1 id="groupTitle">Crew</h1>
-          <p><span id="clubName">FC Bayern München</span> · <span id="memberRole">Mitglied</span></p>
-          <div class="joinLine"><span>Beitrittscode</span><button id="copyJoinCode" class="codeButton" type="button">––––––––</button></div>
+          <p><span id="clubName">FC Bayern München</span> · <span id="memberRole">Gast</span></p>
         </div>
-        <div class="heroActions"><button class="secondaryButton" data-open-join>Anderer Crew beitreten</button><button class="primaryButton" data-open-create>Neue Crew</button></div>
+        <div class="heroActions">
+          <button class="secondaryButton hidden" id="heroInviteBtn" type="button">Person einladen</button>
+          <button class="secondaryButton" data-open-join>Einladung verwenden</button>
+          <button class="primaryButton" data-open-create>Neue Crew</button>
+        </div>
       </section>
 
       <section class="statsGrid" aria-label="Saisonstatus">
@@ -123,9 +131,10 @@
 
   <dialog id="joinGroupDialog" class="dialog">
     <form method="dialog" class="dialogCard small" id="joinGroupForm">
-      <div class="dialogHead"><div><small>Bestehende Crew</small><h3>Per Code beitreten</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
-      <label>Beitrittscode<input id="joinCode" required autocomplete="off" maxlength="12" placeholder="AB12CD34"></label>
-      <button class="primaryButton" type="submit">Beitreten</button>
+      <div class="dialogHead"><div><small>Einladung</small><h3>Beitritt anfragen</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
+      <p class="dialogIntro">Der Link stellt nur eine Beitrittsanfrage. Ein Gruppen-Admin muss dich anschließend als <b>Gast</b> oder <b>Admin</b> freigeben.</p>
+      <label>Einladungslink oder Code<input id="joinCode" required autocomplete="off" placeholder="Link einfügen oder Einladungscode"></label>
+      <button class="primaryButton" type="submit">Beitritt anfragen</button>
       <div class="dialogStatus" id="joinGroupStatus"></div>
     </form>
   </dialog>
@@ -136,7 +145,9 @@
       <div class="settingsGrid">
         <section>
           <h4>Dein Profil</h4>
+          <label>Nutzername<input id="profileUsername" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}"></label>
           <label>Anzeigename<input id="profileName"></label>
+          <label>E-Mail<input id="profileEmail" type="email" readonly></label>
           <button class="secondaryButton" id="saveProfileBtn" type="button">Profil speichern</button>
         </section>
         <section id="adminSettings">
@@ -147,6 +158,14 @@
           <button class="secondaryButton" id="saveGroupBtn" type="button">Crew speichern</button>
         </section>
       </div>
+
+      <section class="inviteSettings hidden" id="inviteAdminSettings">
+        <div class="settingsSectionHead"><div><h4>Einladungen & Freigaben</h4><p>Ein Link oder QR-Code erzeugt nur eine Bewerbung. Du entscheidest danach über Rolle und Freigabe.</p></div><button class="primaryButton compact" id="createInviteBtn" type="button">Neue Einladung</button></div>
+        <div id="inviteBox" class="inviteBox emptyInvite">Noch keine aktive Einladung.</div>
+        <div class="joinRequestHead"><h4>Offene Bewerbungen</h4><span id="requestCount">0</span></div>
+        <div id="joinRequestList" class="joinRequestList"><div class="loadingCard">Keine offenen Bewerbungen.</div></div>
+      </section>
+
       <section class="ticketSettings" id="ticketSettings">
         <div class="settingsSectionHead"><div><h4>Dauerkarten</h4><p>Block, Reihe und Sitz werden als eindeutige Kartenbezeichnung verwendet.</p></div></div>
         <div id="ticketList" class="ticketList"></div>
@@ -174,6 +193,6 @@
   </dialog>
 
   <div class="toast" id="toast" aria-live="polite"></div>
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="app.js?v=2"></script>
 </body>
 </html>
