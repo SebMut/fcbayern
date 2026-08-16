@@ -1,0 +1,66 @@
+name: SeasonCrew approve refresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-approve-refresh.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch approval UI refresh
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app = Path('SeasonCrew/app.js')
+          s = app.read_text()
+          old = """async function decideRequest(id,approve,role){
+  if(!isAdmin())return;const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
+  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});if(error){setStatus($('settingsStatus'),error.message);return}
+  await loadAdminData();const {data:ms}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');members=ms||[];await enrichMembers();renderSettings();showToast(approve?`Person ${role==='admin'?'als Admin':'als Gast'} freigegeben`:'Bewerbung abgelehnt');
+}"""
+          new = """async function decideRequest(id,approve,role){
+  if(!isAdmin())return;
+  const request=pendingRequests.find(r=>r.id===id);
+  const person=request?.display_name||request?.username||'Person';
+  const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
+  if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
+  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});
+  if(error){setStatus($('settingsStatus'),error.message);return}
+
+  pendingRequests=pendingRequests.filter(r=>r.id!==id);
+  const {data:ms,error:memberError}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');
+  if(memberError){setStatus($('settingsStatus'),memberError.message);return}
+  members=ms||[];
+  await enrichMembers();
+  await loadAdminData();
+  renderSettings();
+  showToast(approve?`${person} ist jetzt ${role==='admin'?'Admin':'Gast'}`:`${person} wurde abgelehnt`);
+}"""
+          if old not in s:
+              raise SystemExit('decideRequest block not found')
+          app.write_text(s.replace(old,new,1))
+
+          html=Path('SeasonCrew/index.html')
+          h=html.read_text()
+          h=h.replace('Build mobile-scroll-1','Build approve-refresh-1')
+          h=h.replace('./app.js?v=20260816-loginfix9','./app.js?v=20260816-approve-refresh1')
+          html.write_text(h)
+          PY
+      - name: Verify JavaScript syntax
+        run: node --check SeasonCrew/app.js
+      - name: Commit changes
+        run: |
+          git config user.name "SebMut"
+          git config user.email "sebastian.mutter@outlook.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git commit -m "Refresh SeasonCrew members immediately after approval"
+          git push
