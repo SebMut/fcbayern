@@ -17,7 +17,7 @@
     const guest=guestRole();
     document.body.classList.toggle('guest-readonly',guest);
     document.querySelectorAll('[data-attendee-fixture]').forEach(el=>{el.readOnly=guest;el.setAttribute('aria-readonly',guest?'true':'false')});
-    document.querySelectorAll('[data-note-fixture]').forEach(el=>{el.readOnly=guest;el.setAttribute('aria-readonly',guest?'true':'false')});
+    document.querySelectorAll('[data-note-fixture]').forEach(el=>{el.readOnly=false;el.setAttribute('aria-readonly','false')});
     document.querySelectorAll('[data-paid-fixture]').forEach(el=>{el.disabled=guest});
     document.querySelectorAll('[data-assign-fixture]').forEach(el=>{
       el.setAttribute('aria-disabled',guest?'true':'false');
@@ -26,7 +26,8 @@
     const roleEl=$('memberRole');
     if(roleEl){
       let hint=document.getElementById('guestReadonlyHint');
-      if(guest&&!hint){hint=document.createElement('span');hint.id='guestReadonlyHint';hint.className='guestReadonlyHint';hint.textContent='Nur lesen';roleEl.insertAdjacentElement('afterend',hint)}
+      if(guest&&!hint){hint=document.createElement('span');hint.id='guestReadonlyHint';hint.className='guestReadonlyHint';hint.textContent='Lesen · Notizen';roleEl.insertAdjacentElement('afterend',hint)}
+      if(guest&&hint)hint.textContent='Lesen · Notizen';
       if(!guest&&hint)hint.remove();
     }
   }
@@ -40,11 +41,11 @@
   },true);
   document.addEventListener('change',e=>{
     if(!guestRole())return;
-    if(e.target.matches('[data-attendee-fixture],[data-paid-fixture],[data-note-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
+    if(e.target.matches('[data-attendee-fixture],[data-paid-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
   },true);
   document.addEventListener('keydown',e=>{
     if(!guestRole())return;
-    if(e.target.matches('[data-attendee-fixture],[data-note-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
+    if(e.target.matches('[data-attendee-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
   },true);
 
   const observer=new MutationObserver(()=>requestAnimationFrame(sync));
