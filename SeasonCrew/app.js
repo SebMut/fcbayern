@@ -288,7 +288,7 @@ async function renderInviteAdmin(){
   const box=$('inviteBox');
   if(!activeInvite){box.className='inviteBox emptyInvite';box.textContent='Noch keine aktive Einladung. Erstelle einen neuen Link oder QR-Code.';return}
   const link=invitationLink(activeInvite.token),expires=new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(activeInvite.expires_at));
-  let qr='';
+  let qr='';try{const QRCode=await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm');qr=await QRCode.toDataURL(link,{width:260,margin:1})}catch(e){console.warn('QR-Code konnte nicht geladen werden',e)}
   box.className='inviteBox';box.innerHTML=`<div class="inviteGrid">${qr?`<img class="inviteQr" src="${qr}" alt="QR-Code für Einladung">`:''}<div class="inviteMeta"><small>Aktiver Einladungslink</small><strong>${esc(currentGroup.name)}</strong><span class="inviteLink">${esc(link)}</span><div class="inviteActions"><button type="button" data-copy-invite>Link kopieren</button><button type="button" data-share-invite>Teilen</button></div><div class="inviteExpiry">Gültig bis ${esc(expires)} · danach automatisch ungültig</div></div></div>`;
   box.querySelector('[data-copy-invite]')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(link);showToast('Einladungslink kopiert')});
   box.querySelector('[data-share-invite]')?.addEventListener('click',async()=>{try{if(navigator.share)await navigator.share({title:`Einladung zu ${currentGroup.name}`,text:'Bewirb dich für unsere SeasonCrew.',url:link});else await navigator.clipboard.writeText(link)}catch(e){if(e?.name!=='AbortError')showToast('Teilen nicht möglich')}});
