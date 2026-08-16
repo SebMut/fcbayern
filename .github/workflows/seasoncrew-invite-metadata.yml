@@ -1,0 +1,74 @@
+name: SeasonCrew invite metadata fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-invite-metadata.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use invite token from account metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('SeasonCrew/app.js')
+          s=app.read_text()
+          old="""async function processPendingInvite(){
+  const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
+  const token=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));if(!token)return;
+  const {data,error}=await sb.rpc('sc_request_join',{p_token:token});
+  if(error){localStorage.removeItem('seasoncrew-pending-invite');showToast(error.message);return}
+  localStorage.removeItem('seasoncrew-pending-invite');await loadOwnRequests();
+  if(data?.status==='member'){await loadGroups(data.group_id);showToast('Du bist bereits Mitglied dieser Crew.')}else{renderPendingNotice(`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Warte jetzt auf die Freigabe eines Admins.`);showToast('Einladung angenommen – Freigabe steht aus')}
+  const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u);
+}"""
+          new="""async function processPendingInvite(){
+  const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));
+  if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
+  const storedToken=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));
+  const metadataToken=extractInviteToken(user?.user_metadata?.invite_token);
+  const token=urlToken||storedToken||metadataToken;
+  if(!token)return;
+  const {data,error}=await sb.rpc('sc_request_join',{p_token:token});
+  if(error){
+    localStorage.removeItem('seasoncrew-pending-invite');
+    if(metadataToken)await sb.auth.updateUser({data:{invite_token:null}});
+    showToast(error.message);return;
+  }
+  localStorage.removeItem('seasoncrew-pending-invite');
+  if(metadataToken)await sb.auth.updateUser({data:{invite_token:null}});
+  await loadOwnRequests();
+  if(data?.status==='member'){await loadGroups(data.group_id);showToast('Du bist bereits Mitglied dieser Crew.')}else{renderPendingNotice(`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Warte jetzt auf die Freigabe eines Admins.`);showToast('Einladung angenommen – Freigabe steht aus')}
+  const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u);
+}"""
+          if old not in s:
+              raise SystemExit('processPendingInvite block not found')
+          app.write_text(s.replace(old,new,1))
+
+          html=Path('SeasonCrew/index.html')
+          h=html.read_text()
+          h=h.replace('Build login-fix-8','Build login-fix-9')
+          h=h.replace('./app.js?v=20260816-loginfix8','./app.js?v=20260816-loginfix9')
+          html.write_text(h)
+          PY
+
+      - name: Verify JavaScript syntax
+        run: node --check SeasonCrew/app.js
+
+      - name: Commit changes
+        run: |
+          git config user.name "SebMut"
+          git config user.email "sebastian.mutter@outlook.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git commit -m "Recover SeasonCrew invite from account metadata"
+          git push
