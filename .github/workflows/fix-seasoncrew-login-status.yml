@@ -1,0 +1,44 @@
+name: Fix SeasonCrew login status
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-seasoncrew-login-status.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Clear stale login loading state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('SeasonCrew/app.js')
+          s = app.read_text()
+          old = "if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}return}"
+          new = "if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}else{setStatus(els.authStatus,'')}return}"
+          if old not in s:
+              raise SystemExit('boot login branch not found')
+          app.write_text(s.replace(old, new, 1))
+
+          html = Path('SeasonCrew/index.html')
+          h = html.read_text()
+          h = h.replace('<div class="authStatus" id="authStatus" aria-live="polite">Login wird geladen …</div>', '<div class="authStatus" id="authStatus" aria-live="polite"></div>')
+          h = h.replace('Build login-fix-6', 'Build login-fix-7')
+          h = h.replace("app.js?v=20260816-loginfix6", "app.js?v=20260816-loginfix7")
+          h = h.replace('auth-fallback-v5.js?v=3', 'auth-fallback-v5.js?v=4')
+          html.write_text(h)
+          PY
+      - name: Verify JavaScript syntax
+        run: node --check SeasonCrew/app.js
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git commit -m "Fix SeasonCrew stale login loading status"
+          git push
