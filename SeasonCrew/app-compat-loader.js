@@ -9,29 +9,41 @@
   }
 
   async function start() {
+    let blobUrl = null;
     try {
       if (!window.supabase?.createClient) throw new Error('Supabase-Bibliothek fehlt');
 
-      const [scheduleSource, appSource] = await Promise.all([
-        loadText('../FcBayern_Tom/schedule.js?v=20260816-compat1'),
-        loadText('./app.js?v=20260816-compat1')
-      ]);
+      // Den lokalen Spielplan als normales ES-Modul laden. Das funktioniert auf
+      // iOS zuverlässig und vermeidet das frühere new-Function-Umschreiben.
+      const schedule = await import('./schedule.js?v=20260816-loginfix4');
+      if (!schedule?.BASE_M || !schedule?.D || !schedule?.MON) {
+        throw new Error('Spielplan konnte nicht initialisiert werden');
+      }
+      window.SeasonCrewSchedule = schedule;
 
-      let scheduleCode = scheduleSource
-        .replace(/export\s+const\s+/g, 'const ')
-        .replace(/export\s*\{[^}]*\}\s*;?/g, '');
-      scheduleCode += '\nwindow.SeasonCrewSchedule = { BASE_M, D, MON };';
-      new Function(scheduleCode + '\n//# sourceURL=SeasonCrew/schedule-compat-runtime.js')();
+      // app.js verwendet normalerweise zwei statische Imports. Für den iPhone-
+      // Fallback entfernen wir nur diese beiden Importzeilen und stellen die
+      // gleichen Werte lokal bereit. Anschließend wird der Code wieder als
+      // echtes ES-Modul geparst – nicht über new Function().
+      const appSource = await loadText('./app.js?v=20260816-loginfix4');
+      const appBody = appSource
+        .split('\n')
+        .filter(line => {
+          const t = line.trim();
+          return !t.startsWith("import { BASE_M, D, MON }") &&
+                 !t.startsWith("import { createClient }");
+        })
+        .join('\n');
 
-      if (!window.SeasonCrewSchedule?.BASE_M) throw new Error('Spielplan konnte nicht initialisiert werden');
+      const prefix = [
+        'const { BASE_M, D, MON } = window.SeasonCrewSchedule;',
+        'const createClient = (...args) => window.supabase.createClient(...args);'
+      ].join('\n');
 
-      let appCode = appSource
-        .replace(/^import\s+\{\s*BASE_M\s*,\s*D\s*,\s*MON\s*\}\s+from\s+['"]\.\/schedule\.js['"]\s*;?\s*/m, '')
-        .replace(/^import\s+\{\s*createClient\s*\}\s+from\s+['"][^'"]+['"]\s*;?\s*/m, '');
+      const blob = new Blob([prefix, '\n', appBody], { type: 'text/javascript' });
+      blobUrl = URL.createObjectURL(blob);
+      await import(blobUrl);
 
-      appCode = `const { BASE_M, D, MON } = window.SeasonCrewSchedule;\nconst createClient = (...args) => window.supabase.createClient(...args);\n${appCode}`;
-
-      new Function(appCode + '\n//# sourceURL=SeasonCrew/app-compat-runtime.js')();
       window.seasonCrewModuleLoaded = true;
       window.seasonCrewModuleFailed = false;
     } catch (error) {
@@ -39,6 +51,8 @@
       console.error('SeasonCrew compatibility start failed', error);
       setStatus('App-Start fehlgeschlagen: ' + (error?.message || String(error)));
       window.dispatchEvent(new Event('seasoncrew-module-failed'));
+    } finally {
+      if (blobUrl) setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     }
   }
 
