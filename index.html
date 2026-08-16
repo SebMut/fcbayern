@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>FC Bayern · Jahreskarten 26/27</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="layout.css">
+  <link rel="stylesheet" href="layout.css?v=20260816-paypal1">
 </head>
 <body class="locked">
 <section class="login" id="loginScreen">
@@ -28,7 +28,6 @@
   </section>
   <section class="scheduleShell"><div class="scheduleIntro"><div><div class="sectionLabel">Spielplan</div><h3>Heimspiele & Kartenverteilung</h3></div><button class="currentMatchBtn" id="currentMatchBtn" type="button">Zum nächsten Spieltag</button></div><section class="tools"><div class="filtergroup"><button class="on" data-f="all">Alle</button><button data-f="bl">Bundesliga</button><button data-f="dfb">DFB-Pokal</button><button data-f="cl">Champions League</button><button data-f="open">Karten verfügbar</button></div><label class="searchbox"><span>⌕</span><input id="q" placeholder="Spiel suchen …"></label></section><div id="app"></div></section>
 </main>
-
 <dialog class="paypalDialog" id="paypalDialog">
   <form method="dialog" class="paypalCard" id="paypalForm">
     <div class="paypalHead"><div><small>PayPal.Me</small><h3>Zahlung anfordern</h3></div><button class="paypalClose" value="cancel" aria-label="Schließen">×</button></div>
@@ -41,7 +40,6 @@
     <div class="paypalStatus" id="paypalStatus" aria-live="polite"></div>
   </form>
 </dialog>
-
 <footer class="sitefooter"><span>FC Bayern · Jahreskarten 2026/27</span><a href="history.html">History-Log</a></footer>
 <script type="module" src="app.js?v=20260816-paypal1"></script><script src="ui-live.js?v=20260816-renderfix1" defer></script>
 </body></html>
