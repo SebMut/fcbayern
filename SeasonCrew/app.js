@@ -313,15 +313,17 @@ $('createInviteBtn').addEventListener('click',async()=>{
   const {data,error}=await sb.rpc('sc_create_invite',{p_group:currentGroup.id,p_days:14});if(error){setStatus($('settingsStatus'),error.message);return}
   activeInvite=data?.[0]||null;setStatus($('settingsStatus'),'Neue Einladung erstellt ✓',true);await renderInviteAdmin();
 });
-async function decideRequest(id,approve,role){
+async function decideRequest(id,approve,role,userId=null){
   if(!isAdmin())return;
   const request=pendingRequests.find(r=>r.id===id);
+  const applicantId=userId||request?.user_id;
   const person=request?.display_name||request?.username||'Person';
+  if(!applicantId){await loadAdminData();renderSettings();setStatus($('settingsStatus'),'Bewerbung wurde aktualisiert. Bitte erneut versuchen.');return}
   const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
   if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
-  const {error}=await sb.rpc('sc_decide_join_request',{p_request:id,p_approve:approve,p_role:role});
-  if(error){setStatus($('settingsStatus'),error.message);return}
-  pendingRequests=pendingRequests.filter(r=>r.id!==id);
+  const {error}=await sb.rpc('sc_decide_join_request_v2',{p_request:id,p_group:currentGroup.id,p_user:applicantId,p_approve:approve,p_role:role});
+  if(error){await loadAdminData();renderSettings();setStatus($('settingsStatus'),error.message);return}
+  pendingRequests=pendingRequests.filter(r=>r.id!==id&&r.user_id!==applicantId);
   const {data:ms,error:memberError}=await sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',currentGroup.id).order('joined_at');
   if(memberError){setStatus($('settingsStatus'),memberError.message);return}
   members=ms||[];
