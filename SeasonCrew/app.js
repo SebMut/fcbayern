@@ -337,11 +337,21 @@ async function requestInvite(token){
 }
 
 async function processPendingInvite(){
-  const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
-  const token=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));if(!token)return;
+  const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));
+  if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
+  const storedToken=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));
+  const metadataToken=extractInviteToken(user?.user_metadata?.invite_token);
+  const token=urlToken||storedToken||metadataToken;
+  if(!token)return;
   const {data,error}=await sb.rpc('sc_request_join',{p_token:token});
-  if(error){localStorage.removeItem('seasoncrew-pending-invite');showToast(error.message);return}
-  localStorage.removeItem('seasoncrew-pending-invite');await loadOwnRequests();
+  if(error){
+    localStorage.removeItem('seasoncrew-pending-invite');
+    if(metadataToken)await sb.auth.updateUser({data:{invite_token:null}});
+    showToast(error.message);return;
+  }
+  localStorage.removeItem('seasoncrew-pending-invite');
+  if(metadataToken)await sb.auth.updateUser({data:{invite_token:null}});
+  await loadOwnRequests();
   if(data?.status==='member'){await loadGroups(data.group_id);showToast('Du bist bereits Mitglied dieser Crew.')}else{renderPendingNotice(`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Warte jetzt auf die Freigabe eines Admins.`);showToast('Einladung angenommen – Freigabe steht aus')}
   const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u);
 }
