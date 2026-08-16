@@ -17,13 +17,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use invite token from account metadata
+      - name: Patch invite recovery
         run: |
           python - <<'PY'
           from pathlib import Path
-          app=Path('SeasonCrew/app.js')
-          s=app.read_text()
-          old="""async function processPendingInvite(){
+          app = Path('SeasonCrew/app.js')
+          s = app.read_text()
+          old = """async function processPendingInvite(){
   const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
   const token=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));if(!token)return;
   const {data,error}=await sb.rpc('sc_request_join',{p_token:token});
@@ -32,7 +32,7 @@ jobs:
   if(data?.status==='member'){await loadGroups(data.group_id);showToast('Du bist bereits Mitglied dieser Crew.')}else{renderPendingNotice(`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Warte jetzt auf die Freigabe eines Admins.`);showToast('Einladung angenommen – Freigabe steht aus')}
   const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u);
 }"""
-          new="""async function processPendingInvite(){
+          new = """async function processPendingInvite(){
   const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));
   if(urlToken)localStorage.setItem('seasoncrew-pending-invite',urlToken);
   const storedToken=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));
@@ -53,12 +53,12 @@ jobs:
 }"""
           if old not in s:
               raise SystemExit('processPendingInvite block not found')
-          app.write_text(s.replace(old,new,1))
+          app.write_text(s.replace(old, new, 1))
 
-          html=Path('SeasonCrew/index.html')
-          h=html.read_text()
-          h=h.replace('Build login-fix-8','Build login-fix-9')
-          h=h.replace('./app.js?v=20260816-loginfix8','./app.js?v=20260816-loginfix9')
+          html = Path('SeasonCrew/index.html')
+          h = html.read_text()
+          h = h.replace('Build login-fix-8', 'Build login-fix-9')
+          h = h.replace('./app.js?v=20260816-loginfix8', './app.js?v=20260816-loginfix9')
           html.write_text(h)
           PY
 
