@@ -1,0 +1,2 @@
+SeasonCrew login-fix-8
+Visible invitation code + copy button
