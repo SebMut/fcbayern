@@ -43,7 +43,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite">Login wird geladen …</div>
-      <small class="authFoot">Pilot V1 · Build login-fix-4 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build login-fix-5 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -198,7 +198,30 @@
 
   <script>window.seasonCrewModuleLoaded=false;window.seasonCrewModuleFailed=false;</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-  <script src="auth-fallback-v5.js?v=1"></script>
-  <script src="app-compat-loader.js?v=2"></script>
+  <script src="auth-fallback-v5.js?v=2"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm": "./supabase-esm-shim.js?v=2"
+      }
+    }
+  </script>
+  <script type="module">
+    import('./app.js?v=20260816-loginfix5')
+      .then(() => {
+        window.seasonCrewModuleLoaded = true;
+        window.seasonCrewModuleFailed = false;
+      })
+      .catch(error => {
+        window.seasonCrewModuleFailed = true;
+        console.error('SeasonCrew module start failed', error);
+        const status = document.getElementById('authStatus');
+        if (status) {
+          const where = error?.stack ? String(error.stack).split('\n')[0] : '';
+          status.textContent = 'App-Start fehlgeschlagen: ' + (error?.message || String(error)) + (where && !where.includes(error?.message || '') ? ' · ' + where : '');
+        }
+        window.dispatchEvent(new Event('seasoncrew-module-failed'));
+      });
+  </script>
 </body>
 </html>
