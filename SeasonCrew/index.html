@@ -32,7 +32,7 @@
       </form>
       <form class="authForm hidden" id="signupForm">
         <h1>Dein SeasonCrew Account.</h1>
-        <p>Du brauchst eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.</p>
+        <p>Für die Registrierung brauchst du eine gültige Einladung, eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.</p>
         <label>Nutzername<input id="signupUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}" required placeholder="z. B. Mika87"></label>
         <small class="fieldHint">3–24 Zeichen · Buchstaben, Zahlen, Punkt, Minus und Unterstrich.</small>
         <label>Anzeigename<input id="signupName" autocomplete="name" required placeholder="z. B. Mika"></label>
@@ -41,7 +41,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite">Login wird geladen …</div>
-      <small class="authFoot">Pilot V1 · Build 2026.08.16-17:22 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build invite-required-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -196,7 +196,7 @@
 
   <script>window.seasonCrewModuleLoaded=false;window.seasonCrewModuleFailed=false;</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-  <script src="auth-fallback.js?v=2"></script>
+  <script src="auth-fallback.js?v=3"></script>
   <script type="module">
     import('./app.js?v=6')
       .then(() => { window.seasonCrewModuleLoaded = true; })
