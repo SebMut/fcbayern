@@ -3,6 +3,14 @@
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
   let noteClient=null;
+
+  if(!document.querySelector('link[data-seasoncrew-crew-delete]')){
+    const link=document.createElement('link');link.rel='stylesheet';link.href='./crew-delete.css?v=1';link.dataset.seasoncrewCrewDelete='1';document.head.appendChild(link);
+  }
+  if(!document.querySelector('script[data-seasoncrew-crew-delete]')){
+    const script=document.createElement('script');script.src='./crew-delete.js?v=1';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
+  }
+
   const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Gast';
   const username=()=>String($('helloUser')?.textContent||'').replace(/^Hallo\s+/i,'').trim()||'Profil';
   const role=()=>String($('memberRole')?.textContent||'Profil').trim()||'Profil';
