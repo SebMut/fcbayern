@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles.css?v=4">
   <link rel="stylesheet" href="invite.css?v=3">
   <link rel="stylesheet" href="ui-v2.css?v=1">
+  <link rel="stylesheet" href="crew-settings-button.css?v=1">
 </head>
 <body class="auth-locked">
   <section class="authScreen" id="authScreen">
@@ -44,7 +45,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build guest-readonly-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build crew-settings-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -54,7 +55,7 @@
       <div class="groupSwitch">
         <label for="groupSelect">Crew</label>
         <select id="groupSelect"></select>
-        <button class="iconButton" id="groupMenuBtn" type="button" title="Gruppe verwalten">•••</button>
+        <button class="crewSettingsButton" id="groupMenuBtn" type="button" title="Crew-Einstellungen" aria-label="Crew-Einstellungen"><span class="crewSettingsGear" aria-hidden="true">⚙</span><span class="crewSettingsText">Crew-Einstellungen</span></button>
       </div>
       <div class="topActions">
         <span class="superadminBadge hidden" id="superadminBadge">Superadmin</span>
