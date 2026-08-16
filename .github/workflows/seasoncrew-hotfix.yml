@@ -1,0 +1,45 @@
+name: SeasonCrew browser hotfix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-seasoncrew:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove blocking QR module import
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p=Path('SeasonCrew/app.js')
+          s=p.read_text()
+          old=s
+          s=s.replace("import * as QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm';\n","")
+          s=s.replace("  let qr='';try{qr=await QRCode.toDataURL(link,{width:260,margin:1})}catch(e){console.error(e)}\n","  let qr='';\n")
+          p.write_text(s)
+          h=Path('SeasonCrew/index.html')
+          x=h.read_text()
+          x=re.sub(r'app\.js\?v=\d+', 'app.js?v=4', x)
+          h.write_text(x)
+          print('app changed:', s != old)
+      - name: Syntax check
+        run: node --check SeasonCrew/app.js
+      - name: Commit hotfix if needed
+        run: |
+          if git diff --quiet; then
+            echo "No hotfix needed"
+            exit 0
+          fi
+          git config user.name "SeasonCrew Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git commit -m "Fix SeasonCrew browser startup and bust cache"
+          git push
