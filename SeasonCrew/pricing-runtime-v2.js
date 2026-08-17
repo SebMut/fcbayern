@@ -1,6 +1,7 @@
 (()=>{
   if(window.__seasonCrewPricingRuntimeV2)return;
   window.__seasonCrewPricingRuntimeV2=true;
+  window.__seasonCrewPricingRuntime=true;
 
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
