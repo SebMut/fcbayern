@@ -14,14 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bump SeasonCrew loader versions and signup copy
+      - name: Polish SeasonCrew product v2
         run: |
-          python -c "from pathlib import Path; p=Path('SeasonCrew/index.html'); s=p.read_text(); s=s.replace('ui-v2.js?v=3','ui-v2.js?v=4').replace('Build guest-notes-1','Build product-v2-1').replace('Build crew-delete-1','Build product-v2-1').replace('Für die Registrierung brauchst du eine gültige Einladung, eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.','Erstelle deinen Account mit einer bestätigten E-Mail-Adresse und einem eindeutigen Nutzernamen. Einen Einladungscode kannst du optional direkt mitgeben.').replace('<label>Einladungscode <span style=\"color:#ff7b8b\">*</span><input id=\"signupInvite\" autocomplete=\"off\" required placeholder=\"Code oder Einladungslink\"></label>','<label>Einladungscode <span>(optional)</span><input id=\"signupInvite\" autocomplete=\"off\" placeholder=\"Code oder Einladungslink\"></label>').replace('Pflichtfeld · Du kannst auch den kompletten Einladungslink einfügen.','Optional · Wenn du eingeladen wurdest, kannst du auch den kompletten Einladungslink einfügen.'); p.write_text(s)"
+          python -c "from pathlib import Path; p=Path('SeasonCrew/index.html'); s=p.read_text(); s=s.replace('ui-v2.js?v=3','ui-v2.js?v=4').replace('Build guest-notes-1','Build product-v2-2').replace('Build crew-delete-1','Build product-v2-2').replace('Build product-v2-1','Build product-v2-2').replace('Für die Registrierung brauchst du eine gültige Einladung, eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.','Erstelle deinen Account mit einer bestätigten E-Mail-Adresse und einem eindeutigen Nutzernamen. Einen Einladungscode kannst du optional direkt mitgeben.').replace('<label>Einladungscode <span style=\"color:#ff7b8b\">*</span><input id=\"signupInvite\" autocomplete=\"off\" required placeholder=\"Code oder Einladungslink\"></label>','<label>Einladungscode <span>(optional)</span><input id=\"signupInvite\" autocomplete=\"off\" placeholder=\"Code oder Einladungslink\"></label>').replace('Pflichtfeld · Du kannst auch den kompletten Einladungslink einfügen.','Optional · Wenn du eingeladen wurdest, kannst du auch den kompletten Einladungslink einfügen.'); p.write_text(s)"
           python -c "from pathlib import Path; p=Path('SeasonCrew/ui-v2.js'); s=p.read_text(); s=s.replace('crew-delete.js?v=1','crew-delete.js?v=2'); p.write_text(s)"
-      - name: Commit cache bump
+          python -c "from pathlib import Path; p=Path('SeasonCrew/product-v2.js'); s=p.read_text(); s=s.replace(\"const URL='https://kmhadzujovvxvpgblgkk.supabase.co';\",\"const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';\").replace('createClient(URL,KEY','createClient(SUPABASE_URL,KEY').replace('URL.createObjectURL','globalThis.URL.createObjectURL').replace('URL.revokeObjectURL','globalThis.URL.revokeObjectURL'); p.write_text(s)"
+          python -c "from pathlib import Path; p=Path('SeasonCrew/crew-delete.js'); s=p.read_text(); s=s.replace('product-v2.js?v=1','product-v2.js?v=2').replace('product-v2.css?v=1','product-v2.css?v=2'); p.write_text(s)"
+          python -c "from pathlib import Path; p=Path('SeasonCrew/history.js'); s=p.read_text(); s=s.replace(\"'&quot'\",\"'&quot;'\"); p.write_text(s)"
+      - name: Commit product polish
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SeasonCrew/index.html SeasonCrew/ui-v2.js
-          git diff --cached --quiet || git commit -m "Polish SeasonCrew product v2 signup"
+          git add SeasonCrew/index.html SeasonCrew/ui-v2.js SeasonCrew/product-v2.js SeasonCrew/crew-delete.js SeasonCrew/history.js
+          git diff --cached --quiet || git commit -m "Polish SeasonCrew product v2"
           git push
