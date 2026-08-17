@@ -1,0 +1,12 @@
+.settingsTabs.settingsTabsGrouped{display:grid!important;grid-template-columns:minmax(0,1.5fr) minmax(240px,.8fr) minmax(130px,.45fr) minmax(150px,.5fr);gap:10px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.settingsTabGroup{min-width:0;padding:8px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:#111827}
+.settingsTabGroup.hidden{display:none!important}
+.settingsTabGroupTitle{padding:2px 4px 7px;color:#7f8ba1;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.settingsTabGroupButtons{display:flex;flex-wrap:wrap;gap:6px}
+.settingsTabs.settingsTabsGrouped .settingsTabGroupButtons button{flex:1 1 auto!important;min-width:92px!important;min-height:40px!important;padding:8px 11px!important}
+.settingsTabs.settingsTabsGrouped .settingsTabGroup-crew .settingsTabGroupButtons button{flex:1 1 calc(50% - 3px)!important}
+.settingsTabs.settingsTabsGrouped .settingsTabGroup-access .settingsTabGroupButtons button{flex:1 1 100%!important}
+.settingsTabs.settingsTabsGrouped .settingsTabGroup-account .settingsTabGroupButtons button,.settingsTabs.settingsTabsGrouped .settingsTabGroup-security .settingsTabGroupButtons button{width:100%!important;min-width:0!important}
+.settingsTabs.settingsTabsGrouped button[data-settings-tab="danger"]{margin-left:0!important}
+@media(max-width:1050px){.settingsTabs.settingsTabsGrouped{grid-template-columns:1fr 1fr!important}.settingsTabGroup-account,.settingsTabGroup-security{grid-column:auto}}
+@media(max-width:620px){.settingsTabs.settingsTabsGrouped{display:flex!important;flex-direction:column;overflow:visible!important;gap:8px!important}.settingsTabGroup{padding:7px}.settingsTabGroupButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.settingsTabs.settingsTabsGrouped .settingsTabGroupButtons button,.settingsTabs.settingsTabsGrouped .settingsTabGroup-crew .settingsTabGroupButtons button,.settingsTabs.settingsTabsGrouped .settingsTabGroup-access .settingsTabGroupButtons button{width:100%!important;min-width:0!important;flex:none!important}.settingsTabGroup-account .settingsTabGroupButtons,.settingsTabGroup-security .settingsTabGroupButtons{grid-template-columns:1fr}}
