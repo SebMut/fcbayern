@@ -46,8 +46,7 @@ form?.addEventListener('submit',e=>{
   form.reset();
 });
 
-// These are not redraws: the frames load static demo pages that use the exact CSS
-// and DOM classes of the current FC Bayern app. Only the example data is fictional.
+// Static demo frames use the current SeasonCrew look with fictional example data.
 function appFrame(src,title,baseWidth,baseHeight){
   const wrap=document.createElement('div');
   wrap.style.cssText='position:relative;width:100%;overflow:hidden;background:#f5f6f8;border-radius:18px';
@@ -69,20 +68,20 @@ const heroDemo=document.querySelector('.app-demo');
 if(heroDemo){
   heroDemo.innerHTML='';
   heroDemo.style.cssText='display:block;min-height:0;background:#f5f6f8;overflow:hidden';
-  const frame=appFrame('demo-overview.html?v=1','SeasonCrew Saisonübersicht im Original-App-Design',1080,620);
+  const frame=appFrame('demo-overview.html?v=2','SeasonCrew Saisonübersicht im Original-App-Design',1080,620);
   frame.style.borderRadius='0';heroDemo.append(frame);
 }
 
 const miniBoard=document.querySelector('.mini-board');
 if(miniBoard){
-  const frame=appFrame('demo-schedule.html?v=1','SeasonCrew Spieltag und Kartenverteilung im Original-App-Design',1080,690);
+  const frame=appFrame('demo-schedule.html?v=2','SeasonCrew Spieltag und Kartenverteilung im Original-App-Design',1080,690);
   frame.style.boxShadow='0 20px 50px rgba(10,15,31,.16)';
   miniBoard.replaceWith(frame);
 }
 
 const paymentMessage=document.querySelector('.payment-message');
 if(paymentMessage){
-  const frame=appFrame('demo-paypal.html?v=1','SeasonCrew PayPal-Zahlungsaufforderung im Original-App-Design',900,620);
+  const frame=appFrame('demo-paypal.html?v=2','SeasonCrew PayPal-Zahlungsaufforderung im Original-App-Design',900,620);
   frame.style.marginTop='18px';frame.style.boxShadow='0 18px 44px rgba(0,0,0,.28)';
   paymentMessage.replaceWith(frame);
 }
