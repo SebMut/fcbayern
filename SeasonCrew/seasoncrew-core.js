@@ -1,10 +1,6 @@
 (()=>{
   if(window.SeasonCrewCore)return;
-  const runtime=window.SeasonCrewConfig||Object.freeze({
-    environment:'production-transition',
-    supabaseUrl:'https://kmhadzujovvxvpgblgkk.supabase.co',
-    publishableKey:'sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y'
-  });
+  const runtime=window.SeasonCrewConfig||null;
   const status=document.getElementById('authStatus');
   if(!runtime?.supabaseUrl||!runtime?.publishableKey){
     if(status)status.textContent='SeasonCrew ist nicht vollständig konfiguriert. Bitte Seite neu laden.';
