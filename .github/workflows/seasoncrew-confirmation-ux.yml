@@ -33,7 +33,6 @@ jobs:
           if old not in s:
               raise SystemExit('signup status marker missing')
           app.write_text(s.replace(old,new,1))
-
           test=Path('SeasonCrew/tests/e2e/auth.spec.js')
           t=test.read_text()
           old_stub="body:`window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),updateUser:async()=>({data:{user:{}},error:null})}})}`"
@@ -41,21 +40,9 @@ jobs:
           if old_stub not in t:
               raise SystemExit('auth stub marker missing')
           t=t.replace(old_stub,new_stub,1)
-          t += """
-
-test('signup without a session asks the user to confirm the email address',async({page})=>{
-  await stubPublicServices(page);
-  await page.goto('/SeasonCrew/index.html',{waitUntil:'domcontentloaded'});
-  await page.getByRole('button',{name:'Account erstellen'}).first().click();
-  await page.locator('#signupUsername').fill('TestUser27');
-  await page.locator('#signupEmail').fill('new@example.de');
-  await page.locator('#signupPassword').fill('VerySafe123!');
-  await page.locator('#signupForm button[type="submit"]').click();
-  await expect(page.locator('#loginForm')).toBeVisible();
-  await expect(page.locator('#authStatus')).toContainText('Bitte bestätige jetzt deine E-Mail');
-  await expect(page.locator('#authStatus')).toContainText('Danach wirst du zu SeasonCrew zurückgeleitet');
-});
-"""
+          addition="\n\ntest('signup without a session asks the user to confirm the email address',async({page})=>{\n  await stubPublicServices(page);\n  await page.goto('/SeasonCrew/index.html',{waitUntil:'domcontentloaded'});\n  await page.getByRole('button',{name:'Account erstellen'}).first().click();\n  await page.locator('#signupUsername').fill('TestUser27');\n  await page.locator('#signupEmail').fill('new@example.de');\n  await page.locator('#signupPassword').fill('VerySafe123!');\n  await page.locator('#signupForm button[type=\\\"submit\\\"]').click();\n  await expect(page.locator('#loginForm')).toBeVisible();\n  await expect(page.locator('#authStatus')).toContainText('Bitte bestätige jetzt deine E-Mail');\n  await expect(page.locator('#authStatus')).toContainText('Danach wirst du zu SeasonCrew zurückgeleitet');\n});\n"
+          if "signup without a session asks the user" not in t:
+              t += addition
           test.write_text(t)
           PY
       - name: Install dependencies
