@@ -20,142 +20,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Add seat selector to production and demo
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          # Production HTML
-          p=Path('SeasonCrew/index.html')
-          s=p.read_text(encoding='utf-8')
-          marker='      <div class="assignTicketMeta" id="assignTicketMeta"></div>\n      <label>Crew-Mitglied<select id="assignTicketMember"><option value="">Crew-Mitglied wählen …</option></select></label>'
-          replacement='      <div class="assignTicketMeta" id="assignTicketMeta"></div>\n      <label>Sitzplatz / Dauerkarte<select id="assignTicketSeat"></select></label>\n      <label>Crew-Mitglied<select id="assignTicketMember"><option value="">Crew-Mitglied wählen …</option></select></label>'
-          if marker not in s:
-            raise SystemExit('Production assign dialog marker not found')
-          s=s.replace(marker,replacement,1)
-          p.write_text(s,encoding='utf-8')
-
-          # Production app logic
-          p=Path('SeasonCrew/app.js')
-          s=p.read_text(encoding='utf-8')
-          pattern=r"function openAssignTicket\(fixtureId,ticketId,preselectUserId=''\)\{.*?\n\}"
-          new_func="""function updateAssignTicketSeatMeta(){
-  if(!assignmentContext)return;
-  const m=fixtureById(assignmentContext.fixtureId),t=ticketById(assignmentContext.ticketId);if(!m||!t)return;
-  $('assignTicketTitle').textContent=`${ticketLabel(t)} · ${m.o}`;
-  $('assignTicketMeta').textContent=`${gameDate(m)[0]}${gameDate(m)[1]?` · ${gameDate(m)[1]}`:''} · ${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}`;
-}
-function openAssignTicket(fixtureId,ticketId,preselectUserId=''){
-  if(!isAdmin())return;
-  const m=fixtureById(fixtureId),t=ticketById(ticketId);if(!m||!t)return;
-  assignmentContext={fixtureId,ticketId};
-  const availableTickets=tickets.filter(x=>x.id===ticketId||!allocationByIds(fixtureId,x.id));
-  $('assignTicketSeat').innerHTML=availableTickets.map(x=>`<option value="${x.id}">${esc(ticketLabel(x))} · ${esc([x.block&&`Block ${x.block}`,x.row_label&&`Reihe ${x.row_label}`,x.seat&&`Sitz ${x.seat}`].filter(Boolean).join(' · '))}</option>`).join('');
-  $('assignTicketSeat').value=ticketId;
-  updateAssignTicketSeatMeta();
-  $('assignTicketMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+members.map(x=>`<option value="${x.user_id}">${esc(x.username||'Mitglied')} · ${roleLabel(x.role)}</option>`).join('');
-  $('assignTicketMember').value=preselectUserId&&members.some(x=>x.user_id===preselectUserId)?preselectUserId:'';$('assignTicketGuest').value='';setStatus($('assignTicketStatus'),'');
-  $('assignTicketDialog').showModal();
-}"""
-          s2,n=re.subn(pattern,new_func,s,count=1,flags=re.S)
-          if n!=1:
-            raise SystemExit(f'openAssignTicket replacement count {n}')
-          s=s2
-          marker="$('assignTicketMember').addEventListener('change',()=>{if($('assignTicketMember').value)$('assignTicketGuest').value=''});"
-          addition="$('assignTicketSeat').addEventListener('change',()=>{if(!assignmentContext)return;assignmentContext.ticketId=$('assignTicketSeat').value;updateAssignTicketSeatMeta()});\n"+marker
-          if marker not in s:
-            raise SystemExit('Production seat listener marker not found')
-          s=s.replace(marker,addition,1)
-          p.write_text(s,encoding='utf-8')
-
-          # Demo HTML
-          p=Path('SeasonCrew/demo.html')
-          s=p.read_text(encoding='utf-8')
-          marker='<label>Person<select id="assignMember"></select></label>'
-          replacement='<label>Sitzplatz / Dauerkarte<select id="assignSeat"></select></label>\n      <label>Person<select id="assignMember"></select></label>'
-          if marker not in s:
-            raise SystemExit('Demo assign dialog marker not found')
-          s=s.replace(marker,replacement,1)
-          p.write_text(s,encoding='utf-8')
-
-          # Demo logic
-          p=Path('SeasonCrew/demo.js')
-          s=p.read_text(encoding='utf-8')
-          old="""  function openAssign(matchId,ticketId){
-    if(!isAdmin()){toast('In der Mitgliedsansicht können freie Karten nicht vergeben werden.');return}
-    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;
-    $('assignTitle').textContent=`${t.label} · ${m.opponent}`;$('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
-  }"""
-          new="""  function updateDemoAssignSeat(){
-    if(!assignContext)return;const m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(!m||!t)return;
-    $('assignTitle').textContent=`${t.label} · ${m.opponent}`;
-  }
-  function openAssign(matchId,ticketId){
-    if(!isAdmin()){toast('In der Mitgliedsansicht können freie Karten nicht vergeben werden.');return}
-    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;
-    const available=state.tickets.filter(x=>x.id===ticketId||!alloc(matchId,x.id));
-    $('assignSeat').innerHTML=available.map(x=>`<option value="${x.id}">${esc(x.label)} · Block ${esc(x.block)} · Reihe ${esc(x.row)} · Sitz ${esc(x.seat)}</option>`).join('');
-    $('assignSeat').value=ticketId;updateDemoAssignSeat();
-    $('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
-  }"""
-          if old not in s:
-            raise SystemExit('Demo openAssign marker not found')
-          s=s.replace(old,new,1)
-          submit_old="const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(!m||!t)return;const name=guest||(p?.name||'Gast');"
-          submit_new="const selectedTicketId=$('assignSeat')?.value||assignContext.ticketId;assignContext.ticketId=selectedTicketId;const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(selectedTicketId);if(!m||!t)return;const name=guest||(p?.name||'Mitglied');"
-          if submit_old not in s:
-            raise SystemExit('Demo submit marker not found')
-          s=s.replace(submit_old,submit_new,1)
-          init_marker="  $('filters')?.addEventListener('click',event=>{"
-          listener="  $('assignSeat')?.addEventListener('change',()=>{if(!assignContext)return;assignContext.ticketId=$('assignSeat').value;updateDemoAssignSeat()});\n"
-          if init_marker not in s:
-            raise SystemExit('Demo listener marker not found')
-          s=s.replace(init_marker,listener+init_marker,1)
-          p.write_text(s,encoding='utf-8')
-          PY
-
+      - name: Apply seat selector patch
+        run: python SeasonCrew/seat_patch.py
       - name: Build browser bundle
         run: |
-          cp SeasonCrew/app.js /tmp/seasoncrew-app-source.js
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('SeasonCrew/app.js')
-          s=p.read_text()
-          old="import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';"
-          new="const createClient = (...args) => window.supabase.createClient(...args);"
-          if old not in s:
-            raise SystemExit('Supabase import line not found')
-          p.write_text(s.replace(old,new,1))
-          PY
+          cp SeasonCrew/app.js /tmp/app-source.js
+          python -c "from pathlib import Path; p=Path('SeasonCrew/app.js'); s=p.read_text(); old=\"import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';\"; new=\"const createClient = (...args) => window.supabase.createClient(...args);\"; assert old in s; p.write_text(s.replace(old,new,1))"
           npx --yes esbuild@0.25.9 SeasonCrew/app.js --bundle --format=iife --target=safari15 --external:https://cdn.jsdelivr.net/* --outfile=SeasonCrew/app.bundle.js
-          mv /tmp/seasoncrew-app-source.js SeasonCrew/app.js
-
-      - name: Bump cache keys
+          mv /tmp/app-source.js SeasonCrew/app.js
+      - name: Cache bust
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('SeasonCrew/index.html')
-          s=p.read_text()
-          s=re.sub(r'Pilot V1 · Build [^·<]+ · Multi-User', 'Pilot V1 · Build seat-1 · Multi-User', s)
-          s=re.sub(r'app\.bundle\.js\?v=[^\"]+', 'app.bundle.js?v=20260817-seat1', s)
-          p.write_text(s)
-          d=Path('SeasonCrew/demo.html')
-          x=d.read_text()
-          x=re.sub(r'demo\.js\?v=[^\"]+', 'demo.js?v=4', x)
-          d.write_text(x)
-          PY
-
+          python -c "from pathlib import Path; import re; p=Path('SeasonCrew/index.html'); s=p.read_text(); s=re.sub(r'Pilot V1 · Build [^·<]+ · Multi-User','Pilot V1 · Build seat-1 · Multi-User',s); s=re.sub(r'app\.bundle\.js\?v=[^\"]+','app.bundle.js?v=20260817-seat1',s); p.write_text(s); d=Path('SeasonCrew/demo.html'); x=d.read_text(); x=re.sub(r'demo\.js\?v=[^\"]+','demo.js?v=4',x); d.write_text(x)"
       - name: Validate
         run: |
-          grep -q 'id="assignTicketSeat"' SeasonCrew/index.html
-          grep -q 'id="assignSeat"' SeasonCrew/demo.html
-          grep -q "availableTickets=tickets.filter" SeasonCrew/app.js
+          grep -q 'assignTicketSeat' SeasonCrew/index.html
+          grep -q 'assignSeat' SeasonCrew/demo.html
           node --check SeasonCrew/app.bundle.js
           node --check SeasonCrew/demo.js
-
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
