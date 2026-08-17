@@ -238,23 +238,30 @@ function bindGameEvents(){
   document.querySelectorAll('[data-note-fixture]').forEach(t=>t.addEventListener('change',()=>saveNote(t.dataset.noteFixture,t.value)));
 }
 
+async function readAllocation(fixtureId,ticketId){
+  const {data,error}=await sb.rpc('sc_get_allocations',{p_group:currentGroup.id});
+  if(error){console.warn('Allocation refresh',error);return null}
+  return (data||[]).find(a=>a.fixture_id===fixtureId&&a.ticket_id===ticketId)||null;
+}
 async function assignTicket(fixtureId,ticketId){
   const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:profile?.username||'',attendee_user_id:user.id,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
-  const {data,error}=await sb.from('sc_allocations').upsert(row,{onConflict:'group_id,fixture_id,ticket_id'}).select().single();
-  if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return}allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==allocationKey(fixtureId,ticketId));allocations.push(data);render();
+  const {error}=await sb.from('sc_allocations').upsert(row,{onConflict:'group_id,fixture_id,ticket_id'});
+  if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return}
+  const saved=await readAllocation(fixtureId,ticketId);replaceAllocation(saved||row);render();
 }
 async function releaseTicket(fixtureId,ticketId){
   const {error}=await sb.from('sc_allocations').delete().eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId);if(error){showToast('Karte konnte nicht freigegeben werden');return}
   allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==allocationKey(fixtureId,ticketId));render();
 }
 async function saveAttendee(fixtureId,ticketId,name){
-  const {data,error}=await sb.from('sc_allocations').update({attendee_name:name.trim(),updated_by:user.id,updated_at:new Date().toISOString()}).eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId).select().single();if(error){showToast('Name konnte nicht gespeichert werden');return}
-  replaceAllocation(data);showToast('Name gespeichert');
+  const {error}=await sb.from('sc_allocations').update({attendee_name:name.trim(),updated_by:user.id,updated_at:new Date().toISOString()}).eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId);if(error){showToast('Name konnte nicht gespeichert werden');return}
+  const saved=await readAllocation(fixtureId,ticketId);if(saved)replaceAllocation(saved);showToast('Name gespeichert');
 }
 async function savePaid(fixtureId,ticketId,paid){
-  const {data,error}=await sb.from('sc_allocations').update({paid,updated_by:user.id,updated_at:new Date().toISOString()}).eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId).select().single();if(error){showToast('Zahlstatus konnte nicht gespeichert werden');return}replaceAllocation(data);render();
+  const {error}=await sb.from('sc_allocations').update({paid,updated_by:user.id,updated_at:new Date().toISOString()}).eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId);if(error){showToast('Zahlstatus konnte nicht gespeichert werden');return}
+  const saved=await readAllocation(fixtureId,ticketId);if(saved)replaceAllocation(saved);render();
 }
-function replaceAllocation(data){const key=allocationKey(data.fixture_id,data.ticket_id);allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==key);allocations.push(data)}
+function replaceAllocation(data){if(!data)return;const key=allocationKey(data.fixture_id,data.ticket_id);allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==key);allocations.push(data)}
 async function saveNote(fixtureId,note){
   if(!note.trim()){await sb.from('sc_fixture_notes').delete().eq('group_id',currentGroup.id).eq('fixture_id',fixtureId);notes=notes.filter(n=>n.fixture_id!==fixtureId);showToast('Notiz entfernt');return}
   const {data,error}=await sb.from('sc_fixture_notes').upsert({group_id:currentGroup.id,fixture_id:fixtureId,note,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'group_id,fixture_id'}).select().single();if(error){showToast('Notiz konnte nicht gespeichert werden');return}notes=notes.filter(n=>n.fixture_id!==fixtureId);notes.push(data);showToast('Notiz gespeichert');
