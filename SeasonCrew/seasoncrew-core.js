@@ -1,6 +1,6 @@
 (()=>{
   if(window.SeasonCrewCore)return;
-  // Stable shared client core · auth/core/CI/club-independent baseline · dependency audit clean
+  // Stable shared client core · auth/core/CI/club-independent baseline · dependency audit clean · Actions v6 verification
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   let sharedClient=null;
