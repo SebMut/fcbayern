@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 500" role="img" aria-label="SeasonCrew logo">
+  <defs>
+    <mask id="ticketMask">
+      <rect x="180" y="35" width="360" height="245" rx="38" fill="white"/>
+      <circle cx="180" cy="157" r="28" fill="black"/>
+      <circle cx="540" cy="157" r="28" fill="black"/>
+      <circle cx="180" cy="35" r="27" fill="black"/>
+      <circle cx="540" cy="35" r="27" fill="black"/>
+      <circle cx="180" cy="280" r="27" fill="black"/>
+      <circle cx="540" cy="280" r="27" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#ticketMask)">
+    <rect x="180" y="35" width="180" height="245" fill="#1F2A30"/>
+    <rect x="360" y="35" width="180" height="245" fill="#B7FF00"/>
+  </g>
+  <rect x="356" y="35" width="8" height="245" fill="#fff"/>
+  <text x="222" y="203" fill="#fff" font-family="Arial Black,Arial,sans-serif" font-size="145" font-weight="900" letter-spacing="-12">S</text>
+  <text x="382" y="203" fill="#fff" font-family="Arial Black,Arial,sans-serif" font-size="145" font-weight="900" letter-spacing="-12">C</text>
+  <circle cx="360" cy="221" r="16" fill="#B7FF00" stroke="#fff" stroke-width="7"/>
+  <circle cx="320" cy="232" r="12" fill="#fff"/>
+  <circle cx="400" cy="232" r="12" fill="#fff"/>
+  <path d="M331 280c2-28 12-43 29-43s27 15 29 43h-58Z" fill="#B7FF00" stroke="#fff" stroke-width="7"/>
+  <path d="M286 280c2-21 13-32 34-32 6 0 11 2 16 5-6 7-9 16-10 27h-40Z" fill="#fff"/>
+  <path d="M434 280c-2-21-13-32-34-32-6 0-11 2-16 5 6 7 9 16 10 27h40Z" fill="#fff"/>
+  <text x="76" y="382" fill="#1F2A30" font-family="Arial,Helvetica,sans-serif" font-size="88" font-weight="800" letter-spacing="-5">Season</text>
+  <text x="397" y="382" fill="#B7FF00" font-family="Arial,Helvetica,sans-serif" font-size="88" font-weight="800" letter-spacing="-5">Crew</text>
+  <line x1="84" y1="430" x2="230" y2="430" stroke="#B7FF00" stroke-width="5"/>
+  <line x1="490" y1="430" x2="636" y2="430" stroke="#B7FF00" stroke-width="5"/>
+  <text x="257" y="438" fill="#1F2A30" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="5">season tickets, sorted.</text>
+  <circle cx="486" cy="429" r="4" fill="#B7FF00"/>
+</svg>
