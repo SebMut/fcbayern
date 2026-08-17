@@ -176,7 +176,7 @@
     if(channel){try{await c.removeChannel(channel)}catch{}channel=null}
     channel=c.channel(`seasoncrew-features-${gid}`)
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_ticket_wishes',filter:`group_id=eq.${gid}`},()=>scheduleLoad(90))
-      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','updated_by','updated_at'],filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_tickets',filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .subscribe();

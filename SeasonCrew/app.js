@@ -485,7 +485,7 @@ async function setupPresence(){
 }
 function setupRealtime(){
   if(!currentGroup)return;const gid=currentGroup.id;realtimeChannel=sb.channel(`seasoncrew-data-${gid}`)
-   .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${gid}`},queueReload)
+   .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','updated_by','updated_at'],filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_fixture_notes',filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_tickets',filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${gid}`},queueReload)

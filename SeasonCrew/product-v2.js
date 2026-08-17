@@ -157,7 +157,7 @@
     channel=c.channel(`seasoncrew-product-${group}`)
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_notifications',filter:`user_id=eq.${session.user.id}`},()=>schedule(80))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_ticket_wishes',filter:`group_id=eq.${group}`},()=>schedule(100))
-      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${group}`},()=>schedule(100))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','updated_by','updated_at'],filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_join_requests',filter:`group_id=eq.${group}`},()=>schedule(100))
       .subscribe();
