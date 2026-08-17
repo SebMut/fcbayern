@@ -1,0 +1,66 @@
+name: SeasonCrew next priorities
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-next-priorities.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply priority roadmap patch
+        run: python SeasonCrew/seasoncrew_priority_roadmap_patch.py
+      - name: Install test dependencies
+        working-directory: SeasonCrew
+        run: npm install --no-fund --no-audit
+      - name: Install Chromium
+        working-directory: SeasonCrew
+        run: npx playwright install --with-deps chromium
+      - name: Build browser app
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Static validation
+        run: |
+          node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/seasoncrew-core.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/wish-actions-v2.js
+          node --check SeasonCrew/ui-v2.js
+          node --check SeasonCrew/crew-delete.js
+          node --check SeasonCrew/price-management.js
+          test ! -e SeasonCrew/auth-fallback-v6.js
+          grep -q 'resetPasswordForEmail' SeasonCrew/app.js
+          grep -q 'PASSWORD_RECOVERY' SeasonCrew/app.js
+          grep -q 'seasoncrew-core.js' SeasonCrew/index.html
+          if grep -R --include='*.js' -n "createClient(" SeasonCrew | grep -v 'SeasonCrew/seasoncrew-core.js'; then
+            echo 'Second Supabase client implementation remains'
+            exit 1
+          fi
+          if grep -R -n 'auth-fallback' SeasonCrew/index.html .github/workflows/seasoncrew-bundle.yml; then
+            echo 'Legacy auth fallback reference remains'
+            exit 1
+          fi
+      - name: Browser regression tests
+        working-directory: SeasonCrew
+        run: npm run test:e2e
+      - name: Commit tested refactor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A SeasonCrew .github/workflows/seasoncrew-bundle.yml .github/workflows/seasoncrew-ci.yml
+          git commit -m "Refactor SeasonCrew auth client and add browser CI"
+          git push
