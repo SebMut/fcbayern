@@ -1,734 +1,172 @@
 import { withSupabase } from "npm:@supabase/server@^1";
-import * as cheerio from "npm:cheerio@1.2.0";
 
 const SEASON = "2026-27";
+const OPENLIGA_SEASON = "2026";
 const TZ = "Europe/Berlin";
+const API = "https://api.openligadb.de";
+const TEAM_FILTER = "Bayern";
+const TRUST_OPENLIGA_WITHIN_DAYS = 21;
 
-const SOURCES = {
-  bundesliga:
-    "https://www.bundesliga.com/en/bundesliga/matchday/2026-2027/fc-bayern-muenchen",
-  dfb:
-    "https://datencenter.dfb.de/competitions/dfb-pokal/seasons/2026-27/teams/bayern-muenchen?datacenter_name=datencenter%3Fhistorize_title%3D&historize_url=",
-  championsLeague:
-    "https://de.uefa.com/uefachampionsleague/clubs/50037--bayern-munchen/matches/",
-};
-
+type Competition = "bl" | "dfb" | "cl";
 type ParsedMatch = {
-  id?: string;
-  competition: "bl" | "dfb" | "cl";
+  id: string;
+  competition: Competition;
   start_date: string;
   end_date: string;
   kickoff_time: string | null;
   opponent: string;
   home: boolean;
-  exact: boolean;
-};
-
-type SourceResult = {
+  possible: boolean;
   source: string;
-  matches: ParsedMatch[];
-  error?: string;
 };
 
-const MONTHS: Record<string, number> = {
-  jan: 1, january: 1,
-  feb: 2, february: 2,
-  mar: 3, march: 3,
-  apr: 4, april: 4,
-  may: 5,
-  jun: 6, june: 6,
-  jul: 7, july: 7,
-  aug: 8, august: 8,
-  sep: 9, sept: 9, september: 9,
-  oct: 10, october: 10,
-  nov: 11, november: 11,
-  dec: 12, december: 12,
+type SourceResult = { source: string; matches: ParsedMatch[]; error?: string };
+
+const BL_WINDOWS: Record<string, { start: string; end: string; time: string | null }> = {
+  bl01:{start:"2026-08-28",end:"2026-08-28",time:"20:30"},
+  bl02:{start:"2026-09-05",end:"2026-09-05",time:"18:30"},
+  bl03:{start:"2026-09-13",end:"2026-09-13",time:"17:30"},
+  bl04:{start:"2026-09-18",end:"2026-09-18",time:"20:30"},
+  bl05:{start:"2026-10-09",end:"2026-10-11",time:null},
+  bl06:{start:"2026-10-16",end:"2026-10-18",time:null},
+  bl07:{start:"2026-10-23",end:"2026-10-25",time:null},
+  bl08:{start:"2026-10-30",end:"2026-11-01",time:null},
+  bl09:{start:"2026-11-06",end:"2026-11-08",time:null},
+  bl10:{start:"2026-11-20",end:"2026-11-22",time:null},
+  bl11:{start:"2026-11-27",end:"2026-11-29",time:null},
+  bl12:{start:"2026-12-04",end:"2026-12-06",time:null},
+  bl13:{start:"2026-12-11",end:"2026-12-13",time:null},
+  bl14:{start:"2026-12-18",end:"2026-12-20",time:null},
+  bl15:{start:"2027-01-08",end:"2027-01-10",time:null},
+  bl16:{start:"2027-01-12",end:"2027-01-14",time:null},
+  bl17:{start:"2027-01-15",end:"2027-01-17",time:null},
+  bl18:{start:"2027-01-22",end:"2027-01-24",time:null},
+  bl19:{start:"2027-01-29",end:"2027-01-31",time:null},
+  bl20:{start:"2027-02-05",end:"2027-02-07",time:null},
+  bl21:{start:"2027-02-12",end:"2027-02-14",time:null},
+  bl22:{start:"2027-02-19",end:"2027-02-21",time:null},
+  bl23:{start:"2027-02-26",end:"2027-02-28",time:null},
+  bl24:{start:"2027-03-02",end:"2027-03-04",time:null},
+  bl25:{start:"2027-03-05",end:"2027-03-07",time:null},
+  bl26:{start:"2027-03-12",end:"2027-03-14",time:null},
+  bl27:{start:"2027-03-19",end:"2027-03-21",time:null},
+  bl28:{start:"2027-04-02",end:"2027-04-04",time:null},
+  bl29:{start:"2027-04-09",end:"2027-04-11",time:null},
+  bl30:{start:"2027-04-16",end:"2027-04-18",time:null},
+  bl31:{start:"2027-04-23",end:"2027-04-25",time:null},
+  bl32:{start:"2027-05-07",end:"2027-05-09",time:null},
+  bl33:{start:"2027-05-14",end:"2027-05-16",time:null},
+  bl34:{start:"2027-05-22",end:"2027-05-22",time:"15:30"},
 };
 
-const BUNDESLIGA_CODES: Record<string, string> = {
-  FCB: "FC Bayern München",
-  VFB: "VfB Stuttgart",
-  S04: "FC Schalke 04",
-  ELV: "SV 07 Elversberg",
-  FCU: "1. FC Union Berlin",
-  FCA: "FC Augsburg",
-  RBL: "RB Leipzig",
-  SCF: "SC Freiburg",
-  BVB: "Borussia Dortmund",
-  M05: "1. FSV Mainz 05",
-  KOE: "1. FC Köln",
-  HSV: "Hamburger SV",
-  SCP: "SC Paderborn 07",
-  TSG: "TSG Hoffenheim",
-  SVW: "SV Werder Bremen",
-  BMG: "Borussia Mönchengladbach",
-  B04: "Bayer 04 Leverkusen",
-  SGE: "Eintracht Frankfurt",
-};
-
-const BL_EXPECTED = [
-  ["bl01", true,  "VfB Stuttgart",              "2026-08-28"],
-  ["bl02", false, "FC Schalke 04",              "2026-09-05"],
-  ["bl03", false, "SV 07 Elversberg",           "2026-09-13"],
-  ["bl04", true,  "1. FC Union Berlin",         "2026-09-18"],
-  ["bl05", false, "FC Augsburg",                "2026-10-09"],
-  ["bl06", true,  "RB Leipzig",                 "2026-10-16"],
-  ["bl07", false, "SC Freiburg",                "2026-10-23"],
-  ["bl08", true,  "Borussia Dortmund",          "2026-10-30"],
-  ["bl09", false, "1. FSV Mainz 05",            "2026-11-06"],
-  ["bl10", true,  "1. FC Köln",                 "2026-11-20"],
-  ["bl11", false, "Hamburger SV",               "2026-11-27"],
-  ["bl12", true,  "SC Paderborn 07",            "2026-12-04"],
-  ["bl13", false, "TSG Hoffenheim",             "2026-12-11"],
-  ["bl14", true,  "SV Werder Bremen",           "2026-12-18"],
-  ["bl15", false, "Borussia Mönchengladbach",   "2027-01-08"],
-  ["bl16", true,  "Bayer 04 Leverkusen",        "2027-01-12"],
-  ["bl17", false, "Eintracht Frankfurt",        "2027-01-15"],
-  ["bl18", false, "VfB Stuttgart",              "2027-01-22"],
-  ["bl19", true,  "FC Schalke 04",              "2027-01-29"],
-  ["bl20", true,  "SV 07 Elversberg",           "2027-02-05"],
-  ["bl21", false, "1. FC Union Berlin",         "2027-02-12"],
-  ["bl22", true,  "FC Augsburg",                "2027-02-19"],
-  ["bl23", false, "RB Leipzig",                 "2027-02-26"],
-  ["bl24", true,  "SC Freiburg",                "2027-03-02"],
-  ["bl25", false, "Borussia Dortmund",          "2027-03-05"],
-  ["bl26", true,  "1. FSV Mainz 05",            "2027-03-12"],
-  ["bl27", false, "1. FC Köln",                 "2027-03-19"],
-  ["bl28", true,  "Hamburger SV",               "2027-04-02"],
-  ["bl29", false, "SC Paderborn 07",            "2027-04-09"],
-  ["bl30", true,  "TSG Hoffenheim",             "2027-04-16"],
-  ["bl31", false, "SV Werder Bremen",           "2027-04-23"],
-  ["bl32", true,  "Borussia Mönchengladbach",   "2027-05-07"],
-  ["bl33", false, "Bayer 04 Leverkusen",        "2027-05-14"],
-  ["bl34", true,  "Eintracht Frankfurt",        "2027-05-22"],
+const DFB_SLOTS = [
+  ["dfb01", "2026-09-02"], ["dfb02", "2026-10-27"], ["dfb03", "2026-12-01"],
+  ["dfb04a", "2027-02-02"], ["dfb04b", "2027-02-09"], ["dfb05", "2027-04-20"],
+  ["dfb06", "2027-05-29"],
 ] as const;
 
-const DFB_IDS = ["dfb01", "dfb02", "dfb03", "dfb04a", "dfb05", "dfb06"];
-
 const CL_SLOTS = [
-  ["cl01",   "2026-09-08"],
-  ["cl02",   "2026-10-13"],
-  ["cl03",   "2026-10-20"],
-  ["cl04",   "2026-11-03"],
-  ["cl05",   "2026-11-24"],
-  ["cl06",   "2026-12-08"],
-  ["cl07",   "2027-01-19"],
-  ["cl08",   "2027-01-27"],
-  ["clpo1",  "2027-02-16"],
-  ["clpo2",  "2027-02-23"],
-  ["clr161", "2027-03-09"],
-  ["clr162", "2027-03-16"],
-  ["clqf1",  "2027-04-06"],
-  ["clqf2",  "2027-04-13"],
-  ["clsf1",  "2027-04-27"],
-  ["clsf2",  "2027-05-04"],
+  ["cl01","2026-09-08"],["cl02","2026-10-13"],["cl03","2026-10-20"],["cl04","2026-11-03"],
+  ["cl05","2026-11-24"],["cl06","2026-12-08"],["cl07","2027-01-19"],["cl08","2027-01-27"],
+  ["clpo1","2027-02-16"],["clpo2","2027-02-23"],["clr161","2027-03-09"],["clr162","2027-03-16"],
+  ["clqf1","2027-04-06"],["clqf2","2027-04-13"],["clsf1","2027-04-27"],["clsf2","2027-05-04"],
   ["clfinal","2027-06-05"],
 ] as const;
 
 function localParts(now = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(now);
-
-  const get = (type: string) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-
-  return {
-    date: `${get("year")}-${get("month")}-${get("day")}`,
-    hour: Number(get("hour")),
-  };
+  const parts = new Intl.DateTimeFormat("en-CA", {timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"}).formatToParts(now);
+  const get=(type:string)=>parts.find((p)=>p.type===type)?.value??"";
+  return {date:`${get("year")}-${get("month")}-${get("day")}`,hour:Number(get("hour"))};
 }
 
-function cleanText(v: string) {
-  return v.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+function value(obj:any,...keys:string[]){for(const key of keys){const v=obj?.[key];if(v!==undefined&&v!==null)return v}return null}
+function teamName(team:any):string{return String(value(team,"teamName","TeamName","shortName","ShortName")??"").trim()}
+function isBayern(name:string){return /(?:fc\s+)?bayern(?:\s+m(?:ü|u)nchen|\s+munich)?/i.test(name.trim())}
+function cleanTeam(name:string){return name.replace(/^FC Bayern Munich$/i,"FC Bayern München").replace(/^Bayern Munich$/i,"FC Bayern München").replace(/^Bayern München$/i,"FC Bayern München").trim()}
+
+function berlinDateTimeFromUtc(raw:string){
+  const d=new Date(raw);if(Number.isNaN(d.getTime()))return null;
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d);
+  const get=(type:string)=>parts.find((p)=>p.type===type)?.value??"";
+  return {date:`${get("year")}-${get("month")}-${get("day")}`,time:`${get("hour")}:${get("minute")}`};
+}
+function localOpenLigaDateTime(raw:string){const m=raw.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);return m?{date:m[1],time:m[2]}:null}
+function matchDateTime(match:any){
+  const utc=String(value(match,"matchDateTimeUTC","MatchDateTimeUTC")??"").trim();if(utc){const parsed=berlinDateTimeFromUtc(utc);if(parsed)return parsed}
+  const local=String(value(match,"matchDateTime","MatchDateTime")??"").trim();return local?localOpenLigaDateTime(local):null;
+}
+function groupOrder(match:any):number|null{const group=value(match,"group","Group");const raw=value(group,"groupOrderID","GroupOrderID","groupOrderId","GroupOrderId");const n=Number(raw);return Number.isFinite(n)?n:null}
+function dateDistance(a:string,b:string){return Math.abs(new Date(`${a}T12:00:00Z`).getTime()-new Date(`${b}T12:00:00Z`).getTime())}
+function daysUntil(date:string,today:string){return Math.floor((new Date(`${date}T12:00:00Z`).getTime()-new Date(`${today}T12:00:00Z`).getTime())/86400000)}
+
+function assignNearestSlots(rows:Array<Omit<ParsedMatch,"id">>,slots:readonly(readonly[string,string])[],maxDays:number):ParsedMatch[]{
+  const free=new Set(slots.map(([id])=>id));const result:ParsedMatch[]=[];
+  for(const row of [...rows].sort((a,b)=>a.start_date.localeCompare(b.start_date))){
+    const candidates=slots.filter(([id])=>free.has(id)).map(([id,baseline])=>({id,distance:dateDistance(row.start_date,baseline)})).sort((a,b)=>a.distance-b.distance);
+    const best=candidates[0];if(best&&best.distance<=maxDays*86400000){free.delete(best.id);result.push({...row,id:best.id})}
+  }return result;
 }
 
-function cleanTeam(v: string) {
-  return cleanText(v)
-    .replace(/^FC Bayern Munich$/i, "FC Bayern München")
-    .replace(/^Bayern Munich$/i, "FC Bayern München")
-    .replace(/^Bayern München$/i, "FC Bayern München");
+async function fetchOpenLiga(shortcut:string){
+  const url=`${API}/getmatchdata/${encodeURIComponent(shortcut)}/${OPENLIGA_SEASON}/${encodeURIComponent(TEAM_FILTER)}`;
+  const response=await fetch(url,{headers:{Accept:"application/json","User-Agent":"SeasonCrew/1.0 (fixture sync; OpenLigaDB)"}});
+  if(!response.ok)throw new Error(`${shortcut}: HTTP ${response.status} ${response.statusText}`);
+  const data=await response.json();if(!Array.isArray(data))throw new Error(`${shortcut}: unerwartetes API-Format`);return data;
 }
 
-function isBayern(v: string) {
-  return /(?:FC\s+)?Bayern\s+(?:München|Munich)/i.test(cleanTeam(v));
+function normalizeOpenLigaMatch(match:any,competition:Competition,shortcut:string):Omit<ParsedMatch,"id">|null{
+  const homeName=cleanTeam(teamName(value(match,"team1","Team1")));const awayName=cleanTeam(teamName(value(match,"team2","Team2")));
+  if(!homeName||!awayName||(!isBayern(homeName)&&!isBayern(awayName)))return null;const dt=matchDateTime(match);if(!dt)return null;
+  return {competition,start_date:dt.date,end_date:dt.date,kickoff_time:dt.time||null,opponent:isBayern(homeName)?awayName:homeName,home:isBayern(homeName),possible:false,source:`openligadb.de:${shortcut}`};
 }
 
-function seasonYear(month: number) {
-  return month >= 7 ? 2026 : 2027;
-}
-
-function isoDate(year: number, month: number, day: number) {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function parseEnglishDate(day: string, monthName: string) {
-  const month = MONTHS[monthName.toLowerCase()];
-  if (!month) throw new Error(`Unknown month: ${monthName}`);
-  return isoDate(seasonYear(month), month, Number(day));
-}
-
-function dateDistance(a: string, b: string) {
-  return Math.abs(
-    new Date(`${a}T12:00:00Z`).getTime() -
-    new Date(`${b}T12:00:00Z`).getTime()
-  );
-}
-
-function utcTimeToBerlin(date: string, time: string) {
-  const d = new Date(`${date}T${time}:00Z`);
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(d);
-
-  const get = (type: string) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-
-  return {
-    date: `${get("year")}-${get("month")}-${get("day")}`,
-    time: `${get("hour")}:${get("minute")}`,
-  };
-}
-
-async function fetchHtml(url: string) {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/149 Safari/537.36",
-      "Accept":
-        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
-      "Cache-Control": "no-cache",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
-  }
-
-  return await response.text();
-}
-
-function parseBundesliga(html: string): ParsedMatch[] {
-  const $ = cheerio.load(html);
-  const text = cleanText($("body").text());
-
-  const days =
-    "(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)";
-
-  const re = new RegExp(
-    `${days}\\s+` +
-    `(?:-\\s+${days}\\s+)?` +
-    `(\\d{1,2})\\s+([A-Za-z]+)` +
-    `(?:\\s*-\\s*(\\d{1,2})\\s+([A-Za-z]+))?` +
-    `(?:\\s+(\\d{2}:\\d{2}))?\\s+` +
-    `([A-Z0-9]{2,4})\\s+([A-Z0-9]{2,4})`,
-    "g",
-  );
-
-  const candidates: ParsedMatch[] = [];
-  let m: RegExpExecArray | null;
-
-  while ((m = re.exec(text))) {
-    const [, d1, mon1, d2, mon2, rawTime, homeCode, awayCode] = m;
-
-    if (homeCode !== "FCB" && awayCode !== "FCB") continue;
-    if (!BUNDESLIGA_CODES[homeCode] || !BUNDESLIGA_CODES[awayCode]) continue;
-
-    let start = parseEnglishDate(d1, mon1);
-    let end = d2 && mon2 ? parseEnglishDate(d2, mon2) : start;
-    let kickoff: string | null = null;
-
-    if (rawTime && start === end) {
-      const berlin = utcTimeToBerlin(start, rawTime);
-      start = berlin.date;
-      end = berlin.date;
-      kickoff = berlin.time;
+async function loadBundesliga(today:string):Promise<SourceResult>{
+  const source="openligadb.de:bl1";
+  try{
+    const raw=await fetchOpenLiga("bl1");const matches:ParsedMatch[]=[];
+    for(const item of raw){
+      const row=normalizeOpenLigaMatch(item,"bl","bl1");const order=groupOrder(item);if(!row||!order||order<1||order>34)continue;
+      const id=`bl${String(order).padStart(2,"0")}`;const baseline=BL_WINDOWS[id];if(!baseline)continue;
+      const baselineAlreadyExact=baseline.start===baseline.end&&Boolean(baseline.time);
+      const closeEnough=daysUntil(row.start_date,today)<=TRUST_OPENLIGA_WITHIN_DAYS;
+      if(baselineAlreadyExact||closeEnough){matches.push({...row,id,possible:false})}
+      else{matches.push({...row,id,start_date:baseline.start,end_date:baseline.end,kickoff_time:null,possible:true})}
     }
-
-    candidates.push({
-      competition: "bl",
-      start_date: start,
-      end_date: end,
-      kickoff_time: kickoff,
-      opponent:
-        homeCode === "FCB"
-          ? BUNDESLIGA_CODES[awayCode]
-          : BUNDESLIGA_CODES[homeCode],
-      home: homeCode === "FCB",
-      exact: Boolean(kickoff),
-    });
-  }
-
-  const dedup = new Map<string, ParsedMatch>();
-  for (const x of candidates) {
-    const key = [
-      x.start_date, x.end_date, x.kickoff_time,
-      x.opponent, x.home,
-    ].join("|");
-    dedup.set(key, x);
-  }
-
-  const unique = [...dedup.values()];
-  const result: ParsedMatch[] = [];
-
-  for (const [id, home, opponent, baseline] of BL_EXPECTED) {
-    const matches = unique
-      .filter((x) => x.home === home && x.opponent === opponent)
-      .sort(
-        (a, b) =>
-          dateDistance(a.start_date, baseline) -
-          dateDistance(b.start_date, baseline),
-      );
-
-    const best = matches[0];
-    if (best) result.push({ ...best, id });
-  }
-
-  return result;
+    return {source,matches};
+  }catch(error){return {source,matches:[],error:error instanceof Error?error.message:String(error)}}
 }
 
-function parseDfb(html: string): ParsedMatch[] {
-  const $ = cheerio.load(html);
-  const text = cleanText($("body").text());
-
-  const re =
-    /(?:Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag),\s*(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}:\d{2})\s+Uhr\s+(.+?)\s+-\s*:\s*-\s+(.+?)(?=\s+(?:Vergleich|Liveticker|Spielbericht|$))/gi;
-
-  const candidates: ParsedMatch[] = [];
-  let m: RegExpExecArray | null;
-
-  while ((m = re.exec(text))) {
-    const [, day, month, year, time, leftRaw, rightRaw] = m;
-    const left = cleanTeam(leftRaw);
-    const right = cleanTeam(rightRaw);
-
-    if (!isBayern(left) && !isBayern(right)) continue;
-
-    candidates.push({
-      competition: "dfb",
-      start_date: `${year}-${month}-${day}`,
-      end_date: `${year}-${month}-${day}`,
-      kickoff_time: time,
-      opponent: isBayern(left) ? right : left,
-      home: isBayern(left),
-      exact: true,
-    });
-  }
-
-  const dedup = new Map<string, ParsedMatch>();
-  for (const x of candidates) {
-    dedup.set(
-      [x.start_date, x.kickoff_time, x.opponent, x.home].join("|"),
-      x,
-    );
-  }
-
-  return [...dedup.values()]
-    .sort((a, b) => a.start_date.localeCompare(b.start_date))
-    .slice(0, DFB_IDS.length)
-    .map((x, i) => ({ ...x, id: DFB_IDS[i] }));
+async function loadCup(shortcut:string,competition:"dfb"|"cl"):Promise<SourceResult>{
+  const source=`openligadb.de:${shortcut}`;
+  try{
+    const raw=await fetchOpenLiga(shortcut);const rows=raw.map((item:any)=>normalizeOpenLigaMatch(item,competition,shortcut)).filter(Boolean) as Array<Omit<ParsedMatch,"id">>;
+    const matches=competition==="dfb"?assignNearestSlots(rows,DFB_SLOTS,18):assignNearestSlots(rows,CL_SLOTS,14);return {source,matches};
+  }catch(error){return {source,matches:[],error:error instanceof Error?error.message:String(error)}}
 }
 
-function getTeamName(value: any): string | null {
-  if (!value) return null;
-  if (typeof value === "string") return cleanTeam(value);
-  if (typeof value?.name === "string") return cleanTeam(value.name);
-  if (typeof value?.teamName === "string") return cleanTeam(value.teamName);
-  if (typeof value?.clubName === "string") return cleanTeam(value.clubName);
-  return null;
+async function fetchMatches(today:string){
+  const results=await Promise.all([loadBundesliga(today),loadCup("dfb","dfb"),loadCup("ucl","cl")]);
+  const errors=results.filter((x)=>x.error).map((x)=>`${x.source}: ${x.error}`);if(results.every((x)=>x.error))throw new Error(`OpenLigaDB fehlgeschlagen: ${errors.join(" | ")}`);
+  const dedup=new Map<string,ParsedMatch>();for(const match of results.flatMap((x)=>x.matches))dedup.set(match.id,match);
+  return {matches:[...dedup.values()],diagnostics:results.map((x)=>({source:x.source,count:x.matches.length,error:x.error??null})),errors};
 }
 
-function findString(obj: any, keys: string[]): string | null {
-  for (const key of keys) {
-    const v = obj?.[key];
-    if (typeof v === "string" && v.trim()) return v.trim();
+async function writeHistory(supabaseAdmin:any,actor:string,runId:number,status:"success"|"failed",payload:Record<string,unknown>){
+  const {error}=await supabaseAdmin.from("history_log").insert({actor_name:actor,entity_type:"sync_run",entity_id:String(runId),before_data:{},after_data:{status,...payload}});if(error)console.error("history_log:",error.message);
+}
+
+export default {fetch:withSupabase({auth:"secret"},async(req,ctx)=>{
+  const local=localParts();let force=false;let actor="Admin";try{const body=await req.json();force=body?.force===true;if(force&&["Admin","Patrick","Ober","Tom"].includes(body?.actor))actor=body.actor}catch{}
+  if(!force&&local.hour%3!==0)return Response.json({ok:true,skipped:true,localDate:local.date,localHour:local.hour,reason:"outside Berlin 3-hour schedule"});
+  const {data:run,error:runError}=await ctx.supabaseAdmin.from("fixture_sync_runs").insert({local_date:local.date,status:"running"}).select("id").single();if(runError)throw runError;
+  try{
+    const {matches,diagnostics,errors}=await fetchMatches(local.date);let updatedCount=0;
+    for(const m of matches){const {error}=await ctx.supabaseAdmin.from("match_overrides").upsert({id:m.id,season:SEASON,start_date:m.start_date,end_date:m.end_date,kickoff_time:m.kickoff_time,opponent:m.opponent,home:m.home,possible:m.possible,active:true,source:m.source,source_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()},{onConflict:"id"});if(error)throw error;updatedCount++}
+    const finishedAt=new Date().toISOString();const baseMessage=force?"Manueller OpenLigaDB-Spieltagssync erfolgreich":"Automatischer OpenLigaDB-Spieltagssync erfolgreich";const message=errors.length?`${baseMessage}; Teilfehler: ${errors.join(" | ")}`:baseMessage;
+    await ctx.supabaseAdmin.from("fixture_sync_runs").update({status:"success",finished_at:finishedAt,found_count:matches.length,updated_count:updatedCount,message}).eq("id",run.id);
+    await writeHistory(ctx.supabaseAdmin,actor,run.id,"success",{provider:"OpenLigaDB",license:"ODbL-1.0",found_count:matches.length,updated_count:updatedCount,message,diagnostics,finished_at:finishedAt,forced:force,berlin_hour:local.hour,confirmation_window_days:TRUST_OPENLIGA_WITHIN_DAYS});
+    return Response.json({ok:true,provider:"OpenLigaDB",license:"ODbL-1.0",localDate:local.date,localHour:local.hour,found:matches.length,updated:updatedCount,forced:force,diagnostics});
+  }catch(error){
+    const message=error instanceof Error?error.message:String(error);const finishedAt=new Date().toISOString();await ctx.supabaseAdmin.from("fixture_sync_runs").update({status:"failed",finished_at:finishedAt,message}).eq("id",run.id);await writeHistory(ctx.supabaseAdmin,actor,run.id,"failed",{provider:"OpenLigaDB",found_count:0,updated_count:0,message,finished_at:finishedAt,forced:force,berlin_hour:local.hour});console.error(message);return Response.json({ok:false,provider:"OpenLigaDB",error:message},{status:500});
   }
-  return null;
-}
-
-function parseDateValue(value: string) {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(d);
-
-  const get = (type: string) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-
-  return {
-    date: `${get("year")}-${get("month")}-${get("day")}`,
-    time: `${get("hour")}:${get("minute")}`,
-  };
-}
-
-function scanJsonForUefaMatches(
-  node: any,
-  out: ParsedMatch[],
-  seen = new Set<any>(),
-) {
-  if (!node || typeof node !== "object" || seen.has(node)) return;
-  seen.add(node);
-
-  const home =
-    getTeamName(node.homeTeam) ??
-    getTeamName(node.home) ??
-    findString(node, ["homeTeamName", "homeName"]);
-
-  const away =
-    getTeamName(node.awayTeam) ??
-    getTeamName(node.away) ??
-    findString(node, ["awayTeamName", "awayName"]);
-
-  const dateValue = findString(node, [
-    "startDate",
-    "dateTime",
-    "kickOffTime",
-    "kickoffTime",
-    "utcDate",
-    "matchDate",
-  ]);
-
-  if (
-    home &&
-    away &&
-    dateValue &&
-    (isBayern(home) || isBayern(away))
-  ) {
-    const dt = parseDateValue(dateValue);
-    if (dt) {
-      out.push({
-        competition: "cl",
-        start_date: dt.date,
-        end_date: dt.date,
-        kickoff_time: dt.time,
-        opponent: isBayern(home) ? cleanTeam(away) : cleanTeam(home),
-        home: isBayern(home),
-        exact: true,
-      });
-    }
-  }
-
-  if (Array.isArray(node)) {
-    for (const item of node) scanJsonForUefaMatches(item, out, seen);
-  } else {
-    for (const value of Object.values(node)) {
-      scanJsonForUefaMatches(value, out, seen);
-    }
-  }
-}
-
-function parseUefa(html: string): ParsedMatch[] {
-  const $ = cheerio.load(html);
-  const candidates: ParsedMatch[] = [];
-
-  $("script").each((_, element) => {
-    const type = ($(element).attr("type") || "").toLowerCase();
-    const raw = $(element).html()?.trim();
-    if (!raw) return;
-
-    if (
-      type.includes("json") ||
-      $(element).attr("id") === "__NEXT_DATA__" ||
-      raw.startsWith("{") ||
-      raw.startsWith("[")
-    ) {
-      try {
-        scanJsonForUefaMatches(JSON.parse(raw), candidates);
-      } catch {
-      }
-    }
-  });
-
-  const dedup = new Map<string, ParsedMatch>();
-  for (const x of candidates) {
-    dedup.set(
-      [x.start_date, x.kickoff_time, x.opponent, x.home].join("|"),
-      x,
-    );
-  }
-
-  const unique = [...dedup.values()]
-    .filter((x) => x.start_date >= "2026-09-01" && x.start_date <= "2027-06-10")
-    .sort((a, b) => a.start_date.localeCompare(b.start_date));
-
-  const freeSlots = new Set(CL_SLOTS.map(([id]) => id));
-  const result: ParsedMatch[] = [];
-
-  for (const match of unique) {
-    const options = CL_SLOTS
-      .filter(([id]) => freeSlots.has(id))
-      .map(([id, baseline]) => ({
-        id,
-        distance: dateDistance(match.start_date, baseline),
-      }))
-      .sort((a, b) => a.distance - b.distance);
-
-    const best = options[0];
-
-    if (best && best.distance <= 12 * 24 * 60 * 60 * 1000) {
-      freeSlots.delete(best.id);
-      result.push({ ...match, id: best.id });
-    }
-  }
-
-  return result;
-}
-
-async function loadSource(
-  source: keyof typeof SOURCES,
-): Promise<SourceResult> {
-  try {
-    const html = await fetchHtml(SOURCES[source]);
-
-    if (source === "bundesliga") {
-      return { source, matches: parseBundesliga(html) };
-    }
-
-    if (source === "dfb") {
-      return { source, matches: parseDfb(html) };
-    }
-
-    return { source, matches: parseUefa(html) };
-  } catch (error) {
-    return {
-      source,
-      matches: [],
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-async function fetchMatches() {
-  const results = await Promise.all([
-    loadSource("bundesliga"),
-    loadSource("dfb"),
-    loadSource("championsLeague"),
-  ]);
-
-  const errors = results
-    .filter((x) => x.error)
-    .map((x) => `${x.source}: ${x.error}`);
-
-  if (results.every((x) => x.error)) {
-    throw new Error(`Alle Quellen fehlgeschlagen: ${errors.join(" | ")}`);
-  }
-
-  return {
-    matches: results.flatMap((x) => x.matches),
-    diagnostics: results.map((x) => ({
-      source: x.source,
-      count: x.matches.length,
-      error: x.error ?? null,
-    })),
-    errors,
-  };
-}
-
-async function writeHistory(
-  supabaseAdmin: any,
-  actor: string,
-  runId: number,
-  status: "success" | "failed",
-  payload: Record<string, unknown>,
-) {
-  const { error } = await supabaseAdmin.from("history_log").insert({
-    actor_name: actor,
-    entity_type: "sync_run",
-    entity_id: String(runId),
-    before_data: {},
-    after_data: { status, ...payload },
-  });
-
-  if (error) console.error("history_log:", error.message);
-}
-
-export default {
-  fetch: withSupabase({ auth: "secret" }, async (req, ctx) => {
-    const local = localParts();
-
-    let force = false;
-    let actor = "System";
-
-    try {
-      const body = await req.json();
-      force = body?.force === true;
-
-      if (force && ["Admin", "Patrick", "Ober"].includes(body?.actor)) {
-        actor = body.actor;
-      } else if (force) {
-        actor = "Admin";
-      }
-    } catch {
-    }
-
-    // Automatischer Sync alle 3 Stunden in Europe/Berlin:
-    // 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00.
-    // Der Supabase-Cron ruft die Function technisch jede volle Stunde auf.
-    // Dadurch bleibt der Rhythmus auch bei Sommer-/Winterzeit korrekt.
-    // Manueller Test mit force=true darf jederzeit laufen.
-    if (!force && local.hour % 3 !== 0) {
-      return Response.json({
-        ok: true,
-        skipped: true,
-        reason: "not a Berlin 3-hour sync slot",
-        localHour: local.hour,
-      });
-    }
-
-    const { data: run, error: runError } = await ctx.supabaseAdmin
-      .from("fixture_sync_runs")
-      .insert({
-        local_date: local.date,
-        status: "running",
-      })
-      .select("id")
-      .single();
-
-    if (runError) throw runError;
-
-    try {
-      const { matches, diagnostics, errors } = await fetchMatches();
-
-      let updatedCount = 0;
-
-      for (const m of matches) {
-        if (!m.id) continue;
-
-        const { error } = await ctx.supabaseAdmin
-          .from("match_overrides")
-          .upsert(
-            {
-              id: m.id,
-              season: SEASON,
-              start_date: m.start_date,
-              end_date: m.end_date,
-              kickoff_time: m.kickoff_time,
-              opponent: m.opponent,
-              home: m.home,
-              possible: m.competition === "bl" ? false : m.home,
-              active: true,
-              source:
-                m.competition === "bl"
-                  ? "bundesliga.com"
-                  : m.competition === "dfb"
-                    ? "datencenter.dfb.de"
-                    : "uefa.com",
-              source_updated_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "id" },
-          );
-
-        if (error) throw error;
-        updatedCount++;
-      }
-
-      if (matches.some((x) => x.id === "dfb04a")) {
-        const { error } = await ctx.supabaseAdmin
-          .from("match_overrides")
-          .upsert(
-            {
-              id: "dfb04b",
-              season: SEASON,
-              active: false,
-              source: "datencenter.dfb.de",
-              source_updated_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "id" },
-          );
-
-        if (error) throw error;
-      }
-
-      const finishedAt = new Date().toISOString();
-
-      const message = force
-        ? "Manueller Spieltagssync erfolgreich"
-        : "Automatischer Spieltagssync erfolgreich";
-
-      const detailMessage =
-        errors.length > 0
-          ? `${message}; Teilfehler: ${errors.join(" | ")}`
-          : message;
-
-      await ctx.supabaseAdmin
-        .from("fixture_sync_runs")
-        .update({
-          status: "success",
-          finished_at: finishedAt,
-          found_count: matches.length,
-          updated_count: updatedCount,
-          message: detailMessage,
-        })
-        .eq("id", run.id);
-
-      await writeHistory(ctx.supabaseAdmin, actor, run.id, "success", {
-        found_count: matches.length,
-        updated_count: updatedCount,
-        message: detailMessage,
-        diagnostics,
-        finished_at: finishedAt,
-        forced: force,
-      });
-
-      return Response.json({
-        ok: true,
-        localDate: local.date,
-        found: matches.length,
-        updated: updatedCount,
-        forced: force,
-        diagnostics,
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error);
-
-      const finishedAt = new Date().toISOString();
-
-      await ctx.supabaseAdmin
-        .from("fixture_sync_runs")
-        .update({
-          status: "failed",
-          finished_at: finishedAt,
-          message,
-        })
-        .eq("id", run.id);
-
-      await writeHistory(ctx.supabaseAdmin, actor, run.id, "failed", {
-        found_count: 0,
-        updated_count: 0,
-        message,
-        finished_at: finishedAt,
-        forced: force,
-      });
-
-      console.error(message);
-
-      return Response.json(
-        { ok: false, error: message },
-        { status: 500 },
-      );
-    }
-  }),
-};
+})};
