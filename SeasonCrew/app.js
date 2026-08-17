@@ -189,6 +189,7 @@ function render(){
   els.groupTitle.textContent=currentGroup.name;els.clubName.textContent=currentGroup.club_name;els.memberRole.textContent=roleLabel(effectiveRole());
   els.heroInviteBtn.classList.toggle('hidden',!isAdmin());
   renderStats();renderGames();renderSettings();
+  window.dispatchEvent(new CustomEvent('seasoncrew:rendered',{detail:{groupId:currentGroup.id,role:effectiveRole()}}));
 }
 
 function renderStats(){
@@ -200,10 +201,11 @@ function renderStats(){
 
 function renderGames(){
   const list=filteredFixtures(),amap=allocationMap(),nmap=noteMap(),today=todayBerlin(),next=list.find(m=>(m.e||m.s)>=today)||list.at(-1);
-  if(!list.length){els.games.innerHTML='<div class="noGames">Keine Spiele für diesen Filter.</div>';return}
+  if(!list.length){els.games.innerHTML='<div class="noGames">Keine Spiele für diesen Filter.</div>';window.dispatchEvent(new CustomEvent('seasoncrew:games-rendered',{detail:{groupId:currentGroup?.id||null}}));return}
   const groupsByMonth={};for(const m of list){const d=new Date(`${m.s}T12:00:00`),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;(groupsByMonth[k]||=[]).push(m)}
   els.games.innerHTML=Object.keys(groupsByMonth).sort().map(k=>`<div class="monthTitle">${MON[Number(k.slice(5))-1]} ${k.slice(0,4)}</div>${groupsByMonth[k].map(m=>renderGame(m,amap,nmap,m.id===next?.id)).join('')}`).join('');
   bindGameEvents();
+  window.dispatchEvent(new CustomEvent('seasoncrew:games-rendered',{detail:{groupId:currentGroup?.id||null}}));
 }
 
 function renderGame(m,amap,nmap,isNext){
@@ -278,6 +280,7 @@ function renderSettings(){
   document.querySelectorAll('[data-delete-ticket]').forEach(b=>b.onclick=()=>deleteTicket(b.dataset.deleteTicket));
   $('memberList').innerHTML=members.map(m=>`<div class="memberRow"><div class="memberIdentity"><b>@${esc(m.username||'mitglied')}</b></div><span class="roleBadge ${m.role==='owner'?'owner':m.role==='admin'?'admin':'guest'}">${roleLabel(m.role)}</span></div>`).join('');
   renderInviteAdmin();
+  window.dispatchEvent(new CustomEvent('seasoncrew:settings-rendered',{detail:{groupId:currentGroup?.id||null}}));
 }
 
 async function renderInviteAdmin(){

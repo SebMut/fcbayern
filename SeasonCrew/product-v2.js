@@ -139,6 +139,7 @@
   }
 
   $('groupSelect')?.addEventListener('change',()=>schedule(100));
-  const observer=new MutationObserver(muts=>{for(const m of muts){if(m.target?.id==='settingsForm'||m.target?.closest?.('#settingsForm,.topActions,.statsGrid')){if(state)requestAnimationFrame(()=>{ensureUi();renderSeasonTools();renderCockpit()});break}}});observer.observe(document.documentElement,{subtree:true,childList:true});
+  window.addEventListener('seasoncrew:settings-rendered',()=>{if(state)requestAnimationFrame(renderSeasonTools)});
+  window.addEventListener('seasoncrew:rendered',()=>{if(state)requestAnimationFrame(()=>{ensureUi();renderCockpit()})});
   window.addEventListener('DOMContentLoaded',()=>schedule(900));setTimeout(()=>schedule(0),1300);
 })();

@@ -8,7 +8,7 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./crew-delete.css?v=1';link.dataset.seasoncrewCrewDelete='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-crew-delete]')){
-    const script=document.createElement('script');script.src='./crew-delete.js?v=2';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./crew-delete.js?v=3';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
   }
 
   const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Gast';
@@ -32,6 +32,9 @@
   function syncProfileButton(){
     const btn=$('settingsBtn');if(!btn)return;
     const name=username(),r=role(),initial=(name[0]||'P').toUpperCase();
+    const signature=`${name}|${r}`;
+    if(btn.dataset.profileSignature===signature)return;
+    btn.dataset.profileSignature=signature;
     btn.className='profileButton';
     btn.title='Profil & Einstellungen';
     btn.setAttribute('aria-label',`Profil und Einstellungen von ${name}`);
@@ -153,8 +156,8 @@
     if(e.target.matches('[data-attendee-fixture],[data-note-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
   },true);
 
-  const observer=new MutationObserver(()=>requestAnimationFrame(sync));
-  observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+  window.addEventListener('seasoncrew:games-rendered',()=>requestAnimationFrame(syncGuestUi));
+  window.addEventListener('seasoncrew:rendered',()=>requestAnimationFrame(sync));
   window.addEventListener('DOMContentLoaded',sync);
-  setTimeout(sync,250);
+  setTimeout(sync,350);
 })();

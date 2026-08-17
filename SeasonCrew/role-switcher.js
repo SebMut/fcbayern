@@ -1,7 +1,6 @@
 (()=>{
   const KEY='seasoncrew-superadmin-role-view';
   const VALUES=new Set(['superadmin','owner','admin','guest']);
-  let timer=null;
 
   function actualSuperadmin(){
     const badge=document.getElementById('superadminBadge');
@@ -49,9 +48,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{
-    ensure();
-    timer=setInterval(()=>{if(ensure()){clearInterval(timer);timer=null}},250);
-    setTimeout(()=>{if(timer){clearInterval(timer);timer=null}},12000);
-  });
+  window.addEventListener('DOMContentLoaded',ensure);
+  window.addEventListener('seasoncrew:rendered',ensure);
+  setTimeout(ensure,700);
 })();

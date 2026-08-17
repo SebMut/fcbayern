@@ -8,13 +8,13 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./features-v1.css?v=1';link.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-features-v1]')){
-    const script=document.createElement('script');script.src='./features-v1.js?v=2';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./features-v1.js?v=3';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
   }
   if(!document.querySelector('link[data-seasoncrew-product-v2]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./product-v2.css?v=2';link.dataset.seasoncrewProductV2='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-product-v2]')){
-    const script=document.createElement('script');script.src='./product-v2.js?v=3';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./product-v2.js?v=4';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
   }
 
   const role=()=>String($('memberRole')?.textContent||'').trim();
@@ -89,8 +89,8 @@
     setTimeout(()=>location.reload(),450);
   }
 
-  const observer=new MutationObserver(()=>requestAnimationFrame(sync));
-  observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+  window.addEventListener('seasoncrew:settings-rendered',()=>requestAnimationFrame(sync));
+  window.addEventListener('seasoncrew:rendered',()=>requestAnimationFrame(sync));
   window.addEventListener('DOMContentLoaded',sync);
-  setTimeout(sync,300);
+  setTimeout(sync,400);
 })();

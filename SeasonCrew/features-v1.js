@@ -112,7 +112,7 @@
       }
       if(remover&&!manager&&m.role!=='owner'&&m.user_id!==uid){
         const actions=document.createElement('div');actions.className='memberManageActions';
-        actions.innerHTML='<button class=\"memberAction danger\" type=\"button\" data-remove-member>Entfernen</button>';
+        actions.innerHTML='<button class="memberAction danger" type="button" data-remove-member>Entfernen</button>';
         row.appendChild(actions);
         actions.querySelector('[data-remove-member]').addEventListener('click',()=>removeMember(m.user_id,m.username));
       }
@@ -170,14 +170,8 @@
   }
 
   $('groupSelect')?.addEventListener('change',()=>scheduleLoad(100));
-  const observer=new MutationObserver(muts=>{
-    let relevant=false;
-    for(const m of muts){
-      if(m.target?.id==='games'||m.target?.id==='memberList'||m.target?.closest?.('#games,#memberList')){relevant=true;break}
-    }
-    if(relevant&&state)requestAnimationFrame(render);
-  });
-  observer.observe(document.documentElement,{subtree:true,childList:true});
+  window.addEventListener('seasoncrew:games-rendered',()=>{if(state)requestAnimationFrame(renderWishBars)});
+  window.addEventListener('seasoncrew:settings-rendered',()=>{if(state)requestAnimationFrame(renderMemberControls)});
   window.addEventListener('DOMContentLoaded',()=>scheduleLoad(700));
   setTimeout(()=>scheduleLoad(0),1000);
 })();
