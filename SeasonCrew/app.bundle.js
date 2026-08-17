@@ -11,6 +11,13 @@
     if (typeof require !== "undefined") return require.apply(this, arguments);
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
+  var __esm = (fn, res) => function __init() {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
       for (let key of __getOwnPropNames(from))
@@ -28,84 +35,18 @@
     mod
   ));
 
-  // FcBayern_Tom/schedule.js
-  var raw = "bl01|bl|Bundesliga \xB7 1. Spieltag|2026-08-28|2026-08-28|20:30|VfB Stuttgart|H|Allianz Arena, M\xFCnchen\nbl02|bl|Bundesliga \xB7 2. Spieltag|2026-09-05|2026-09-05|18:30|FC Schalke 04||VELTINS-Arena, Gelsenkirchen\nbl03|bl|Bundesliga \xB7 3. Spieltag|2026-09-13|2026-09-13|17:30|SV 07 Elversberg||URSAPHARM-Arena, Elversberg\nbl04|bl|Bundesliga \xB7 4. Spieltag|2026-09-18|2026-09-18|20:30|1. FC Union Berlin|H|Allianz Arena, M\xFCnchen\nbl05|bl|Bundesliga \xB7 5. Spieltag|2026-10-09|2026-10-11||FC Augsburg||WWK Arena, Augsburg\nbl06|bl|Bundesliga \xB7 6. Spieltag|2026-10-16|2026-10-18||RB Leipzig|H|Allianz Arena, M\xFCnchen\nbl07|bl|Bundesliga \xB7 7. Spieltag|2026-10-23|2026-10-25||SC Freiburg||Europa-Park Stadion, Freiburg\nbl08|bl|Bundesliga \xB7 8. Spieltag|2026-10-30|2026-11-01||Borussia Dortmund|H|Allianz Arena, M\xFCnchen\nbl09|bl|Bundesliga \xB7 9. Spieltag|2026-11-06|2026-11-08||1. FSV Mainz 05||MEWA Arena, Mainz\nbl10|bl|Bundesliga \xB7 10. Spieltag|2026-11-20|2026-11-22||1. FC K\xF6ln|H|Allianz Arena, M\xFCnchen\nbl11|bl|Bundesliga \xB7 11. Spieltag|2026-11-27|2026-11-29||Hamburger SV||Volksparkstadion, Hamburg\nbl12|bl|Bundesliga \xB7 12. Spieltag|2026-12-04|2026-12-06||SC Paderborn 07|H|Allianz Arena, M\xFCnchen\nbl13|bl|Bundesliga \xB7 13. Spieltag|2026-12-11|2026-12-13||TSG Hoffenheim||Sinsheim\nbl14|bl|Bundesliga \xB7 14. Spieltag|2026-12-18|2026-12-20||SV Werder Bremen|H|Allianz Arena, M\xFCnchen\nbl15|bl|Bundesliga \xB7 15. Spieltag|2027-01-08|2027-01-10||Borussia M\xF6nchengladbach||Borussia-Park, M\xF6nchengladbach\nbl16|bl|Bundesliga \xB7 16. Spieltag|2027-01-12|2027-01-14||Bayer 04 Leverkusen|H|Allianz Arena, M\xFCnchen\nbl17|bl|Bundesliga \xB7 17. Spieltag|2027-01-15|2027-01-17||Eintracht Frankfurt||Deutsche Bank Park, Frankfurt\nbl18|bl|Bundesliga \xB7 18. Spieltag|2027-01-22|2027-01-24||VfB Stuttgart||MHP-Arena, Stuttgart\nbl19|bl|Bundesliga \xB7 19. Spieltag|2027-01-29|2027-01-31||FC Schalke 04|H|Allianz Arena, M\xFCnchen\nbl20|bl|Bundesliga \xB7 20. Spieltag|2027-02-05|2027-02-07||SV 07 Elversberg|H|Allianz Arena, M\xFCnchen\nbl21|bl|Bundesliga \xB7 21. Spieltag|2027-02-12|2027-02-14||1. FC Union Berlin||Stadion An der Alten F\xF6rsterei, Berlin\nbl22|bl|Bundesliga \xB7 22. Spieltag|2027-02-19|2027-02-21||FC Augsburg|H|Allianz Arena, M\xFCnchen\nbl23|bl|Bundesliga \xB7 23. Spieltag|2027-02-26|2027-02-28||RB Leipzig||Red Bull Arena, Leipzig\nbl24|bl|Bundesliga \xB7 24. Spieltag|2027-03-02|2027-03-04||SC Freiburg|H|Allianz Arena, M\xFCnchen\nbl25|bl|Bundesliga \xB7 25. Spieltag|2027-03-05|2027-03-07||Borussia Dortmund||Signal Iduna Park, Dortmund\nbl26|bl|Bundesliga \xB7 26. Spieltag|2027-03-12|2027-03-14||1. FSV Mainz 05|H|Allianz Arena, M\xFCnchen\nbl27|bl|Bundesliga \xB7 27. Spieltag|2027-03-19|2027-03-21||1. FC K\xF6ln||RheinEnergieStadion, K\xF6ln\nbl28|bl|Bundesliga \xB7 28. Spieltag|2027-04-02|2027-04-04||Hamburger SV|H|Allianz Arena, M\xFCnchen\nbl29|bl|Bundesliga \xB7 29. Spieltag|2027-04-09|2027-04-11||SC Paderborn 07||Home-Deluxe-Arena, Paderborn\nbl30|bl|Bundesliga \xB7 30. Spieltag|2027-04-16|2027-04-18||TSG Hoffenheim|H|Allianz Arena, M\xFCnchen\nbl31|bl|Bundesliga \xB7 31. Spieltag|2027-04-23|2027-04-25||SV Werder Bremen||Weserstadion, Bremen\nbl32|bl|Bundesliga \xB7 32. Spieltag|2027-05-07|2027-05-09||Borussia M\xF6nchengladbach|H|Allianz Arena, M\xFCnchen\nbl33|bl|Bundesliga \xB7 33. Spieltag|2027-05-14|2027-05-16||Bayer 04 Leverkusen||BayArena, Leverkusen\nbl34|bl|Bundesliga \xB7 34. Spieltag|2027-05-22|2027-05-22|15:30|Eintracht Frankfurt|H|Allianz Arena, M\xFCnchen\ndfb01|dfb|DFB-Pokal \xB7 1. Runde|2026-09-02|2026-09-02|20:45|VfL Osnabr\xFCck||Bremer Br\xFCcke, Osnabr\xFCck\ndfb02|dfb|DFB-Pokal \xB7 2. Runde|2026-10-27|2026-10-28||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb03|dfb|DFB-Pokal \xB7 Achtelfinale|2026-12-01|2026-12-02||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb04a|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster A|2027-02-02|2027-02-03||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb04b|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster B|2027-02-09|2027-02-10||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb05|dfb|DFB-Pokal \xB7 Halbfinale|2027-04-20|2027-04-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb06|dfb|DFB-Pokal \xB7 Finale|2027-05-29|2027-05-29||m\xF6gliches Finale|PN|Olympiastadion Berlin\ncl01|cl|Champions League \xB7 Ligaphase 1|2026-09-08|2026-09-10||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl02|cl|Champions League \xB7 Ligaphase 2|2026-10-13|2026-10-14||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl03|cl|Champions League \xB7 Ligaphase 3|2026-10-20|2026-10-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl04|cl|Champions League \xB7 Ligaphase 4|2026-11-03|2026-11-04||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl05|cl|Champions League \xB7 Ligaphase 5|2026-11-24|2026-11-25||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl06|cl|Champions League \xB7 Ligaphase 6|2026-12-08|2026-12-09||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl07|cl|Champions League \xB7 Ligaphase 7|2027-01-19|2027-01-20||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl08|cl|Champions League \xB7 Ligaphase 8|2027-01-27|2027-01-27||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\nclpo1|cl|Champions League \xB7 Play-off Hinspiel|2027-02-16|2027-02-17||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclpo2|cl|Champions League \xB7 Play-off R\xFCckspiel|2027-02-23|2027-02-24||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclr161|cl|Champions League \xB7 Achtelfinale Hinspiel|2027-03-09|2027-03-10||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclr162|cl|Champions League \xB7 Achtelfinale R\xFCckspiel|2027-03-16|2027-03-17||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf1|cl|Champions League \xB7 Viertelfinale Hinspiel|2027-04-06|2027-04-07||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf2|cl|Champions League \xB7 Viertelfinale R\xFCckspiel|2027-04-13|2027-04-14||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf1|cl|Champions League \xB7 Halbfinale Hinspiel|2027-04-27|2027-04-28||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf2|cl|Champions League \xB7 Halbfinale R\xFCckspiel|2027-05-04|2027-05-05||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclfinal|cl|Champions League \xB7 Finale|2027-06-05|2027-06-05||m\xF6gliches Finale|PN|Estadio Metropolitano, Madrid";
-  var BASE_M = raw.split("\n").map((x) => {
-    let [id, c, l, s, e, t, o, f, p] = x.split("|");
-    return { id, c, l, s, e, t, o, h: f.includes("H"), pos: f.includes("P"), n: f.includes("N"), p };
+  // SeasonCrew/club-kits.js?v=20260817-loginfix1
+  var club_kits_exports = {};
+  __export(club_kits_exports, {
+    ALIASES: () => ALIASES,
+    CLUB_KITS: () => CLUB_KITS,
+    DEFAULT_KIT: () => DEFAULT_KIT,
+    canonicalName: () => canonicalName,
+    element: () => element,
+    getKit: () => getKit,
+    html: () => html,
+    hydrate: () => hydrate
   });
-  var MON = ["Jan", "Feb", "M\xE4r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-
-  // SeasonCrew/club-kits.js
-  var import_meta = {};
-  var CLUB_KITS = {
-    "FC Bayern M\xFCnchen": { primary: "#DC052D", secondary: "#FFFFFF" },
-    "Borussia Dortmund": { primary: "#FDE100", secondary: "#111111" },
-    "VfB Stuttgart": { primary: "#FFFFFF", secondary: "#E32219" },
-    "FC Schalke 04": { primary: "#005CA9", secondary: "#FFFFFF" },
-    "SV 07 Elversberg": { primary: "#111111", secondary: "#FFFFFF" },
-    "1. FC Union Berlin": { primary: "#D71920", secondary: "#F4C300" },
-    "FC Augsburg": { primary: "#BA3733", secondary: "#2E7D32" },
-    "RB Leipzig": { primary: "#FFFFFF", secondary: "#D71920" },
-    "SC Freiburg": { primary: "#D71920", secondary: "#111111" },
-    "1. FSV Mainz 05": { primary: "#C8102E", secondary: "#FFFFFF" },
-    "1. FC K\xF6ln": { primary: "#FFFFFF", secondary: "#D71920" },
-    "Hamburger SV": { primary: "#FFFFFF", secondary: "#0057B8" },
-    "SC Paderborn 07": { primary: "#005CA9", secondary: "#111111" },
-    "TSG Hoffenheim": { primary: "#005CA9", secondary: "#FFFFFF" },
-    "SV Werder Bremen": { primary: "#008A45", secondary: "#FFFFFF" },
-    "Borussia M\xF6nchengladbach": { primary: "#111111", secondary: "#FFFFFF" },
-    "Bayer 04 Leverkusen": { primary: "#111111", secondary: "#D71920" },
-    "Eintracht Frankfurt": { primary: "#111111", secondary: "#D71920" },
-    "VfL Osnabr\xFCck": { primary: "#6A1B9A", secondary: "#FFFFFF" }
-  };
-  var ALIASES = {
-    "FC Bayern": "FC Bayern M\xFCnchen",
-    "Bayern": "FC Bayern M\xFCnchen",
-    "Bayern M\xFCnchen": "FC Bayern M\xFCnchen",
-    "FC Bayern Munich": "FC Bayern M\xFCnchen",
-    "BVB": "Borussia Dortmund",
-    "Dortmund": "Borussia Dortmund",
-    "Schalke": "FC Schalke 04",
-    "Union Berlin": "1. FC Union Berlin",
-    "Mainz 05": "1. FSV Mainz 05",
-    "K\xF6ln": "1. FC K\xF6ln",
-    "Werder Bremen": "SV Werder Bremen",
-    "Gladbach": "Borussia M\xF6nchengladbach",
-    "Leverkusen": "Bayer 04 Leverkusen",
-    "Frankfurt": "Eintracht Frankfurt",
-    "Hoffenheim": "TSG Hoffenheim",
-    "Freiburg": "SC Freiburg",
-    "Paderborn": "SC Paderborn 07",
-    "Augsburg": "FC Augsburg",
-    "Stuttgart": "VfB Stuttgart",
-    "Leipzig": "RB Leipzig",
-    "Hamburg": "Hamburger SV",
-    "Osnabr\xFCck": "VfL Osnabr\xFCck",
-    "Elversberg": "SV 07 Elversberg"
-  };
-  var DOMAIN_TO_CLUB = {
-    "fcbayern.com": "FC Bayern M\xFCnchen",
-    "bvb.de": "Borussia Dortmund",
-    "vfb.de": "VfB Stuttgart",
-    "schalke04.de": "FC Schalke 04",
-    "sv07elversberg.de": "SV 07 Elversberg",
-    "fc-union-berlin.de": "1. FC Union Berlin",
-    "fcaugsburg.de": "FC Augsburg",
-    "rbleipzig.com": "RB Leipzig",
-    "scfreiburg.com": "SC Freiburg",
-    "mainz05.de": "1. FSV Mainz 05",
-    "fc.de": "1. FC K\xF6ln",
-    "hsv.de": "Hamburger SV",
-    "scp07.de": "SC Paderborn 07",
-    "tsg-hoffenheim.de": "TSG Hoffenheim",
-    "werder.de": "SV Werder Bremen",
-    "borussia.de": "Borussia M\xF6nchengladbach",
-    "bayer04.de": "Bayer 04 Leverkusen",
-    "eintracht.de": "Eintracht Frankfurt",
-    "vfl.de": "VfL Osnabr\xFCck"
-  };
-  var DEFAULT_KIT = { primary: "#252730", secondary: "#E14975" };
   function canonicalName(name = "") {
     const clean = String(name).replace(/\s+/g, " ").trim();
     if (CLUB_KITS[clean]) return clean;
@@ -160,15 +101,16 @@
     const prev = el.previousElementSibling?.textContent?.trim();
     if (prev && prev !== "\u2013") return canonicalName(prev);
     const club = el.closest?.(".club");
-    const nearby = club?.querySelector?.("span")?.textContent?.trim();
+    const nearby = club?.querySelector?.("span:not(.clubJersey)")?.textContent?.trim();
     if (nearby) return canonicalName(nearby);
     return "";
   }
   function replaceNode(el, name) {
     if (!name || el.dataset?.kitReady === "1") return;
     const jersey = element(name);
-    if (el.classList?.contains("clubLogo")) jersey.classList.add("clubLogo");
-    if (el.classList?.contains("logo")) jersey.classList.add("logo");
+    el.classList?.forEach((c) => {
+      if (c !== "clubJersey") jersey.classList.add(c);
+    });
     el.replaceWith(jersey);
   }
   function hydrate(root = document) {
@@ -184,27 +126,114 @@
     const current = document.currentScript?.src || import_meta.url;
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = new URL("./club-kits.css?v=20260817-1", current).href;
+    link.href = new URL("./club-kits.css?v=20260817-2", current).href;
     link.dataset.seasoncrewClubKits = "1";
     document.head.append(link);
   }
-  ensureStyles();
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => hydrate());
-  else hydrate();
-  var observer = new MutationObserver((records) => records.forEach((r) => r.addedNodes.forEach((n) => {
-    if (n.nodeType === 1) {
-      const el = n;
-      const name = inferClub(el);
-      if (el.matches?.("span.clubLogo,img.clubLogo,img.logo,[data-club-jersey]") && name) replaceNode(el, name);
-      hydrate(el);
+  var import_meta, CLUB_KITS, ALIASES, DOMAIN_TO_CLUB, DEFAULT_KIT, observer, api;
+  var init_club_kits = __esm({
+    "SeasonCrew/club-kits.js?v=20260817-loginfix1"() {
+      import_meta = {};
+      CLUB_KITS = {
+        "FC Bayern M\xFCnchen": { primary: "#DC052D", secondary: "#FFFFFF" },
+        "Borussia Dortmund": { primary: "#FDE100", secondary: "#111111" },
+        "VfB Stuttgart": { primary: "#FFFFFF", secondary: "#E32219" },
+        "FC Schalke 04": { primary: "#005CA9", secondary: "#FFFFFF" },
+        "SV 07 Elversberg": { primary: "#111111", secondary: "#FFFFFF" },
+        "1. FC Union Berlin": { primary: "#D71920", secondary: "#F4C300" },
+        "FC Augsburg": { primary: "#BA3733", secondary: "#2E7D32" },
+        "RB Leipzig": { primary: "#FFFFFF", secondary: "#D71920" },
+        "SC Freiburg": { primary: "#D71920", secondary: "#111111" },
+        "1. FSV Mainz 05": { primary: "#C8102E", secondary: "#FFFFFF" },
+        "1. FC K\xF6ln": { primary: "#FFFFFF", secondary: "#D71920" },
+        "Hamburger SV": { primary: "#FFFFFF", secondary: "#0057B8" },
+        "SC Paderborn 07": { primary: "#005CA9", secondary: "#111111" },
+        "TSG Hoffenheim": { primary: "#005CA9", secondary: "#FFFFFF" },
+        "SV Werder Bremen": { primary: "#008A45", secondary: "#FFFFFF" },
+        "Borussia M\xF6nchengladbach": { primary: "#111111", secondary: "#FFFFFF" },
+        "Bayer 04 Leverkusen": { primary: "#111111", secondary: "#D71920" },
+        "Eintracht Frankfurt": { primary: "#111111", secondary: "#D71920" },
+        "VfL Osnabr\xFCck": { primary: "#6A1B9A", secondary: "#FFFFFF" }
+      };
+      ALIASES = {
+        "FC Bayern": "FC Bayern M\xFCnchen",
+        "Bayern": "FC Bayern M\xFCnchen",
+        "Bayern M\xFCnchen": "FC Bayern M\xFCnchen",
+        "FC Bayern Munich": "FC Bayern M\xFCnchen",
+        "BVB": "Borussia Dortmund",
+        "Dortmund": "Borussia Dortmund",
+        "Schalke": "FC Schalke 04",
+        "Union Berlin": "1. FC Union Berlin",
+        "Mainz 05": "1. FSV Mainz 05",
+        "K\xF6ln": "1. FC K\xF6ln",
+        "Werder Bremen": "SV Werder Bremen",
+        "Gladbach": "Borussia M\xF6nchengladbach",
+        "Leverkusen": "Bayer 04 Leverkusen",
+        "Frankfurt": "Eintracht Frankfurt",
+        "Hoffenheim": "TSG Hoffenheim",
+        "Freiburg": "SC Freiburg",
+        "Paderborn": "SC Paderborn 07",
+        "Augsburg": "FC Augsburg",
+        "Stuttgart": "VfB Stuttgart",
+        "Leipzig": "RB Leipzig",
+        "Hamburg": "Hamburger SV",
+        "Osnabr\xFCck": "VfL Osnabr\xFCck",
+        "Elversberg": "SV 07 Elversberg"
+      };
+      DOMAIN_TO_CLUB = {
+        "fcbayern.com": "FC Bayern M\xFCnchen",
+        "bvb.de": "Borussia Dortmund",
+        "vfb.de": "VfB Stuttgart",
+        "schalke04.de": "FC Schalke 04",
+        "sv07elversberg.de": "SV 07 Elversberg",
+        "fc-union-berlin.de": "1. FC Union Berlin",
+        "fcaugsburg.de": "FC Augsburg",
+        "rbleipzig.com": "RB Leipzig",
+        "scfreiburg.com": "SC Freiburg",
+        "mainz05.de": "1. FSV Mainz 05",
+        "fc.de": "1. FC K\xF6ln",
+        "hsv.de": "Hamburger SV",
+        "scp07.de": "SC Paderborn 07",
+        "tsg-hoffenheim.de": "TSG Hoffenheim",
+        "werder.de": "SV Werder Bremen",
+        "borussia.de": "Borussia M\xF6nchengladbach",
+        "bayer04.de": "Bayer 04 Leverkusen",
+        "eintracht.de": "Eintracht Frankfurt",
+        "vfl.de": "VfL Osnabr\xFCck"
+      };
+      DEFAULT_KIT = { primary: "#252730", secondary: "#E14975" };
+      ensureStyles();
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => hydrate());
+      else hydrate();
+      observer = new MutationObserver((records) => records.forEach((r) => r.addedNodes.forEach((n) => {
+        if (n.nodeType === 1) {
+          const el = n;
+          const name = inferClub(el);
+          if (el.matches?.("span.clubLogo,img.clubLogo,img.logo,[data-club-jersey]") && name) replaceNode(el, name);
+          hydrate(el);
+        }
+      })));
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      api = { CLUB_KITS, ALIASES, DEFAULT_KIT, canonicalName, getKit, html, element, hydrate };
+      window.SeasonCrewClubKits = api;
     }
-  })));
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  var api = { CLUB_KITS, ALIASES, DEFAULT_KIT, canonicalName, getKit, html, element, hydrate };
-  window.SeasonCrewClubKits = api;
+  });
+
+  // FcBayern_Tom/schedule.js
+  var raw = "bl01|bl|Bundesliga \xB7 1. Spieltag|2026-08-28|2026-08-28|20:30|VfB Stuttgart|H|Allianz Arena, M\xFCnchen\nbl02|bl|Bundesliga \xB7 2. Spieltag|2026-09-05|2026-09-05|18:30|FC Schalke 04||VELTINS-Arena, Gelsenkirchen\nbl03|bl|Bundesliga \xB7 3. Spieltag|2026-09-13|2026-09-13|17:30|SV 07 Elversberg||URSAPHARM-Arena, Elversberg\nbl04|bl|Bundesliga \xB7 4. Spieltag|2026-09-18|2026-09-18|20:30|1. FC Union Berlin|H|Allianz Arena, M\xFCnchen\nbl05|bl|Bundesliga \xB7 5. Spieltag|2026-10-09|2026-10-11||FC Augsburg||WWK Arena, Augsburg\nbl06|bl|Bundesliga \xB7 6. Spieltag|2026-10-16|2026-10-18||RB Leipzig|H|Allianz Arena, M\xFCnchen\nbl07|bl|Bundesliga \xB7 7. Spieltag|2026-10-23|2026-10-25||SC Freiburg||Europa-Park Stadion, Freiburg\nbl08|bl|Bundesliga \xB7 8. Spieltag|2026-10-30|2026-11-01||Borussia Dortmund|H|Allianz Arena, M\xFCnchen\nbl09|bl|Bundesliga \xB7 9. Spieltag|2026-11-06|2026-11-08||1. FSV Mainz 05||MEWA Arena, Mainz\nbl10|bl|Bundesliga \xB7 10. Spieltag|2026-11-20|2026-11-22||1. FC K\xF6ln|H|Allianz Arena, M\xFCnchen\nbl11|bl|Bundesliga \xB7 11. Spieltag|2026-11-27|2026-11-29||Hamburger SV||Volksparkstadion, Hamburg\nbl12|bl|Bundesliga \xB7 12. Spieltag|2026-12-04|2026-12-06||SC Paderborn 07|H|Allianz Arena, M\xFCnchen\nbl13|bl|Bundesliga \xB7 13. Spieltag|2026-12-11|2026-12-13||TSG Hoffenheim||Sinsheim\nbl14|bl|Bundesliga \xB7 14. Spieltag|2026-12-18|2026-12-20||SV Werder Bremen|H|Allianz Arena, M\xFCnchen\nbl15|bl|Bundesliga \xB7 15. Spieltag|2027-01-08|2027-01-10||Borussia M\xF6nchengladbach||Borussia-Park, M\xF6nchengladbach\nbl16|bl|Bundesliga \xB7 16. Spieltag|2027-01-12|2027-01-14||Bayer 04 Leverkusen|H|Allianz Arena, M\xFCnchen\nbl17|bl|Bundesliga \xB7 17. Spieltag|2027-01-15|2027-01-17||Eintracht Frankfurt||Deutsche Bank Park, Frankfurt\nbl18|bl|Bundesliga \xB7 18. Spieltag|2027-01-22|2027-01-24||VfB Stuttgart||MHP-Arena, Stuttgart\nbl19|bl|Bundesliga \xB7 19. Spieltag|2027-01-29|2027-01-31||FC Schalke 04|H|Allianz Arena, M\xFCnchen\nbl20|bl|Bundesliga \xB7 20. Spieltag|2027-02-05|2027-02-07||SV 07 Elversberg|H|Allianz Arena, M\xFCnchen\nbl21|bl|Bundesliga \xB7 21. Spieltag|2027-02-12|2027-02-14||1. FC Union Berlin||Stadion An der Alten F\xF6rsterei, Berlin\nbl22|bl|Bundesliga \xB7 22. Spieltag|2027-02-19|2027-02-21||FC Augsburg|H|Allianz Arena, M\xFCnchen\nbl23|bl|Bundesliga \xB7 23. Spieltag|2027-02-26|2027-02-28||RB Leipzig||Red Bull Arena, Leipzig\nbl24|bl|Bundesliga \xB7 24. Spieltag|2027-03-02|2027-03-04||SC Freiburg|H|Allianz Arena, M\xFCnchen\nbl25|bl|Bundesliga \xB7 25. Spieltag|2027-03-05|2027-03-07||Borussia Dortmund||Signal Iduna Park, Dortmund\nbl26|bl|Bundesliga \xB7 26. Spieltag|2027-03-12|2027-03-14||1. FSV Mainz 05|H|Allianz Arena, M\xFCnchen\nbl27|bl|Bundesliga \xB7 27. Spieltag|2027-03-19|2027-03-21||1. FC K\xF6ln||RheinEnergieStadion, K\xF6ln\nbl28|bl|Bundesliga \xB7 28. Spieltag|2027-04-02|2027-04-04||Hamburger SV|H|Allianz Arena, M\xFCnchen\nbl29|bl|Bundesliga \xB7 29. Spieltag|2027-04-09|2027-04-11||SC Paderborn 07||Home-Deluxe-Arena, Paderborn\nbl30|bl|Bundesliga \xB7 30. Spieltag|2027-04-16|2027-04-18||TSG Hoffenheim|H|Allianz Arena, M\xFCnchen\nbl31|bl|Bundesliga \xB7 31. Spieltag|2027-04-23|2027-04-25||SV Werder Bremen||Weserstadion, Bremen\nbl32|bl|Bundesliga \xB7 32. Spieltag|2027-05-07|2027-05-09||Borussia M\xF6nchengladbach|H|Allianz Arena, M\xFCnchen\nbl33|bl|Bundesliga \xB7 33. Spieltag|2027-05-14|2027-05-16||Bayer 04 Leverkusen||BayArena, Leverkusen\nbl34|bl|Bundesliga \xB7 34. Spieltag|2027-05-22|2027-05-22|15:30|Eintracht Frankfurt|H|Allianz Arena, M\xFCnchen\ndfb01|dfb|DFB-Pokal \xB7 1. Runde|2026-09-02|2026-09-02|20:45|VfL Osnabr\xFCck||Bremer Br\xFCcke, Osnabr\xFCck\ndfb02|dfb|DFB-Pokal \xB7 2. Runde|2026-10-27|2026-10-28||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb03|dfb|DFB-Pokal \xB7 Achtelfinale|2026-12-01|2026-12-02||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb04a|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster A|2027-02-02|2027-02-03||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb04b|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster B|2027-02-09|2027-02-10||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb05|dfb|DFB-Pokal \xB7 Halbfinale|2027-04-20|2027-04-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb06|dfb|DFB-Pokal \xB7 Finale|2027-05-29|2027-05-29||m\xF6gliches Finale|PN|Olympiastadion Berlin\ncl01|cl|Champions League \xB7 Ligaphase 1|2026-09-08|2026-09-10||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl02|cl|Champions League \xB7 Ligaphase 2|2026-10-13|2026-10-14||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl03|cl|Champions League \xB7 Ligaphase 3|2026-10-20|2026-10-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl04|cl|Champions League \xB7 Ligaphase 4|2026-11-03|2026-11-04||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl05|cl|Champions League \xB7 Ligaphase 5|2026-11-24|2026-11-25||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl06|cl|Champions League \xB7 Ligaphase 6|2026-12-08|2026-12-09||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl07|cl|Champions League \xB7 Ligaphase 7|2027-01-19|2027-01-20||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl08|cl|Champions League \xB7 Ligaphase 8|2027-01-27|2027-01-27||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\nclpo1|cl|Champions League \xB7 Play-off Hinspiel|2027-02-16|2027-02-17||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclpo2|cl|Champions League \xB7 Play-off R\xFCckspiel|2027-02-23|2027-02-24||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclr161|cl|Champions League \xB7 Achtelfinale Hinspiel|2027-03-09|2027-03-10||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclr162|cl|Champions League \xB7 Achtelfinale R\xFCckspiel|2027-03-16|2027-03-17||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf1|cl|Champions League \xB7 Viertelfinale Hinspiel|2027-04-06|2027-04-07||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf2|cl|Champions League \xB7 Viertelfinale R\xFCckspiel|2027-04-13|2027-04-14||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf1|cl|Champions League \xB7 Halbfinale Hinspiel|2027-04-27|2027-04-28||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf2|cl|Champions League \xB7 Halbfinale R\xFCckspiel|2027-05-04|2027-05-05||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclfinal|cl|Champions League \xB7 Finale|2027-06-05|2027-06-05||m\xF6gliches Finale|PN|Estadio Metropolitano, Madrid";
+  var BASE_M = raw.split("\n").map((x) => {
+    let [id, c, l, s, e, t, o, f, p] = x.split("|");
+    return { id, c, l, s, e, t, o, h: f.includes("H"), pos: f.includes("P"), n: f.includes("N"), p };
+  });
+  var MON = ["Jan", "Feb", "M\xE4r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
   // SeasonCrew/schedule.js
   var D = Object.freeze({});
+  queueMicrotask(() => {
+    Promise.resolve().then(() => (init_club_kits(), club_kits_exports)).catch((error) => {
+      console.warn("SeasonCrew jersey renderer could not be loaded", error);
+    });
+  });
 
   // SeasonCrew/app.js
   var createClient = (...args) => window.supabase.createClient(...args);
