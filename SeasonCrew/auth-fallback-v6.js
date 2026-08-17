@@ -59,7 +59,7 @@
       label.innerHTML = 'Einladungscode <span style="color:#8c96a4">(optional)</span><input id="signupInvite" autocomplete="off" placeholder="Code oder Einladungslink">';
       hint = document.createElement('small');
       hint.className = 'fieldHint';
-      hint.textContent = 'Optional · Mit Einladung stellst du nach der E-Mail-Bestätigung automatisch eine Beitrittsanfrage. Ohne Einladung kannst du eine eigene Crew erstellen.';
+      hint.textContent = 'Optional · Mit Einladung stellst du nach der Registrierung automatisch eine Beitrittsanfrage. Ohne Einladung kannst du eine eigene Crew erstellen.';
       const firstLabel = signupForm.querySelector('label');
       signupForm.insertBefore(label, firstLabel || null);
       signupForm.insertBefore(hint, firstLabel || null);
@@ -69,11 +69,13 @@
       input.removeAttribute('required');
       label?.querySelector('span')?.remove();
       if (label?.firstChild?.nodeType === Node.TEXT_NODE) label.firstChild.nodeValue = 'Einladungscode (optional) ';
-      if (hint) hint.textContent = 'Optional · Mit Einladung stellst du nach der E-Mail-Bestätigung automatisch eine Beitrittsanfrage. Ohne Einladung kannst du eine eigene Crew erstellen.';
+      if (hint) hint.textContent = 'Optional · Mit Einladung stellst du nach der Registrierung automatisch eine Beitrittsanfrage. Ohne Einladung kannst du eine eigene Crew erstellen.';
     }
 
     const intro = signupForm.querySelector('p');
     if (intro) intro.textContent = 'Erstelle deinen Account. Mit Einladung kannst du einer bestehenden Crew beitreten – ohne Einladung kannst du danach deine eigene Crew anlegen.';
+    const loginIntro = loginForm?.querySelector('p');
+    if (loginIntro) loginIntro.textContent = 'Login mit deiner E-Mail-Adresse und deinem Passwort.';
 
     const urlCode = inviteToken(new URL(location.href).searchParams.get('invite'));
     const savedCode = inviteToken(localStorage.getItem('seasoncrew-pending-invite'));
@@ -82,6 +84,33 @@
   }
 
   ensureInviteField();
+
+  loginForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const sb = getClient();
+    if (!sb) {
+      setStatus('Die Login-Komponente konnte nicht geladen werden. Bitte Seite neu laden.');
+      return;
+    }
+
+    const email = $('loginEmail')?.value.trim();
+    const password = $('loginPassword')?.value || '';
+    setStatus('Einloggen …');
+
+    try {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        setStatus('Login fehlgeschlagen: ' + error.message);
+        return;
+      }
+      setStatus('Login erfolgreich. App wird geladen …', true);
+      setTimeout(() => location.reload(), 250);
+    } catch (error) {
+      setStatus('Login fehlgeschlagen: ' + (error?.message || String(error)));
+    }
+  }, true);
 
   signupForm?.addEventListener('submit', async event => {
     event.preventDefault();
@@ -169,13 +198,14 @@
         return;
       }
 
-      if (data.session) await sb.auth.signOut();
-      setTab('login');
-      if (invite) {
-        setStatus(`Account angelegt. Bitte bestätige deine E-Mail. Danach wird deine Bewerbung für „${invite.group_name || 'die Crew'}“ automatisch übermittelt.`, true);
-      } else {
-        setStatus('Account angelegt. Bitte bestätige deine E-Mail. Danach kannst du direkt deine eigene Crew erstellen oder später einer Crew per Einladung beitreten.', true);
+      if (!data.session) {
+        setTab('login');
+        setStatus('Account angelegt. In Supabase ist die E-Mail-Bestätigung serverseitig noch aktiv. Bitte dort „Confirm email“ deaktivieren; danach ist keine Bestätigungsmail mehr nötig.');
+        return;
       }
+
+      setStatus(invite ? `Account erstellt. Bewerbung für „${invite.group_name || 'die Crew'}“ wird vorbereitet …` : 'Account erstellt. App wird geladen …', true);
+      setTimeout(() => location.reload(), 300);
     } catch (error) {
       setStatus('Account konnte nicht erstellt werden: ' + (error?.message || String(error)));
     }
@@ -199,30 +229,6 @@
         setTab(button.dataset.authTab);
       }, true);
     });
-
-    loginForm?.addEventListener('submit', async event => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      const email = $('loginEmail')?.value.trim();
-      const password = $('loginPassword')?.value || '';
-      setStatus('Einloggen …');
-      try {
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) {
-          setStatus('Login fehlgeschlagen: ' + error.message);
-          return;
-        }
-        if (!data.user?.email_confirmed_at) {
-          await sb.auth.signOut();
-          setStatus('Bitte bestätige zuerst deine E-Mail-Adresse.');
-          return;
-        }
-        setStatus('Login erfolgreich. App wird geladen …', true);
-        setTimeout(() => location.reload(), 350);
-      } catch (error) {
-        setStatus('Login fehlgeschlagen: ' + (error?.message || String(error)));
-      }
-    }, true);
 
     if (!window.seasonCrewModuleFailed) setStatus('Login bereit.');
   }
