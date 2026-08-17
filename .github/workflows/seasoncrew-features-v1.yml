@@ -24,3 +24,5 @@ jobs:
           node --check SeasonCrew/product-v2.js
           node --check SeasonCrew/crew-delete.js
           node --check SeasonCrew/history.js
+      - name: Confirm product v2 files
+        run: test -f SeasonCrew/product-v2.js && test -f SeasonCrew/features-v1.js
