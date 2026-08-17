@@ -39,6 +39,15 @@
     return true;
   }
 
+  function loadPriceManager(){
+    if(document.querySelector('script[data-seasoncrew-prices]'))return;
+    const script=document.createElement('script');
+    script.src='price-management.js?v=20260817-savefix1';
+    script.defer=true;
+    script.dataset.seasoncrewPrices='1';
+    document.body.appendChild(script);
+  }
+
   function ensurePriceManagement(){
     if(!document.querySelector('link[data-seasoncrew-prices]')){
       const link=document.createElement('link');
@@ -47,13 +56,15 @@
       link.dataset.seasoncrewPrices='1';
       document.head.appendChild(link);
     }
-    if(!document.querySelector('script[data-seasoncrew-prices]')){
-      const script=document.createElement('script');
-      script.src='price-management.js?v=20260817-tabs4';
-      script.defer=true;
-      script.dataset.seasoncrewPrices='1';
-      document.body.appendChild(script);
-    }
+    if(window.__seasonCrewPriceObserverFix){loadPriceManager();return}
+    let fix=document.querySelector('script[data-seasoncrew-price-fix]');
+    if(fix){fix.addEventListener('load',loadPriceManager,{once:true});return}
+    fix=document.createElement('script');
+    fix.src='price-observer-fix.js?v=20260817-1';
+    fix.defer=true;
+    fix.dataset.seasoncrewPriceFix='1';
+    fix.addEventListener('load',loadPriceManager,{once:true});
+    document.body.appendChild(fix);
   }
 
   function ensureGroupedSettings(){
