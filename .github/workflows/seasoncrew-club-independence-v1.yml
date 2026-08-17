@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/seasoncrew-club-independence-v1.yml'
+      - 'SeasonCrew/club_independence_patch.py'
   workflow_dispatch:
 
 permissions:
