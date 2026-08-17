@@ -28,18 +28,17 @@
         <div class="settingsSectionHead"><div><h4>Eigene Heimspiele</h4><p>Für andere Vereine ist das der gruppenspezifische Spielplan. Bei FC Bayern kannst du hier zusätzliche Termine ergänzen.</p></div></div>
         <div id="fixtureList" class="ticketList"></div>
         <div class="manualFixtureForm">
-          <select id="fixtureCompetition"><option value="league">Liga</option><option value="cup">Pokal</option><option value="intl">International</option><option value="other">Sonstiges</option></select>
-          <input id="fixtureLabel" maxlength="120" placeholder="z. B. Liga · 5. Spieltag">
-          <input id="fixtureOpponent" maxlength="120" placeholder="Gegner">
-          <input id="fixtureVenue" maxlength="120" placeholder="Spielort optional">
-          <input id="fixtureDate" type="date">
-          <input id="fixtureTime" type="time">
-          <input id="fixturePrice" inputmode="decimal" placeholder="Preis optional">
+          <label class="manualFixtureField fixtureFieldCompetition"><span>Wettbewerb</span><select id="fixtureCompetition"><option value="league">Liga</option><option value="cup">Pokal</option><option value="intl">International</option><option value="other">Sonstiges</option></select></label>
+          <label class="manualFixtureField fixtureFieldLabel"><span>Bezeichnung</span><input id="fixtureLabel" maxlength="120" placeholder="z. B. Liga · 5. Spieltag"></label>
+          <label class="manualFixtureField fixtureFieldOpponent"><span>Gegner</span><input id="fixtureOpponent" maxlength="120" placeholder="z. B. TSV Musterstadt"></label>
+          <label class="manualFixtureField fixtureFieldVenue"><span>Spielort</span><input id="fixtureVenue" maxlength="120" placeholder="optional"></label>
+          <label class="manualFixtureField fixtureFieldDate"><span>Datum</span><input id="fixtureDate" type="date"></label>
+          <label class="manualFixtureField fixtureFieldTime"><span>Uhrzeit</span><input id="fixtureTime" type="time"></label>
+          <label class="manualFixtureField fixtureFieldPrice"><span>Preis</span><input id="fixturePrice" inputmode="decimal" placeholder="optional"></label>
           <button class="primaryButton compact" id="addFixtureBtn" type="button">Heimspiel hinzufügen</button>
         </div>
         <small class="fieldHint">Ohne eigenen Preis gilt der Standardpreis der Crew.</small>
       </section>`);
-      const style=document.createElement('style');style.textContent='.manualFixtureForm{display:grid;grid-template-columns:120px 1.3fr 1.1fr 1fr 135px 100px 110px auto;gap:7px;align-items:center}.manualFixtureForm input,.manualFixtureForm select{min-width:0}.fixtureSettingMeta{display:flex;gap:7px;flex-wrap:wrap}@media(max-width:900px){.manualFixtureForm{grid-template-columns:1fr 1fr}.manualFixtureForm #fixtureLabel,.manualFixtureForm #fixtureOpponent,.manualFixtureForm #fixtureVenue,.manualFixtureForm #addFixtureBtn{grid-column:1/-1}}';document.head.appendChild(style);
       $('addFixtureBtn')?.addEventListener('click',addFixture);
     }
   }
