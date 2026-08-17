@@ -49,11 +49,28 @@ function allocationKey(fixtureId,ticketId){return `${fixtureId}:${ticketId}`}
 function allocationMap(){return new Map(allocations.map(a=>[allocationKey(a.fixture_id,a.ticket_id),a]))}
 function noteMap(){return new Map(notes.map(n=>[n.fixture_id,n]))}
 
+function pendingInviteToken(){
+  const urlToken=extractInviteToken(new URL(location.href).searchParams.get('invite'));
+  const savedToken=extractInviteToken(localStorage.getItem('seasoncrew-pending-invite'));
+  return urlToken||savedToken;
+}
+function syncSignupInvite(){
+  const token=pendingInviteToken();
+  const input=$('signupInvite');
+  if(token){
+    localStorage.setItem('seasoncrew-pending-invite',token);
+    if(input&&!input.value.trim())input.value=token;
+  }
+  return token;
+}
 function setAuthTab(tab){
   document.querySelectorAll('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===tab));
   els.loginForm.classList.toggle('hidden',tab!=='login');els.signupForm.classList.toggle('hidden',tab!=='signup');setStatus(els.authStatus,'');
+  if(tab==='signup')syncSignupInvite();
 }
 document.querySelectorAll('[data-auth-tab]').forEach(b=>b.addEventListener('click',()=>setAuthTab(b.dataset.authTab)));
+const initialInvite=syncSignupInvite();
+if(initialInvite)setAuthTab('signup');
 
 els.loginForm.addEventListener('submit',async e=>{
   e.preventDefault();setStatus(els.authStatus,'Einloggen …');
@@ -69,15 +86,26 @@ els.loginForm.addEventListener('submit',async e=>{
 
 els.signupForm.addEventListener('submit',async e=>{
   e.preventDefault();
+  const token=extractInviteToken($('signupInvite')?.value)||pendingInviteToken();
   const username=$('signupUsername').value.trim(),email=$('signupEmail').value.trim();
   if(!validUsername(username)){setStatus(els.authStatus,'Nutzername: 3–24 Zeichen, nur Buchstaben, Zahlen, Punkt, Minus oder Unterstrich.');return}
+  if(token){
+    setStatus(els.authStatus,'Einladungscode wird geprüft …');
+    const {data:inviteRows,error:inviteError}=await sb.rpc('sc_validate_invite',{p_token:token});
+    const invite=Array.isArray(inviteRows)?inviteRows[0]:inviteRows;
+    if(inviteError){setStatus(els.authStatus,'Einladung konnte nicht geprüft werden: '+inviteError.message);return}
+    if(!invite?.valid){setStatus(els.authStatus,'Dieser Einladungscode ist ungültig oder abgelaufen.');return}
+    localStorage.setItem('seasoncrew-pending-invite',token);
+  }
   setStatus(els.authStatus,'Nutzername wird geprüft …');
   const {data:available,error:checkError}=await sb.rpc('sc_username_available',{p_username:username});
   if(checkError){setStatus(els.authStatus,'Nutzername konnte nicht geprüft werden.');return}
   if(!available){setStatus(els.authStatus,'Dieser Nutzername ist bereits vergeben.');return}
   setStatus(els.authStatus,'Account wird erstellt …');
   const redirectTo=new URL('./',location.href);redirectTo.search='';redirectTo.hash='';
-  const {data,error}=await sb.auth.signUp({email,password:$('signupPassword').value,options:{emailRedirectTo:redirectTo.href,data:{username}}});
+  if(token)redirectTo.searchParams.set('invite',token);
+  const metadata={username};if(token)metadata.invite_token=token;
+  const {data,error}=await sb.auth.signUp({email,password:$('signupPassword').value,options:{emailRedirectTo:redirectTo.href,data:metadata}});
   if(error){setStatus(els.authStatus,error.message);return}
   if(data.session&&data.user){
     session=data.session;user=data.user;setStatus(els.authStatus,'Account erstellt. App wird geladen …',true);await enterApp();return
