@@ -67,7 +67,7 @@
         <button class="authTextButton" id="recoveryCancelBtn" type="button">Abbrechen & zum Login</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build settings-layout-2 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build settings-dialog-2 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -166,7 +166,7 @@
   </dialog>
 
   <dialog id="settingsDialog" class="dialog large">
-    <form method="dialog" class="dialogCard settingsCard" id="settingsForm">
+    <form class="dialogCard settingsCard" id="settingsForm" novalidate>
       <div class="dialogHead"><div><small>SeasonCrew</small><h3 id="settingsTitle">Einstellungen</h3></div><button value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
       <section class="profileSettings"><h4>Mein Profil</h4><div class="settingsGrid"><label>Nutzername<input id="profileUsername" required></label><label>E-Mail<input id="profileEmail" type="email" disabled></label></div><button class="secondaryButton" id="saveProfileBtn" type="button">Profil speichern</button></section>
       <section class="adminSettings hidden" id="adminSettings"><h4>Crew</h4><div class="settingsGrid"><label>Crew-Name<input id="settingsGroupName"></label><label>PayPal.Me<input id="settingsPaypal" placeholder="username"></label><label>Standardpreis<div class="suffixInput"><input id="settingsPrice" inputmode="decimal"><span>€</span></div></label></div><button class="primaryButton" id="saveGroupBtn" type="button">Crew speichern</button></section>
@@ -209,7 +209,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0" onerror="document.getElementById('authStatus').textContent='Die Login-Komponente konnte nicht geladen werden. Bitte Seite neu laden.'"></script>
   <script src="seasoncrew-config.js?v=20260817-prod1"></script>
   <script src="seasoncrew-core.js?v=20260817-core1"></script>
-  <script src="ui-v2.js?v=20260817-core1"></script>
+  <script src="ui-v2.js?v=20260818-iosdialog2"></script>
   <script src="pricing-runtime-v2.js?v=20260817-core1"></script>
   <script src="wish-actions-v2.js?v=20260817-core1"></script>
   <script src="club-fixtures-v1.js?v=20260817-settings1"></script>
