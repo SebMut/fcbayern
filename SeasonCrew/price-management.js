@@ -15,6 +15,17 @@
     ['cl.sf','Champions League · Halbfinale'],
     ['cl.final','Champions League · Finale']
   ];
+  const TAB_LABELS={
+    profile:'Profil',
+    crew:'Crew',
+    prices:'Preise',
+    applications:'Offene Bewerbungen',
+    invites:'Einladungen',
+    tickets:'Dauerkarten',
+    members:'Mitglieder',
+    danger:'Gefahrenzone'
+  };
+  const ADMIN_TABS=new Set(['crew','prices','applications','invites','tickets','members']);
 
   let client=null,groupData=null,fixtures=[],activeTab='profile';
   const $=id=>document.getElementById(id);
@@ -34,7 +45,9 @@
   }
   function cloneRules(rules){try{return structuredClone(rules||{})}catch{return JSON.parse(JSON.stringify(rules||{}))}}
   function currentGroupId(){return $('groupSelect')?.value||''}
-  function canManage(){return ['Owner','Admin','Superadmin'].includes(($('memberRole')?.textContent||'').trim())}
+  function currentRole(){return ($('memberRole')?.textContent||'').trim()}
+  function canManage(){return ['Owner','Admin','Superadmin'].includes(currentRole())}
+  function canDanger(){return ['Owner','Superadmin'].includes(currentRole())}
   function setStatus(text,ok=false){const el=$('priceManagementStatus');if(!el)return;el.textContent=text||'';el.classList.toggle('ok',!!ok)}
 
   function ensureSection(){
@@ -82,11 +95,45 @@
     return section;
   }
 
+  function makePanel(name){
+    const panel=document.createElement('div');
+    panel.id=`settingsTab${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    panel.className=`settingsTabPanel settingsTabPanel-${name}`;
+    panel.dataset.settingsPanel=name;
+    return panel;
+  }
+
+  function splitInviteSection(inviteSection){
+    if(!inviteSection)return null;
+    const head=inviteSection.querySelector('.settingsSectionHead');
+    const h4=head?.querySelector('h4');
+    const p=head?.querySelector('p');
+    if(h4)h4.textContent='Einladungen';
+    if(p)p.textContent='Erstelle einen Einladungslink oder QR-Code für neue Crew-Mitglieder.';
+
+    let applications=$('applicationsSettings');
+    if(!applications){
+      applications=document.createElement('section');
+      applications.id='applicationsSettings';
+      applications.className='applicationsSettings';
+      const requestHead=inviteSection.querySelector('.joinRequestHead');
+      const requestList=$('joinRequestList');
+      if(requestHead)applications.appendChild(requestHead);
+      if(requestList)applications.appendChild(requestList);
+    }
+    return applications;
+  }
+
+  function relocateDangerZone(){
+    const zone=$('crewDangerZone'),panel=$('settingsTabDanger');
+    if(zone&&panel&&zone.parentElement!==panel)panel.appendChild(zone);
+  }
+
   function ensureTabs(){
     const form=$('settingsForm'),priceSection=ensureSection();
     if(!form||!priceSection)return null;
     let tabs=$('settingsTabs');
-    if(tabs)return tabs;
+    if(tabs){relocateDangerZone();syncTabAccess();return tabs}
 
     const grid=form.querySelector('.settingsGrid');
     if(!grid)return null;
@@ -95,27 +142,27 @@
     const inviteSection=$('inviteAdminSettings');
     const ticketSection=$('ticketSettings');
     const membersSection=form.querySelector('.membersSettings');
+    const applicationsSection=splitInviteSection(inviteSection);
 
     tabs=document.createElement('div');
     tabs.id='settingsTabs';
     tabs.className='settingsTabs';
     tabs.setAttribute('role','tablist');
-    tabs.innerHTML=`
-      <button type="button" data-settings-tab="profile" role="tab">Profil</button>
-      <button type="button" data-settings-tab="crew" role="tab">Crew</button>
-      <button type="button" data-settings-tab="prices" role="tab">Preise</button>`;
+    tabs.innerHTML=Object.entries(TAB_LABELS).map(([key,label])=>`<button type="button" data-settings-tab="${key}" role="tab">${label}</button>`).join('');
 
-    const profilePanel=document.createElement('div');
-    profilePanel.id='settingsTabProfile';profilePanel.className='settingsTabPanel';profilePanel.dataset.settingsPanel='profile';
-    const crewPanel=document.createElement('div');
-    crewPanel.id='settingsTabCrew';crewPanel.className='settingsTabPanel settingsCrewPanel';crewPanel.dataset.settingsPanel='crew';
-    const pricePanel=document.createElement('div');
-    pricePanel.id='settingsTabPrices';pricePanel.className='settingsTabPanel';pricePanel.dataset.settingsPanel='prices';
+    const panels={};
+    Object.keys(TAB_LABELS).forEach(name=>panels[name]=makePanel(name));
 
-    if(profileSection)profilePanel.appendChild(profileSection);
-    [adminSection,inviteSection,ticketSection,membersSection].filter(Boolean).forEach(el=>crewPanel.appendChild(el));
-    pricePanel.appendChild(priceSection);
-    grid.replaceWith(tabs,profilePanel,crewPanel,pricePanel);
+    if(profileSection)panels.profile.appendChild(profileSection);
+    if(adminSection)panels.crew.appendChild(adminSection);
+    panels.prices.appendChild(priceSection);
+    if(applicationsSection)panels.applications.appendChild(applicationsSection);
+    if(inviteSection)panels.invites.appendChild(inviteSection);
+    if(ticketSection)panels.tickets.appendChild(ticketSection);
+    if(membersSection)panels.members.appendChild(membersSection);
+
+    grid.replaceWith(tabs,...Object.values(panels));
+    relocateDangerZone();
 
     tabs.querySelectorAll('[data-settings-tab]').forEach(button=>button.addEventListener('click',()=>setActiveTab(button.dataset.settingsTab)));
     syncTabAccess();
@@ -123,17 +170,22 @@
     return tabs;
   }
 
+  function tabAllowed(name){
+    if(name==='profile')return true;
+    if(name==='danger')return canDanger();
+    return ADMIN_TABS.has(name)&&canManage();
+  }
+
   function syncTabAccess(){
-    const manage=canManage();
-    document.querySelectorAll('[data-settings-tab="crew"],[data-settings-tab="prices"]').forEach(button=>button.classList.toggle('hidden',!manage));
-    if(!manage&&activeTab!=='profile')setActiveTab('profile');
+    document.querySelectorAll('[data-settings-tab]').forEach(button=>button.classList.toggle('hidden',!tabAllowed(button.dataset.settingsTab)));
+    relocateDangerZone();
+    if(!tabAllowed(activeTab))setActiveTab('profile');
   }
 
   function setActiveTab(name){
     ensureTabs();
-    const manage=canManage();
-    if((name==='crew'||name==='prices')&&!manage)name='profile';
-    if(!['profile','crew','prices'].includes(name))name='profile';
+    if(!TAB_LABELS[name])name='profile';
+    if(!tabAllowed(name))name='profile';
     activeTab=name;
     document.querySelectorAll('[data-settings-tab]').forEach(button=>{
       const selected=button.dataset.settingsTab===name;
@@ -142,7 +194,7 @@
     });
     document.querySelectorAll('[data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==name);
     const subtitle=document.querySelector('#settingsDialog .dialogHead small');
-    if(subtitle)subtitle.textContent=name==='profile'?'Profil':name==='crew'?'Crew-Einstellungen':'Preisverwaltung';
+    if(subtitle)subtitle.textContent=TAB_LABELS[name]||'Crew-Einstellungen';
     if(name==='prices')scheduleRefresh();
   }
 
@@ -235,15 +287,20 @@
   }
 
   function scheduleRefresh(){setTimeout(refresh,80)}
+  function syncDynamicSections(){ensureTabs();relocateDangerZone();syncTabAccess()}
   function init(){
     ensureSection();ensureTabs();
     $('settingsBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab('profile'),0));
     $('groupMenuBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab(canManage()?'crew':'profile'),0));
-    $('heroInviteBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab(canManage()?'crew':'profile'),0));
+    $('heroInviteBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab(canManage()?'invites':'profile'),0));
     $('groupSelect')?.addEventListener('change',()=>{groupData=null;syncTabAccess();scheduleRefresh()});
     const dialog=$('settingsDialog');
-    if(dialog)new MutationObserver(()=>{if(dialog.open){ensureTabs();syncTabAccess();if(activeTab==='prices')scheduleRefresh()}}).observe(dialog,{attributes:true,attributeFilter:['open']});
-    window.addEventListener('seasoncrew:rendered',()=>{syncTabAccess();if($('settingsDialog')?.open&&activeTab==='prices')scheduleRefresh()});
+    if(dialog){
+      new MutationObserver(()=>{if(dialog.open){syncDynamicSections();if(activeTab==='prices')scheduleRefresh()}}).observe(dialog,{attributes:true,childList:true,subtree:true,attributeFilter:['open']});
+    }
+    window.addEventListener('seasoncrew:settings-rendered',()=>requestAnimationFrame(syncDynamicSections));
+    window.addEventListener('seasoncrew:rendered',()=>{syncDynamicSections();if($('settingsDialog')?.open&&activeTab==='prices')scheduleRefresh()});
+    setTimeout(syncDynamicSections,500);
     if(dialog?.open){setActiveTab('profile');scheduleRefresh()}
   }
   if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
