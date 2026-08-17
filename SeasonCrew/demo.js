@@ -1,5 +1,7 @@
 (()=>{
-  const STORAGE='seasoncrew-customer-demo-v1';
+  'use strict';
+
+  const STORAGE='seasoncrew-customer-demo-v2';
   const $=id=>document.getElementById(id);
   const money=v=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,9 +10,10 @@
   const nowText=()=>new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date());
 
   const seed=()=>({
-    version:1,
+    version:2,
     role:'admin',
     filter:'all',
+    paypalMe:'SeasonCrewDemo',
     members:[
       {id:'miriam',name:'Miriam',role:'Admin',online:true},
       {id:'alex',name:'Alex',role:'Gast',online:true},
@@ -58,155 +61,142 @@
 
   let state=load();
   let assignContext=null;
+  let paypalContext=null;
 
   function load(){
-    try{
-      const parsed=JSON.parse(localStorage.getItem(STORAGE));
-      if(parsed?.version===1)return parsed;
-    }catch{}
+    try{const parsed=JSON.parse(localStorage.getItem(STORAGE));if(parsed?.version===2)return parsed}catch{}
     const fresh=seed();localStorage.setItem(STORAGE,JSON.stringify(fresh));return fresh;
   }
   function save(){localStorage.setItem(STORAGE,JSON.stringify(state))}
-  function toast(text){const el=$('toast');el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
-  function addHistory(text,actor=null){state.history.unshift({time:nowText(),actor:actor||(state.role==='guest'?'Alex':'Miriam'),text});state.history=state.history.slice(0,40);save()}
-  function member(id){return state.members.find(m=>m.id===id)}
-  function match(id){return state.matches.find(m=>m.id===id)}
-  function ticket(id){return state.tickets.find(t=>t.id===id)}
-  function alloc(matchId,ticketId){return state.allocations.find(a=>a.matchId===matchId&&a.ticketId===ticketId)}
+  function member(id){return state.members.find(x=>x.id===id)}
+  function match(id){return state.matches.find(x=>x.id===id)}
+  function ticket(id){return state.tickets.find(x=>x.id===id)}
+  function alloc(matchId,ticketId){return state.allocations.find(x=>x.matchId===matchId&&x.ticketId===ticketId)}
   function isAdmin(){return state.role==='admin'}
-  function visiblePayments(){return state.allocations.filter(a=>!a.paid&&(isAdmin()||a.memberId==='alex'))}
   function compName(c){return c==='liga'?'Liga':c==='pokal'?'Pokal':'Europa'}
+  function visiblePayments(){return state.allocations.filter(a=>!a.paid&&(isAdmin()||a.memberId==='alex'))}
+  function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
+  function addHistory(text,actor=null){state.history.unshift({time:nowText(),actor:actor||(isAdmin()?'Miriam':'Alex'),text});state.history=state.history.slice(0,50);save()}
+  function openModal(id){const el=$(id);if(!el)return;try{if(typeof el.showModal==='function'){if(!el.open)el.showModal()}else{el.setAttribute('open','');el.style.display='block'}}catch{el.setAttribute('open','');el.style.display='block'}}
+  function closeModal(id){const el=$(id);if(!el)return;try{if(typeof el.close==='function'&&el.open)el.close();else el.removeAttribute('open')}catch{el.removeAttribute('open')}if(typeof el.showModal!=='function')el.style.display='none'}
+  async function copyText(text){try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return true}}catch{}try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();return true}catch{return false}}
+
+  function ensurePaypalDialog(){
+    if($('paypalDemoDialog'))return;
+    const dialog=document.createElement('dialog');dialog.id='paypalDemoDialog';dialog.className='dialog';
+    dialog.innerHTML=`<div class="dialogCard"><div class="dialogHead"><div><small>PayPal.Me · Demo</small><h3>Zahlung anfordern</h3></div><button class="iconClose" type="button" data-close="paypalDemoDialog" aria-label="Schließen">×</button></div><div class="demoPaypalPerson" id="demoPaypalPerson"></div><div class="demoPaypalAmount" id="demoPaypalAmount"></div><div class="demoPaypalLink" id="demoPaypalLink"></div><div class="demoFeatureNote">Dies ist nur eine Simulation. Es wird keine echte PayPal-Zahlung ausgelöst.</div><div class="dialogActions"><button class="secondaryBtn" type="button" data-action="copy-paypal">Nachricht kopieren</button><button class="primaryBtn" type="button" data-action="simulate-paypal">PayPal öffnen · Demo</button></div></div>`;
+    document.body.appendChild(dialog);
+    const style=document.createElement('style');
+    style.textContent=`.demoPaypalPerson{font:800 11px Manrope;margin:2px 0 3px}.demoPaypalAmount{font:800 28px Space Grotesk;color:#e14975;margin:8px 0}.demoPaypalLink{background:#f4f6f7;border:1px solid #dfe4e7;border-radius:10px;padding:10px;font:800 10px Manrope;word-break:break-all}.paypalBtn{background:rgba(255,255,255,.2)!important;color:#fff!important;border:1px solid rgba(255,255,255,.32)!important}.paymentPaypal{border:0;background:#1f2a30;color:#b7ff00;border-radius:8px;padding:7px 9px;font:800 8px Manrope;cursor:pointer}.guestMode .ticketCard.unpaid:not(.ownTicket) .paypalBtn{display:none!important}`;
+    document.head.appendChild(style);
+  }
 
   function render(){
     document.body.classList.toggle('guestMode',!isAdmin());
-    $('roleView').value=state.role;
-    $('viewerName').textContent=isAdmin()?'Miriam':'Alex';
-    $('viewerRole').textContent=isAdmin()?'Admin':'Gast';
-    $('inviteBtn').style.display=isAdmin()?'inline-flex':'none';
+    if($('roleView'))$('roleView').value=state.role;
+    if($('viewerName'))$('viewerName').textContent=isAdmin()?'Miriam':'Alex';
+    if($('viewerRole'))$('viewerRole').textContent=isAdmin()?'Admin':'Gast';
+    if($('inviteBtn'))$('inviteBtn').style.display=isAdmin()?'inline-flex':'none';
     renderStats();renderGames();renderNotifications();
+    document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===state.filter));
   }
 
   function renderStats(){
-    const total=state.matches.length*state.tickets.length,assigned=state.allocations.length,unpaid=visiblePayments();
-    $('statFixtures').textContent=state.matches.length;
-    $('statTickets').textContent=state.tickets.length;
-    $('statAssigned').textContent=assigned;
-    $('statOpen').textContent=total-assigned;
-    $('paymentLabel').textContent=isAdmin()?'Zahlungen offen':'Deine offenen Zahlungen';
-    $('statUnpaid').textContent=money(unpaid.reduce((s,a)=>s+a.amount,0));
-    $('statUnpaidCount').textContent=`${unpaid.length} Ticket${unpaid.length===1?'':'s'}`;
-    $('paymentsBtn').textContent=isAdmin()?'Zahlungen ansehen':'Meine Zahlungen';
+    const total=state.matches.length*state.tickets.length,unpaid=visiblePayments();
+    $('statFixtures').textContent=state.matches.length;$('statTickets').textContent=state.tickets.length;$('statAssigned').textContent=state.allocations.length;$('statOpen').textContent=total-state.allocations.length;
+    $('paymentLabel').textContent=isAdmin()?'Zahlungen offen':'Deine offenen Zahlungen';$('statUnpaid').textContent=money(unpaid.reduce((s,a)=>s+Number(a.amount||0),0));$('statUnpaidCount').textContent=`${unpaid.length} Ticket${unpaid.length===1?'':'s'}`;$('paymentsBtn').textContent=isAdmin()?'Zahlungen ansehen':'Meine Zahlungen';
   }
 
   function filteredMatches(){
-    const q=$('searchInput').value.trim().toLowerCase();
-    return state.matches.filter(m=>{
-      const free=state.tickets.some(t=>!alloc(m.id,t.id));
-      const filterOk=state.filter==='all'||state.filter===m.comp||(state.filter==='open'&&free);
-      return filterOk&&(!q||`${m.opponent} ${m.label} ${compName(m.comp)}`.toLowerCase().includes(q));
-    });
+    const q=($('searchInput')?.value||'').trim().toLowerCase();
+    return state.matches.filter(m=>{const free=state.tickets.some(t=>!alloc(m.id,t.id));const ok=state.filter==='all'||state.filter===m.comp||(state.filter==='open'&&free);return ok&&(!q||`${m.opponent} ${m.label} ${compName(m.comp)}`.toLowerCase().includes(q))});
   }
 
   function renderGames(){
-    const groups=new Map();
-    filteredMatches().forEach(m=>{const k=monthText(m.date);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(m)});
-    if(!groups.size){$('games').innerHTML='<div class="demoFeatureNote">Keine Spiele für diesen Filter.</div>';return}
-    const nextId=filteredMatches()[0]?.id;
-    $('games').innerHTML=[...groups].map(([month,matches])=>`<div class="monthTitle">${esc(month)}</div>${matches.map(m=>renderGame(m,m.id===nextId)).join('')}`).join('');
-    bindGameEvents();
+    const list=filteredMatches();if(!list.length){$('games').innerHTML='<div class="demoFeatureNote">Keine Spiele für diesen Filter.</div>';return}
+    const groups=new Map();list.forEach(m=>{const key=monthText(m.date);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(m)});const nextId=list[0]?.id;
+    $('games').innerHTML=[...groups].map(([month,items])=>`<div class="monthTitle">${esc(month)}</div>${items.map(m=>renderGame(m,m.id===nextId)).join('')}`).join('');
   }
 
   function renderGame(m,isNext){
     const assigned=state.tickets.map(t=>alloc(m.id,t.id)).filter(Boolean),allPaid=assigned.length===state.tickets.length&&assigned.every(a=>a.paid);
-    return `<article class="gameCard ${isNext?'nextGame':''} ${allPaid?'allPaid':''}" id="game-${m.id}">
-      <div class="gameTop">
-        <div class="gameDate"><strong>${dateText(m.date)}</strong><span>${esc(m.time)} Uhr</span></div>
-        <div class="fixtureMeta"><span class="competition">${esc(compName(m.comp))}</span><h3>Musterstadt 1908 – ${esc(m.opponent)}</h3><p>${esc(m.label)}</p></div>
-        <div class="fixtureCount">${assigned.length}/${state.tickets.length}</div>
-      </div>
-      <div class="ticketGrid">${state.tickets.map(t=>renderTicket(m,t,alloc(m.id,t.id))).join('')}</div>
-      <div class="gameNoteWrap"><textarea data-note="${m.id}" ${isAdmin()?'':'readonly'} placeholder="Notiz zum Spiel">${esc(m.note||'')}</textarea><button class="saveNote" data-save-note="${m.id}" type="button">Notiz speichern</button></div>
-    </article>`;
+    return `<article class="gameCard ${isNext?'nextGame':''} ${allPaid?'allPaid':''}" id="game-${m.id}"><div class="gameTop"><div class="gameDate"><strong>${dateText(m.date)}</strong><span>${esc(m.time)} Uhr</span></div><div class="fixtureMeta"><span class="competition">${esc(compName(m.comp))}</span><h3>Musterstadt 1908 – ${esc(m.opponent)}</h3><p>${esc(m.label)}</p></div><div class="fixtureCount">${assigned.length}/${state.tickets.length}</div></div><div class="ticketGrid">${state.tickets.map(t=>renderTicket(m,t,alloc(m.id,t.id))).join('')}</div><div class="gameNoteWrap"><textarea data-note="${m.id}" ${isAdmin()?'':'readonly'} placeholder="Notiz zum Spiel">${esc(m.note||'')}</textarea>${isAdmin()?`<button class="saveNote" data-action="save-note" data-match="${m.id}" type="button">Notiz speichern</button>`:''}</div></article>`;
   }
 
   function renderTicket(m,t,a){
     const meta=`Block ${esc(t.block)} · Reihe ${esc(t.row)} · Sitz ${esc(t.seat)}`;
-    if(!a)return `<div class="ticketCard unassigned" data-assign="${m.id}|${t.id}"><div class="ticketHead"><div><b>${esc(t.label)}</b><small>${meta}</small></div><b>+</b></div><div class="ticketPerson">Karte verfügbar</div><div class="ticketActions"><button type="button">Karte vergeben</button></div></div>`;
-    return `<div class="ticketCard ${a.paid?'paid':'unpaid'}"><div class="ticketHead"><div><b>${esc(t.label)}</b><small>${a.paid?'bezahlt':'Zahlung offen'}</small></div></div><div class="ticketMeta">${meta}</div><div class="ticketPerson">${esc(a.name)}</div><div class="ticketActions"><button class="releaseAction" data-release="${m.id}|${t.id}" type="button">Freigeben</button><label><input type="checkbox" data-paid="${m.id}|${t.id}" ${a.paid?'checked':''}> bezahlt</label></div></div>`;
-  }
-
-  function bindGameEvents(){
-    document.querySelectorAll('[data-assign]').forEach(el=>el.addEventListener('click',()=>{if(!isAdmin())return;const [matchId,ticketId]=el.dataset.assign.split('|');openAssign(matchId,ticketId)}));
-    document.querySelectorAll('[data-release]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();if(!isAdmin())return;const [matchId,ticketId]=btn.dataset.release.split('|');releaseTicket(matchId,ticketId)}));
-    document.querySelectorAll('[data-paid]').forEach(input=>input.addEventListener('change',()=>{if(!isAdmin()){input.checked=!input.checked;return}const [matchId,ticketId]=input.dataset.paid.split('|');setPaid(matchId,ticketId,input.checked)}));
-    document.querySelectorAll('[data-save-note]').forEach(btn=>btn.addEventListener('click',()=>{if(!isAdmin())return;const id=btn.dataset.saveNote,m=match(id),area=document.querySelector(`[data-note="${id}"]`);m.note=area.value.trim();addHistory(`Notiz für ${m.opponent} aktualisiert`);save();toast('Notiz gespeichert')}));
+    if(!a)return `<div class="ticketCard unassigned" data-action="assign" data-match="${m.id}" data-ticket="${t.id}" role="button" tabindex="0"><div class="ticketHead"><div><b>${esc(t.label)}</b><small>${meta}</small></div><b>+</b></div><div class="ticketPerson">Karte verfügbar</div><div class="ticketActions"><button type="button" data-action="assign" data-match="${m.id}" data-ticket="${t.id}">Karte vergeben</button></div></div>`;
+    const own=a.memberId==='alex',canPaypal=!a.paid&&(isAdmin()||own);
+    return `<div class="ticketCard ${a.paid?'paid':'unpaid'} ${own?'ownTicket':''}"><div class="ticketHead"><div><b>${esc(t.label)}</b><small>${a.paid?'bezahlt':'Zahlung offen'}</small></div></div><div class="ticketMeta">${meta}</div><div class="ticketPerson">${esc(a.name)} · ${money(a.amount)}</div><div class="ticketActions">${isAdmin()?`<button class="releaseAction" data-action="release" data-match="${m.id}" data-ticket="${t.id}" type="button">Freigeben</button>`:''}${canPaypal?`<button class="paypalBtn" data-action="paypal" data-match="${m.id}" data-ticket="${t.id}" type="button">PayPal</button>`:''}${isAdmin()?`<label><input type="checkbox" data-action="paid-toggle" data-match="${m.id}" data-ticket="${t.id}" ${a.paid?'checked':''}> bezahlt</label>`:''}</div></div>`;
   }
 
   function openAssign(matchId,ticketId){
-    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);
-    $('assignTitle').textContent=`${t.label} · ${m.opponent}`;
-    $('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');
-    $('assignGuest').value='';$('assignDialog').showModal();
+    if(!isAdmin()){toast('In der Gastansicht können freie Karten nicht vergeben werden.');return}
+    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;
+    $('assignTitle').textContent=`${t.label} · ${m.opponent}`;$('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
   }
-
-  function releaseTicket(matchId,ticketId){
-    const a=alloc(matchId,ticketId);if(!a)return;
-    state.allocations=state.allocations.filter(x=>!(x.matchId===matchId&&x.ticketId===ticketId));
-    addHistory(`${ticket(ticketId).label} gegen ${match(matchId).opponent} von ${a.name} freigegeben`);save();render();toast('Karte freigegeben');
-  }
-
-  function setPaid(matchId,ticketId,paid){
-    const a=alloc(matchId,ticketId);if(!a)return;a.paid=paid;
-    addHistory(`${a.name}: ${ticket(ticketId).label} gegen ${match(matchId).opponent} ${paid?'als bezahlt markiert':'wieder auf offen gesetzt'}`);save();render();toast(paid?'Zahlung erledigt':'Zahlung wieder offen');
-  }
+  function releaseTicket(matchId,ticketId){if(!isAdmin())return;const a=alloc(matchId,ticketId);if(!a)return;state.allocations=state.allocations.filter(x=>!(x.matchId===matchId&&x.ticketId===ticketId));addHistory(`${ticket(ticketId).label} gegen ${match(matchId).opponent} von ${a.name} freigegeben`);render();toast('Karte freigegeben')}
+  function setPaid(matchId,ticketId,paid){if(!isAdmin())return;const a=alloc(matchId,ticketId);if(!a)return;a.paid=paid;addHistory(`${a.name}: ${ticket(ticketId).label} gegen ${match(matchId).opponent} ${paid?'als bezahlt markiert':'wieder auf offen gesetzt'}`);render();toast(paid?'Zahlung erledigt':'Zahlung wieder offen')}
 
   function renderPayments(){
     const list=visiblePayments();$('paymentsTitle').textContent=isAdmin()?'Offene Zahlungen':'Deine offenen Zahlungen';
-    $('paymentsList').innerHTML=list.length?list.map(a=>{const m=match(a.matchId),t=ticket(a.ticketId);return `<div class="paymentRow"><div><strong>${esc(a.name)} · ${esc(t.label)}</strong><small>${dateText(m.date)} · ${esc(m.opponent)}</small></div><div class="paymentAmount">${money(a.amount)}</div>${isAdmin()?`<button class="payDone" data-pay-done="${a.matchId}|${a.ticketId}" type="button">Als bezahlt markieren</button>`:''}</div>`}).join(''):'<div class="demoFeatureNote">Aktuell sind keine Zahlungen offen.</div>';
-    document.querySelectorAll('[data-pay-done]').forEach(btn=>btn.addEventListener('click',()=>{const [m,t]=btn.dataset.payDone.split('|');setPaid(m,t,true);renderPayments()}));
+    $('paymentsList').innerHTML=list.length?list.map(a=>{const m=match(a.matchId),t=ticket(a.ticketId);return `<div class="paymentRow"><div><strong>${esc(a.name)} · ${esc(t.label)}</strong><small>${dateText(m.date)} · ${esc(m.opponent)}</small></div><div class="paymentAmount">${money(a.amount)}</div><button class="paymentPaypal" data-action="paypal" data-match="${a.matchId}" data-ticket="${a.ticketId}" type="button">PayPal</button>${isAdmin()?`<button class="payDone" data-action="pay-done" data-match="${a.matchId}" data-ticket="${a.ticketId}" type="button">Bezahlt</button>`:''}</div>`}).join(''):'<div class="demoFeatureNote">Aktuell sind keine Zahlungen offen.</div>';
   }
 
-  function renderHistory(){
-    $('historyList').innerHTML=state.history.map(h=>`<div class="historyRow"><time>${esc(h.time)}</time><div><b>${esc(h.actor)}</b><small>${esc(h.text)}</small></div></div>`).join('');
+  function openPaypal(matchId,ticketId){
+    const a=alloc(matchId,ticketId),m=match(matchId),t=ticket(ticketId);if(!a||!m||!t)return;if(!isAdmin()&&a.memberId!=='alex'){toast('Als Gast siehst du nur deine eigenen Zahlungen.');return}
+    paypalContext={a,m,t};const demoLink=`paypal.me/${state.paypalMe}/${Number(a.amount).toFixed(2)}EUR`;$('demoPaypalPerson').textContent=`${a.name} · ${t.label} · ${m.opponent}`;$('demoPaypalAmount').textContent=money(a.amount);$('demoPaypalLink').textContent=demoLink;openModal('paypalDemoDialog');
+  }
+  function paypalMessage(){if(!paypalContext)return '';const {a,m,t}=paypalContext;return `Hi ${a.name}, für ${t.label} gegen ${m.opponent} sind noch ${money(a.amount)} offen. Demo-PayPal-Link: paypal.me/${state.paypalMe}/${Number(a.amount).toFixed(2)}EUR`}
+
+  function renderHistory(){$('historyList').innerHTML=state.history.map(h=>`<div class="historyRow"><time>${esc(h.time)}</time><div><b>${esc(h.actor)}</b><small>${esc(h.text)}</small></div></div>`).join('')}
+  function renderMembers(){$('membersList').innerHTML=state.members.map(m=>`<div class="memberRow"><span class="memberAvatar">${esc(m.name[0])}</span><div><strong>${esc(m.name)}</strong><small>${m.online?'● online':'○ offline'}</small></div><span class="rolePill">${esc(m.role)}</span></div>`).join('')}
+  function renderNotifications(){const unread=state.notifications.filter(n=>!n.read).length;$('notificationCount').textContent=unread;$('notificationCount').style.display=unread?'inline':'none';$('notificationsList').innerHTML=state.notifications.length?state.notifications.map(n=>`<div class="notificationRow"><div><strong>${n.read?'':'🔔 '}${esc(n.title)}</strong><small>${esc(n.text)}</small></div></div>`).join(''):'<div class="demoFeatureNote">Keine Benachrichtigungen.</div>'}
+  function requestMarkup(){return `<div class="memberRow" style="margin-top:12px"><span class="memberAvatar">J</span><div><strong>Jonas</strong><small>möchte der Crew beitreten</small></div>${isAdmin()?'<button class="payDone" data-action="approve-request" type="button">Als Gast freigeben</button>':'<span class="rolePill">wartet</span>'}</div>`}
+
+  function handleAction(action,el,event){
+    const matchId=el.dataset.match,ticketId=el.dataset.ticket;
+    if(action==='assign'){event.preventDefault();event.stopPropagation();openAssign(matchId,ticketId);return}
+    if(action==='release'){event.preventDefault();event.stopPropagation();releaseTicket(matchId,ticketId);return}
+    if(action==='paypal'){event.preventDefault();event.stopPropagation();openPaypal(matchId,ticketId);return}
+    if(action==='pay-done'){event.preventDefault();setPaid(matchId,ticketId,true);renderPayments();return}
+    if(action==='save-note'){event.preventDefault();if(!isAdmin())return;const m=match(matchId),area=document.querySelector(`[data-note="${matchId}"]`);if(!m||!area)return;m.note=area.value.trim();addHistory(`Notiz für ${m.opponent} aktualisiert`);render();toast('Notiz gespeichert');return}
+    if(action==='copy-paypal'){event.preventDefault();copyText(paypalMessage()).then(ok=>toast(ok?'PayPal-Nachricht kopiert':'Kopieren nicht möglich'));return}
+    if(action==='simulate-paypal'){event.preventDefault();toast('Demo: PayPal.Me würde jetzt geöffnet.');return}
+    if(action==='approve-request'){event.preventDefault();if(!state.members.some(x=>x.id==='jonas'))state.members.push({id:'jonas',name:'Jonas',role:'Gast',online:false});state.joinRequest=null;addHistory('Jonas als Gast freigegeben');$('inviteRequestPreview').innerHTML='<div class="demoFeatureNote">Jonas wurde als Gast zur Crew hinzugefügt.</div>';toast('Jonas freigegeben')}
   }
 
-  function renderMembers(){
-    $('membersList').innerHTML=state.members.map(m=>`<div class="memberRow"><span class="memberAvatar">${esc(m.name[0])}</span><div><strong>${esc(m.name)}</strong><small>${m.online?'● online':'○ offline'}</small></div><span class="rolePill">${esc(m.role)}</span></div>`).join('');
-  }
-
-  function renderNotifications(){
-    const unread=state.notifications.filter(n=>!n.read).length;$('notificationCount').textContent=unread;$('notificationCount').style.display=unread?'inline':'none';
-    $('notificationsList').innerHTML=state.notifications.length?state.notifications.map(n=>`<div class="notificationRow"><div><strong>${n.read?'':'🔔 '}${esc(n.title)}</strong><small>${esc(n.text)}</small></div></div>`).join(''):'<div class="demoFeatureNote">Keine Benachrichtigungen.</div>';
-  }
-
-  $('roleView').addEventListener('change',e=>{state.role=e.target.value;save();render();toast(state.role==='admin'?'Admin-Ansicht aktiv':'Gast-Ansicht von Alex aktiv')});
-  $('searchInput').addEventListener('input',renderGames);
-  document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{state.filter=btn.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));save();renderGames()}));
-  $('nextMatchBtn').addEventListener('click',()=>document.querySelector('.gameCard')?.scrollIntoView({behavior:'smooth',block:'start'}));
-  $('paymentsBtn').addEventListener('click',()=>{renderPayments();$('paymentsDialog').showModal()});
-  $('historyBtn').addEventListener('click',()=>{renderHistory();$('historyDialog').showModal()});
-  $('membersBtn').addEventListener('click',()=>{renderMembers();$('membersDialog').showModal()});
-  $('inviteBtn').addEventListener('click',()=>{$('inviteRequestPreview').innerHTML=state.joinRequest?requestMarkup():'';$('inviteDialog').showModal()});
-  $('notificationBtn').addEventListener('click',()=>{state.notifications.forEach(n=>n.read=true);save();renderNotifications();$('notificationsDialog').showModal()});
-  $('demoHelpBtn').addEventListener('click',()=>$('helpDialog').showModal());
-  $('resetBtn').addEventListener('click',()=>{if(!confirm('Demoversion wirklich auf den Ausgangszustand zurücksetzen?'))return;localStorage.removeItem(STORAGE);state=load();document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter==='all'));render();toast('Demo zurückgesetzt')});
-  document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>$(btn.dataset.close)?.close()));
-
-  $('assignForm').addEventListener('submit',e=>{
-    e.preventDefault();if(!assignContext)return;
-    const memberId=$('assignMember').value,guest=$('assignGuest').value.trim();
-    if(!memberId&&!guest){toast('Bitte Person oder Gastname wählen');return}
-    const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(assignContext.ticketId),name=guest||p.name;
-    state.allocations.push({matchId:m.id,ticketId:t.id,memberId:guest?null:p.id,name,paid:false,amount:m.price});
-    addHistory(`${t.label} gegen ${m.opponent} an ${name} vergeben`);save();$('assignDialog').close();assignContext=null;render();toast('Karte vergeben');
+  document.addEventListener('click',event=>{
+    const actionEl=event.target.closest('[data-action]');if(actionEl){handleAction(actionEl.dataset.action,actionEl,event);return}
+    const closeEl=event.target.closest('[data-close]');if(closeEl){event.preventDefault();closeModal(closeEl.dataset.close);return}
+    const button=event.target.closest('button,a');if(!button)return;const id=button.id;
+    if(id==='paymentsBtn'){event.preventDefault();renderPayments();openModal('paymentsDialog')}
+    else if(id==='historyBtn'){event.preventDefault();renderHistory();openModal('historyDialog')}
+    else if(id==='membersBtn'){event.preventDefault();renderMembers();openModal('membersDialog')}
+    else if(id==='inviteBtn'){event.preventDefault();$('inviteRequestPreview').innerHTML=state.joinRequest?requestMarkup():'';openModal('inviteDialog')}
+    else if(id==='notificationBtn'){event.preventDefault();state.notifications.forEach(n=>n.read=true);save();renderNotifications();openModal('notificationsDialog')}
+    else if(id==='demoHelpBtn'){event.preventDefault();openModal('helpDialog')}
+    else if(id==='nextMatchBtn'){event.preventDefault();document.querySelector('.gameCard')?.scrollIntoView({behavior:'smooth',block:'start'})}
+    else if(id==='resetBtn'){event.preventDefault();if(!window.confirm('Demoversion wirklich auf den Ausgangszustand zurücksetzen?'))return;localStorage.removeItem(STORAGE);state=load();render();toast('Demo zurückgesetzt')}
+    else if(id==='copyInviteBtn'){event.preventDefault();copyText('DEMO-7K4P-26').then(ok=>toast(ok?'Demo-Code kopiert':'Demo-Code: DEMO-7K4P-26'))}
+    else if(id==='simulateRequestBtn'){event.preventDefault();state.joinRequest={name:'Jonas',requestedAt:nowText()};addHistory('Neue Beitrittsanfrage von Jonas erhalten');$('inviteRequestPreview').innerHTML=requestMarkup();toast('Bewerbung simuliert')}
   });
 
-  $('copyInviteBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText('DEMO-7K4P-26');toast('Demo-Code kopiert')}catch{toast('Demo-Code: DEMO-7K4P-26')}});
-  $('simulateRequestBtn').addEventListener('click',()=>{state.joinRequest={name:'Jonas',requestedAt:nowText()};addHistory('Neue Beitrittsanfrage von Jonas erhalten');save();$('inviteRequestPreview').innerHTML=requestMarkup();toast('Bewerbung simuliert')});
+  document.addEventListener('change',event=>{
+    const el=event.target;
+    if(el.id==='roleView'){state.role=el.value==='guest'?'guest':'admin';save();render();toast(isAdmin()?'Admin-Ansicht aktiv':'Gast-Ansicht von Alex aktiv');return}
+    if(el.matches('[data-action="paid-toggle"]')){if(!isAdmin()){el.checked=!el.checked;return}setPaid(el.dataset.match,el.dataset.ticket,el.checked)}
+  });
+  document.addEventListener('input',event=>{if(event.target.id==='searchInput')renderGames()});
+  document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('.ticketCard.unassigned[data-action="assign"]')){event.preventDefault();openAssign(event.target.dataset.match,event.target.dataset.ticket)}});
 
-  function requestMarkup(){return `<div class="memberRow" style="margin-top:12px"><span class="memberAvatar">J</span><div><strong>Jonas</strong><small>möchte der Crew beitreten</small></div>${isAdmin()?'<button class="payDone" id="approveDemoRequest" type="button">Als Gast freigeben</button>':'<span class="rolePill">wartet</span>'}</div>`}
-  $('inviteRequestPreview').addEventListener('click',e=>{if(e.target.id!=='approveDemoRequest')return;state.members.push({id:'jonas',name:'Jonas',role:'Gast',online:false});state.joinRequest=null;addHistory('Jonas als Gast freigegeben');save();$('inviteRequestPreview').innerHTML='<div class="demoFeatureNote">Jonas wurde als Gast zur Crew hinzugefügt.</div>';toast('Jonas freigegeben')});
+  $('filters')?.addEventListener('click',event=>{const btn=event.target.closest('[data-filter]');if(!btn)return;event.preventDefault();state.filter=btn.dataset.filter||'all';save();renderGames();document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===state.filter))});
+  $('assignForm')?.addEventListener('submit',event=>{
+    event.preventDefault();if(event.submitter?.value==='cancel'){closeModal('assignDialog');assignContext=null;return}if(!assignContext)return;
+    const memberId=$('assignMember').value,guest=$('assignGuest').value.trim();if(!memberId&&!guest){toast('Bitte Person oder Gastname wählen');return}
+    const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(!m||!t)return;const name=guest||(p?.name||'Gast');
+    state.allocations.push({matchId:m.id,ticketId:t.id,memberId:guest?null:p?.id||null,name,paid:false,amount:m.price});addHistory(`${t.label} gegen ${m.opponent} an ${name} vergeben`);closeModal('assignDialog');assignContext=null;render();toast('Karte vergeben');
+  });
 
-  document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
-  render();
+  ensurePaypalDialog();render();
 })();
