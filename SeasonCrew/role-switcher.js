@@ -60,13 +60,13 @@
     if(!document.querySelector('link[data-seasoncrew-tab-groups]')){
       const link=document.createElement('link');
       link.rel='stylesheet';
-      link.href='settings-tab-groups.css?v=20260817-1';
+      link.href='settings-tab-groups.css?v=20260817-mobile2';
       link.dataset.seasoncrewTabGroups='1';
       document.head.appendChild(link);
     }
     if(!document.querySelector('script[data-seasoncrew-tab-groups]')){
       const script=document.createElement('script');
-      script.src='settings-tab-groups.js?v=20260817-1';
+      script.src='settings-tab-groups.js?v=20260817-mobile2';
       script.defer=true;
       script.dataset.seasoncrewTabGroups='1';
       document.body.appendChild(script);
