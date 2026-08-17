@@ -245,7 +245,7 @@ async function readAllocation(fixtureId,ticketId){
 }
 async function assignTicket(fixtureId,ticketId){
   const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:profile?.username||'',attendee_user_id:user.id,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
-  const {error}=await sb.from('sc_allocations').upsert(row,{onConflict:'group_id,fixture_id,ticket_id'});
+  const {error}=await sb.from('sc_allocations').insert(row);
   if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return}
   const saved=await readAllocation(fixtureId,ticketId);replaceAllocation(saved||row);render();
 }
