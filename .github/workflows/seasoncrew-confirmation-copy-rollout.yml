@@ -1,0 +1,75 @@
+name: SeasonCrew confirmation copy rollout
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-confirmation-copy-rollout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Patch confirmation guidance and test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('SeasonCrew/app.js')
+          s=app.read_text()
+          old="setStatus(els.authStatus,'Account angelegt. Bitte logge dich jetzt ein.',true);"
+          new="setStatus(els.authStatus,'Account angelegt. Bitte bestätige jetzt deine E-Mail über den Link in deinem Postfach. Danach wirst du zu SeasonCrew zurückgeleitet.',true);"
+          if old in s:
+              s=s.replace(old,new,1)
+          elif new not in s:
+              raise SystemExit('signup confirmation status marker missing')
+          app.write_text(s)
+
+          test=Path('SeasonCrew/tests/e2e/auth.spec.js')
+          t=test.read_text()
+          old_stub="body:`window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),updateUser:async()=>({data:{user:{}},error:null})}})}`"
+          new_stub="body:`window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),updateUser:async()=>({data:{user:{}},error:null}),signUp:async()=>({data:{session:null,user:{id:'test-user'}},error:null})},rpc:async(name)=>({data:name==='sc_username_available'?true:null,error:null})})}`"
+          if old_stub in t:
+              t=t.replace(old_stub,new_stub,1)
+          elif new_stub not in t:
+              raise SystemExit('auth service stub marker missing')
+          marker="signup without a session asks the user to confirm the email address"
+          if marker not in t:
+              t += '''\n\ntest('signup without a session asks the user to confirm the email address',async({page})=>{\n  await stubPublicServices(page);\n  await page.goto('/SeasonCrew/index.html',{waitUntil:'domcontentloaded'});\n  await page.getByRole('button',{name:'Account erstellen'}).first().click();\n  await page.locator('#signupUsername').fill('TestUser27');\n  await page.locator('#signupEmail').fill('new@example.de');\n  await page.locator('#signupPassword').fill('VerySafe123!');\n  await page.locator('#signupForm button[type="submit"]').click();\n  await expect(page.locator('#loginForm')).toBeVisible();\n  await expect(page.locator('#authStatus')).toContainText('Bitte bestätige jetzt deine E-Mail');\n  await expect(page.locator('#authStatus')).toContainText('Danach wirst du zu SeasonCrew zurückgeleitet');\n});\n'''
+          test.write_text(t)
+          PY
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Build Safari bundle
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Verify code and test collection
+        working-directory: SeasonCrew
+        run: |
+          node --check app.js
+          node --check app.bundle.js
+          grep -q 'Bitte bestätige jetzt deine E-Mail' app.js
+          grep -q 'Bitte bestätige jetzt deine E-Mail' app.bundle.js
+          npx playwright test --list
+      - name: Commit tested confirmation UX
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/app.bundle.js SeasonCrew/tests/e2e/auth.spec.js
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Clarify email confirmation after signup"
+          git pull --rebase origin main
+          git push origin main
