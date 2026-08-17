@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="role-switcher.css?v=1">
   <link rel="stylesheet" href="pricing-runtime-v2.css?v=20260817-2">
   <link rel="stylesheet" href="brand-v2.css?v=20260817-paidgreen2">
-  <link rel="stylesheet" href="assignment-dialog.css?v=20260817-release1">
+  <link rel="stylesheet" href="assignment-dialog.css?v=20260817-priorities1">
   <style>#authScreen.hidden{display:none!important}</style>
 </head>
 <body class="auth-locked">
@@ -50,7 +50,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build member-guard-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build priorities-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -191,7 +191,7 @@
 
   <dialog id="assignTicketDialog" class="dialog assignTicketDialog">
     <form class="dialogCard small" id="assignTicketForm">
-      <div class="dialogHead"><div><small>Karte vergeben</small><h3 id="assignTicketTitle">Ticket auswählen</h3></div><button id="assignTicketCancel" type="button" class="closeButton" aria-label="Schließen">×</button></div>
+      <div class="dialogHead"><div><small id="assignTicketModeLabel">Karte vergeben</small><h3 id="assignTicketTitle">Ticket auswählen</h3></div><button id="assignTicketCancel" type="button" class="closeButton" aria-label="Schließen">×</button></div>
       <div class="assignTicketMeta" id="assignTicketMeta"></div>
       <label>Sitzplatz / Dauerkarte<select id="assignTicketSeat"></select></label>
       <label>Crew-Mitglied<select id="assignTicketMember"><option value="">Crew-Mitglied wählen …</option></select></label>
@@ -207,7 +207,7 @@
     <form method="dialog" class="dialogCard small" id="paymentForm">
       <div class="dialogHead"><div><small>PayPal.Me</small><h3>Zahlung anfordern</h3></div><button type="button" value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
       <div class="paymentContext"><b id="paymentPerson">–</b><span id="paymentMatch">–</span></div>
-      <label>Betrag<div class="suffixInput"><input id="paymentAmount" inputmode="decimal"><span>€</span></div></label>
+      <label>Betrag<div class="suffixInput"><input id="paymentAmount" inputmode="decimal" readonly><span>€</span></div></label>
       <div class="paymentPreview" id="paymentPreview"></div>
       <div class="dialogActions"><button class="secondaryButton" id="copyPaymentBtn" type="button">Nachricht kopieren</button><button class="primaryButton" id="sharePaymentBtn" type="button">Teilen</button></div>
       <div class="dialogStatus" id="paymentStatus"></div>
@@ -218,10 +218,10 @@
 
   <script src="demo-entry.js?v=2"></script>
   <script src="role-switcher.js?v=20260817-member1"></script>
-  <script src="ui-v2.js?v=20260817-interest1"></script>
+  <script src="ui-v2.js?v=20260817-priorities1"></script>
   <script>window.seasonCrewModuleLoaded=false;window.seasonCrewModuleFailed=false;</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-  <script src="pricing-runtime-v2.js?v=20260817-interest1"></script>
+  <script src="pricing-runtime-v2.js?v=20260817-priorities1"></script>
   <script src="wish-actions-v2.js?v=20260817-interest1"></script>
   <!-- SEASONCREW_APP_LOADER_START -->
 <script>
@@ -236,7 +236,7 @@
     document.body.appendChild(script);
   };
 </script>
-<script src="app.bundle.js?v=20260817-memberguard1"
+<script src="app.bundle.js?v=20260817-priorities1"
   onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
   onerror="window.seasonCrewLoadFallback()"></script>
 <script type="module" src="club-kits.js?v=2598c19"></script>

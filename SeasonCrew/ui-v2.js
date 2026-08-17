@@ -11,7 +11,7 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./crew-delete.css?v=1';link.dataset.seasoncrewCrewDelete='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-crew-delete]')){
-    const script=document.createElement('script');script.src='./crew-delete.js?v=6';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./crew-delete.js?v=7';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
   }
 
   const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Mitglied';

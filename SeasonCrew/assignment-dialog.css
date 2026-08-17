@@ -2,3 +2,5 @@
 
 .ticketActions .releaseAssignmentBtn{white-space:nowrap;font-size:8px!important;font-weight:800!important;padding-left:7px!important;padding-right:7px!important}
 @media(max-width:560px){.ticketActions .releaseAssignmentBtn{white-space:normal;line-height:1.15}}
+
+.attendeeDisplay{padding:10px 11px;margin:3px 0 2px;border-radius:10px;background:rgba(255,255,255,.16);font:800 10px/1.3 Manrope,system-ui,sans-serif}.ticketCard.paymentPrivate{background:#fff!important;border-color:#dfe4e7!important;color:#1f2a30!important}.ticketCard.paymentPrivate .ticketHead,.ticketCard.paymentPrivate .ticketHead b,.ticketCard.paymentPrivate .ticketHead small,.ticketCard.paymentPrivate .attendeeDisplay{color:#1f2a30!important}.ticketCard.paymentPrivate .attendeeDisplay{background:#f4f6f7!important}.ticketActions .changeAssignmentBtn{white-space:nowrap;font-size:8px!important;font-weight:800!important;padding-left:7px!important;padding-right:7px!important}

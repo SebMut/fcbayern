@@ -3,7 +3,7 @@ import re
 
 
 def sub_once(text, pattern, replacement, label, flags=re.S):
-    out, n = re.subn(pattern, replacement, text, count=1, flags=flags)
+    out, n = re.subn(pattern, lambda _m: replacement, text, count=1, flags=flags)
     if n != 1:
         raise SystemExit(f'{label}: replacement count {n}')
     return out
@@ -126,14 +126,16 @@ s = sub_once(s, r"function openPayment\(fixtureId,ticketId\)\{.*?\n\}", r'''func
   $('copyPaymentBtn').disabled=!known;$('sharePaymentBtn').disabled=!known;setStatus($('paymentStatus'),known?'':'Preis noch nicht bekannt');updatePaymentPreview();els.paymentDialog.showModal();
 }''', 'openPayment')
 
-s = sub_once(s, r"function updatePaymentPreview\(\)\{.*?\n\}", r'''function updatePaymentPreview(){
+old_payment_preview = """function updatePaymentPreview(){const d=paymentData();$('paymentPreview').textContent=d?`${money(d.amount)}\\n${d.match}${d.link?`\\n${d.link}`:'\\nPayPal.Me ist für diese Crew noch nicht hinterlegt.'}`:'Bitte gültigen Betrag eingeben.'}"""
+new_payment_preview = """function updatePaymentPreview(){
   if(paymentContext?.a?.amount==null){$('paymentPreview').textContent='Preis noch nicht bekannt. Hinterlege zuerst den Spielpreis in den Crew-Einstellungen.';return}
-  const d=paymentData();$('paymentPreview').textContent=d?`${money(d.amount)}\n${d.match}${d.link?`\n${d.link}`:'\nPayPal.Me ist für diese Crew noch nicht hinterlegt.'}`:'Preis konnte nicht geladen werden.';
-}''', 'payment preview')
+  const d=paymentData();$('paymentPreview').textContent=d?`${money(d.amount)}\\n${d.match}${d.link?`\\n${d.link}`:'\\nPayPal.Me ist für diese Crew noch nicht hinterlegt.'}`:'Preis konnte nicht geladen werden.';
+}"""
+if old_payment_preview not in s:
+    raise SystemExit('payment preview exact source missing')
+s=s.replace(old_payment_preview,new_payment_preview,1)
 
-s = sub_once(s, r"async function savePaymentAmountAndLog\(d,action\)\{.*?\n\}", r'''async function savePaymentAmountAndLog(d,action){
-  await sb.from('sc_history').insert({group_id:currentGroup.id,actor_user_id:user.id,actor_name:profile.username,entity_type:'paypal',entity_id:d.m.id,action,before_data:{},after_data:{person:d.a.attendee_name,ticket:ticketLabel(d.t),opponent:d.m.o,match_label:d.match,amount:d.amount,paypal_me:cleanPaypal(currentGroup.paypal_me)}});
-}''', 'payment log')
+# PayPal allocation write cleanup is handled by priority_refactor_post.py
 
 # Notify the price decorator whenever crew price/default settings are saved.
 old = "setStatus($('settingsStatus'),'Crew gespeichert ✓',true);render()});"
