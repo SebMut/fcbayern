@@ -93,23 +93,6 @@
     document.body.appendChild(script);
   }
 
-  function ensurePricingRuntime(){
-    if(!document.querySelector('link[data-seasoncrew-pricing-runtime]')){
-      const link=document.createElement('link');
-      link.rel='stylesheet';
-      link.href='pricing-runtime.css?v=20260817-1';
-      link.dataset.seasoncrewPricingRuntime='1';
-      document.head.appendChild(link);
-    }
-    if(!document.querySelector('script[data-seasoncrew-pricing-runtime]')){
-      const script=document.createElement('script');
-      script.src='pricing-runtime.js?v=20260817-1';
-      script.defer=true;
-      script.dataset.seasoncrewPricingRuntime='1';
-      document.body.appendChild(script);
-    }
-  }
-
   window.SeasonCrewRoleView={
     key:KEY,
     get(isSuperadmin){
@@ -119,7 +102,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings();ensureLiveUiSync();ensurePricingRuntime()});
+  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings();ensureLiveUiSync()});
   window.addEventListener('seasoncrew:rendered',ensure);
   setTimeout(ensure,700);
 })();
