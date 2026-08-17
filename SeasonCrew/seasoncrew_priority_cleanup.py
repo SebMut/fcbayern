@@ -12,6 +12,16 @@ for name in obsolete:
     if path.exists():
         path.unlink()
 
+# Never commit local/CI-installed dependencies or generated Playwright artefacts.
+gitignore = Path('SeasonCrew/.gitignore')
+existing = gitignore.read_text(encoding='utf-8') if gitignore.exists() else ''
+required = ['node_modules/', 'test-results/', 'playwright-report/']
+lines = existing.splitlines()
+for entry in required:
+    if entry not in lines:
+        lines.append(entry)
+gitignore.write_text('\n'.join(lines).strip() + '\n', encoding='utf-8')
+
 # The generated bundle workflow should reject an actual legacy script reference,
 # not the word "auth-fallback" inside its own validation message.
 bundle = Path('.github/workflows/seasoncrew-bundle.yml')
