@@ -56,6 +56,23 @@
     }
   }
 
+  function ensureGroupedSettings(){
+    if(!document.querySelector('link[data-seasoncrew-tab-groups]')){
+      const link=document.createElement('link');
+      link.rel='stylesheet';
+      link.href='settings-tab-groups.css?v=20260817-1';
+      link.dataset.seasoncrewTabGroups='1';
+      document.head.appendChild(link);
+    }
+    if(!document.querySelector('script[data-seasoncrew-tab-groups]')){
+      const script=document.createElement('script');
+      script.src='settings-tab-groups.js?v=20260817-1';
+      script.defer=true;
+      script.dataset.seasoncrewTabGroups='1';
+      document.body.appendChild(script);
+    }
+  }
+
   window.SeasonCrewRoleView={
     key:KEY,
     get(isSuperadmin){
@@ -65,7 +82,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement()});
+  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings()});
   window.addEventListener('seasoncrew:rendered',ensure);
   setTimeout(ensure,700);
 })();
