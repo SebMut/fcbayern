@@ -1,0 +1,59 @@
+name: SeasonCrew club independence v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-club-independence-v1.yml'
+      - 'SeasonCrew/club_independence_finalize.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Complete generic fixture and club UI
+        run: python SeasonCrew/club_independence_finalize.py
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Install Chromium
+        working-directory: SeasonCrew
+        run: npx playwright install --with-deps chromium
+      - name: Build app
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Validate JavaScript and architecture
+        run: |
+          node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/club-fixtures-v1.js
+          node --check SeasonCrew/price-management.js
+          grep -q "competition_name" SeasonCrew/club-fixtures-v1.js
+          grep -q "fixtureVenue" SeasonCrew/club-fixtures-v1.js
+          grep -q "club_name" SeasonCrew/product-v2.js
+          grep -q "club-fixtures-v1.js" SeasonCrew/index.html
+          if grep -q '<b>FC Bayern –' SeasonCrew/product-v2.js; then
+            echo 'Hardcoded FC Bayern remains in personal ticket rendering'
+            exit 1
+          fi
+      - name: Browser regression tests
+        working-directory: SeasonCrew
+        run: npm run test:e2e
+      - name: Commit tested product changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A SeasonCrew
+          git restore --staged SeasonCrew/club_independence_patch.py SeasonCrew/club_independence_post.py SeasonCrew/club_independence_finalize.py || true
+          git commit -m "Complete generic club and fixture support"
+          git push
