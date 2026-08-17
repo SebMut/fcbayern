@@ -151,7 +151,7 @@ els.signupForm.addEventListener('submit',async e=>{
     session=data.session;user=data.user;setStatus(els.authStatus,'Account erstellt. App wird geladen …',true);await enterApp();return
   }
   setAuthTab('login');
-  setStatus(els.authStatus,'Account angelegt. Bitte logge dich jetzt ein.',true);
+  setStatus(els.authStatus,'Account angelegt. Bitte bestätige jetzt deine E-Mail über den Link in deinem Postfach. Danach wirst du zu SeasonCrew zurückgeleitet.',true);
 });
 
 $('logoutBtn').addEventListener('click',async()=>{await cleanupChannels();await sb.auth.signOut();location.reload()});

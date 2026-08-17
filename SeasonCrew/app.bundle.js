@@ -577,7 +577,7 @@
       return;
     }
     setAuthTab("login");
-    setStatus(els.authStatus, "Account angelegt. Bitte logge dich jetzt ein.", true);
+    setStatus(els.authStatus, "Account angelegt. Bitte best\xE4tige jetzt deine E-Mail \xFCber den Link in deinem Postfach. Danach wirst du zu SeasonCrew zur\xFCckgeleitet.", true);
   });
   $("logoutBtn").addEventListener("click", async () => {
     await cleanupChannels();
