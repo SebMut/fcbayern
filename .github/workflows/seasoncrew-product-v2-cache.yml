@@ -1,0 +1,27 @@
+name: SeasonCrew product v2 cache
+
+on:
+  push:
+    paths:
+      - '.github/workflows/seasoncrew-product-v2-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump SeasonCrew loader versions
+        run: |
+          python -c "from pathlib import Path; p=Path('SeasonCrew/index.html'); s=p.read_text(); s=s.replace('ui-v2.js?v=3','ui-v2.js?v=4').replace('Build guest-notes-1','Build product-v2-1'); p.write_text(s)"
+          python -c "from pathlib import Path; p=Path('SeasonCrew/ui-v2.js'); s=p.read_text(); s=s.replace('crew-delete.js?v=1','crew-delete.js?v=2'); p.write_text(s)"
+      - name: Commit cache bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html SeasonCrew/ui-v2.js
+          git diff --cached --quiet || git commit -m "Bump SeasonCrew product v2 cache"
+          git push
