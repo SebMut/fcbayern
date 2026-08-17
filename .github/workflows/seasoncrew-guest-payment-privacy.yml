@@ -1,0 +1,24 @@
+name: SeasonCrew guest payment privacy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/seasoncrew-guest-payment-privacy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply guest payment privacy
+        run: python3 SeasonCrew/guest_payment_privacy_patch.py
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SeasonCrew/app.js SeasonCrew/pricing-runtime-v2.js SeasonCrew/product-v2.js SeasonCrew/index.html SeasonCrew/crew-delete.js
+          git diff --cached --quiet || git commit -m 'Limit guest payment totals to own tickets'
+          git push
