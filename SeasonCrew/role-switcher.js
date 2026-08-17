@@ -1,4 +1,13 @@
 (()=>{
+  const BRAND_VERSION='20260817-lime1';
+  const brandLink=[...document.querySelectorAll('link[rel="stylesheet"]')].find(link=>String(link.getAttribute('href')||'').includes('brand-v2.css'));
+  if(brandLink)brandLink.href=`brand-v2.css?v=${BRAND_VERSION}`;
+  const theme=document.querySelector('meta[name="theme-color"]');
+  if(theme)theme.content='#1F2A30';
+  let favicon=document.querySelector('link[rel="icon"]');
+  if(!favicon){favicon=document.createElement('link');favicon.rel='icon';document.head.appendChild(favicon)}
+  favicon.type='image/svg+xml';favicon.href=`seasoncrew-mark.svg?v=${BRAND_VERSION}`;
+
   const PROD_AUTH_REDIRECT='https://sebmut.github.io/fcbayern/SeasonCrew/';
   const nativeFetch=window.fetch?.bind(window);
   if(nativeFetch&&!window.__seasonCrewAuthRedirectFix){
@@ -119,6 +128,11 @@
     });
   }
 
+  function finishBranding(){
+    const foot=document.querySelector('.authFoot');
+    if(foot)foot.textContent='Pilot V1 · Build lime-cd-1 · Multi-User · Freigabe-Workflow';
+  }
+
   window.SeasonCrewRoleView={
     key:KEY,
     get(isSuperadmin){
@@ -128,7 +142,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{ensure();bindLazySettings()});
+  window.addEventListener('DOMContentLoaded',()=>{finishBranding();ensure();bindLazySettings()});
   window.addEventListener('seasoncrew:rendered',()=>{ensure();bindLazySettings()});
-  setTimeout(()=>{ensure();bindLazySettings()},700);
+  setTimeout(()=>{finishBranding();ensure();bindLazySettings()},700);
 })();
