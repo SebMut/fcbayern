@@ -60,35 +60,31 @@ jobs:
           s = p.read_text()
           short = os.environ.get('SOURCE_SHA', 'build')[:7]
 
-          # Remove obsolete module/import-map loaders and any previous generated loader block.
           s = re.sub(r'\n\s*<script type="importmap">.*?</script>', '', s, flags=re.S)
           s = re.sub(r'\n\s*<script type="module">\s*import\(.*?</script>', '', s, flags=re.S)
           s = re.sub(r'\n\s*<!-- SEASONCREW_APP_LOADER_START -->.*?<!-- SEASONCREW_APP_LOADER_END -->', '', s, flags=re.S)
-
-          # The fallback must not run on the normal path because its capture handler
-          # intentionally owns the form. It is loaded only when the main bundle fails.
           s = re.sub(r'\n\s*<script src="auth-fallback-v6\.js[^\"]*"></script>', '', s)
           s = re.sub(r'\n\s*<script src="app\.bundle\.js[^\"]*"[^>]*></script>', '', s)
           s = re.sub(r'\n\s*<script>window\.seasonCrewModuleLoaded=true;window\.seasonCrewModuleFailed=false;</script>', '', s)
 
           loader = f'''\n  <!-- SEASONCREW_APP_LOADER_START -->
-  <script>
-    window.seasonCrewModuleLoaded=false;
-    window.seasonCrewModuleFailed=false;
-    window.seasonCrewLoadFallback=function(){{
-      if(document.querySelector('script[data-seasoncrew-auth-fallback]'))return;
-      window.seasonCrewModuleFailed=true;
-      const script=document.createElement('script');
-      script.src='auth-fallback-v6.js?v={short}';
-      script.dataset.seasoncrewAuthFallback='1';
-      document.body.appendChild(script);
-    }};
-  </script>
-  <script src="app.bundle.js?v={short}"
-    onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
-    onerror="window.seasonCrewLoadFallback()"></script>
-  <script type="module" src="club-kits.js?v={short}"></script>
-  <!-- SEASONCREW_APP_LOADER_END -->'''
+          <script>
+            window.seasonCrewModuleLoaded=false;
+            window.seasonCrewModuleFailed=false;
+            window.seasonCrewLoadFallback=function(){{
+              if(document.querySelector('script[data-seasoncrew-auth-fallback]'))return;
+              window.seasonCrewModuleFailed=true;
+              const script=document.createElement('script');
+              script.src='auth-fallback-v6.js?v={short}';
+              script.dataset.seasoncrewAuthFallback='1';
+              document.body.appendChild(script);
+            }};
+          </script>
+          <script src="app.bundle.js?v={short}"
+            onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
+            onerror="window.seasonCrewLoadFallback()"></script>
+          <script type="module" src="club-kits.js?v={short}"></script>
+          <!-- SEASONCREW_APP_LOADER_END -->'''
 
           if '</body>' not in s:
               raise SystemExit('Closing body tag not found')
@@ -114,7 +110,7 @@ jobs:
       - name: Commit generated browser bundle
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "4189824+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add SeasonCrew/app.bundle.js SeasonCrew/index.html
           if git diff --cached --quiet; then
             echo "No generated changes"
