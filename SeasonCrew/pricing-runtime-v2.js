@@ -6,7 +6,7 @@
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let client=null,pricing=null,ticketMap=new Map(),loadTimer=null,statsTimer=null,loading=false;
+  let client=null,pricing=null,ticketMap=new Map(),opponentMap=new Map(),loadTimer=null,statsTimer=null,loading=false;
 
   function sb(){
     if(client)return client;
@@ -44,6 +44,11 @@
     if(rule!==null)return rule;
     return numeric(pricing.defaultPrice)??0;
   }
+  function opponentKnown(id){
+    if(/^bl\d+/i.test(id))return true;
+    const opponent=String(opponentMap.get(id)||'').trim();
+    return !!opponent&&!/(gegner\s*offen|offen|möglich|moeglich|tabellenplatz|termin|tbd|unknown|\?)/i.test(opponent);
+  }
   function ticketIdFromCard(card){
     return card.dataset.ticketId||card.querySelector('[data-ticket-id]')?.dataset.ticketId||'';
   }
@@ -65,8 +70,6 @@
     if(!badge){badge=document.createElement('span');badge.className='ticketSeatBadge';if(title)title.insertAdjacentElement('afterend',badge);else copy.prepend(badge)}
     badge.textContent=text;
 
-    // Alte automatisch erzeugte Kurzbezeichnung (z. B. 236/2/16) entfernen,
-    // wenn sie nur dieselben Block-/Reihe-/Sitzdaten doppelt wiedergibt.
     const compact=compactSeatText(ticket);
     if(title){
       const shown=title.textContent.trim();
@@ -80,7 +83,6 @@
 
   function decorateGame(card){
     const id=card.id.replace(/^game-/,'');if(!id)return;
-    const price=effectivePrice(id);if(price===null)return;
     const meta=card.querySelector('.fixtureMeta');if(!meta)return;
     let badge=meta.querySelector('.fixturePriceV2');
     if(!badge){
@@ -88,8 +90,14 @@
       const comp=meta.querySelector('.competition');
       comp?.insertAdjacentElement('afterend',badge);
     }
-    badge.textContent=`${money(price)} / Karte`;
-    badge.dataset.price=String(price);
+    if(!opponentKnown(id)){
+      badge.textContent='Preis noch nicht bekannt';
+      badge.removeAttribute('data-price');
+    }else{
+      const price=effectivePrice(id);if(price===null)return;
+      badge.textContent=`${money(price)} / Karte`;
+      badge.dataset.price=String(price);
+    }
     card.querySelectorAll('.ticketCard').forEach(decorateTicket);
   }
 
@@ -103,17 +111,24 @@
     const {data,error}=await c.from('sc_allocations').select('fixture_id,paid').eq('group_id',gid);
     if(error)return;
     const unpaid=(data||[]).filter(x=>!x.paid);
-    const total=unpaid.reduce((sum,row)=>sum+(effectivePrice(row.fixture_id)??0),0);
+    const total=unpaid.reduce((sum,row)=>sum+(opponentKnown(row.fixture_id)?(effectivePrice(row.fixture_id)??0):0),0);
     if($('statUnpaid'))$('statUnpaid').textContent=money(total);
     if($('statUnpaidCount'))$('statUnpaidCount').textContent=`${unpaid.length} Ticket${unpaid.length===1?'':'s'}`;
   }
 
   function applyPaymentPrice(fixtureId){
-    const price=effectivePrice(fixtureId),input=$('paymentAmount');if(price===null||!input)return;
-    input.value=price.toFixed(2).replace('.',',');
-    input.dispatchEvent(new Event('input',{bubbles:true}));
+    const input=$('paymentAmount');if(!input)return;
     let hint=$('paymentRulePriceHint');
     if(!hint){hint=document.createElement('small');hint.id='paymentRulePriceHint';hint.className='paymentRulePriceHint';$('paymentMatch')?.insertAdjacentElement('afterend',hint)}
+    if(!opponentKnown(fixtureId)){
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      if(hint)hint.textContent='Preis noch nicht bekannt';
+      return;
+    }
+    const price=effectivePrice(fixtureId);if(price===null)return;
+    input.value=price.toFixed(2).replace('.',',');
+    input.dispatchEvent(new Event('input',{bubbles:true}));
     if(hint)hint.textContent=`Aktueller Spielpreis: ${money(price)}`;
   }
 
@@ -122,12 +137,17 @@
     loading=true;
     try{
       const [{data:group,error:ge},{data:tickets,error:te}]=await Promise.all([
-        c.from('sc_groups').select('id,default_price,price_rules').eq('id',gid).maybeSingle(),
+        c.from('sc_groups').select('id,season,default_price,price_rules').eq('id',gid).maybeSingle(),
         c.from('sc_tickets').select('id,label,block,row_label,seat').eq('group_id',gid).eq('active',true)
       ]);
       if(ge||!group)return;
       pricing={groupId:gid,defaultPrice:numeric(group.default_price)??0,rules:group.price_rules||{}};
       if(!te)ticketMap=new Map((tickets||[]).map(t=>[t.id,t]));
+      opponentMap=new Map();
+      if(group.season){
+        const {data:matches}=await c.from('match_overrides').select('id,opponent').eq('season',group.season);
+        opponentMap=new Map((matches||[]).map(m=>[m.id,m.opponent]));
+      }
       decorateAll();await refreshUnpaidStats();
     }finally{loading=false}
   }
@@ -139,7 +159,7 @@
     setTimeout(()=>applyPaymentPrice(btn.dataset.paypalFixture),0);
   },true);
 
-  $('groupSelect')?.addEventListener('change',()=>{pricing=null;ticketMap=new Map();scheduleLoad(80)});
+  $('groupSelect')?.addEventListener('change',()=>{pricing=null;ticketMap=new Map();opponentMap=new Map();scheduleLoad(80)});
   window.addEventListener('seasoncrew:prices-updated',()=>scheduleLoad(0));
   window.addEventListener('seasoncrew:games-rendered',()=>pricing?.groupId===groupId()?decorateAll():scheduleLoad(30));
   window.addEventListener('seasoncrew:rendered',()=>pricing?.groupId===groupId()?(decorateAll(),scheduleStats(250)):scheduleLoad(30));
