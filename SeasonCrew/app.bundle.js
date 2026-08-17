@@ -736,8 +736,12 @@
     $("assignTicketSeat").innerHTML = availableTickets.map((x) => `<option value="${x.id}">${esc(ticketLabel(x))} \xB7 ${esc([x.block && `Block ${x.block}`, x.row_label && `Reihe ${x.row_label}`, x.seat && `Sitz ${x.seat}`].filter(Boolean).join(" \xB7 "))}</option>`).join("");
     $("assignTicketSeat").value = ticketId;
     updateAssignTicketSeatMeta();
-    $("assignTicketMember").innerHTML = '<option value="">Crew-Mitglied w\xE4hlen \u2026</option>' + members.map((x) => `<option value="${x.user_id}">${esc(x.username || "Mitglied")} \xB7 ${roleLabel(x.role)}</option>`).join("");
-    $("assignTicketMember").value = preselectUserId && members.some((x) => x.user_id === preselectUserId) ? preselectUserId : "";
+    const assignedMemberIds = new Set(allocations.filter((a) => a.fixture_id === fixtureId && a.attendee_user_id).map((a) => a.attendee_user_id));
+    $("assignTicketMember").innerHTML = '<option value="">Crew-Mitglied w\xE4hlen \u2026</option>' + members.map((x) => {
+      const used = assignedMemberIds.has(x.user_id);
+      return `<option value="${x.user_id}" ${used ? "disabled" : ""}>${esc(x.username || "Mitglied")} \xB7 ${roleLabel(x.role)}${used ? " \xB7 bereits Ticket" : ""}</option>`;
+    }).join("");
+    $("assignTicketMember").value = preselectUserId && members.some((x) => x.user_id === preselectUserId) && !assignedMemberIds.has(preselectUserId) ? preselectUserId : "";
     $("assignTicketGuest").value = "";
     setStatus($("assignTicketStatus"), "");
     $("assignTicketDialog").showModal();
@@ -748,7 +752,12 @@
     const row = { group_id: currentGroup.id, fixture_id: fixtureId, ticket_id: ticketId, attendee_name: String(attendeeName || "").trim(), attendee_user_id: attendeeUserId || null, paid: false, amount: Number(currentGroup.default_price) || 50, updated_by: user.id };
     const { error } = await sb.from("sc_allocations").insert(row);
     if (error) {
-      showToast("Karte konnte nicht vergeben werden");
+      if (error.code === "23505" && String(error.message || "").includes("sc_allocations_unique_member_per_fixture")) {
+        setStatus($("assignTicketStatus"), "Dieses Mitglied hat f\xFCr dieses Spiel bereits ein Ticket.");
+        showToast("Mitglied hat bereits ein Ticket");
+      } else {
+        showToast("Karte konnte nicht vergeben werden");
+      }
       console.error(error);
       return false;
     }
@@ -787,6 +796,10 @@
     const chosen = memberId ? members.find((x) => x.user_id === memberId) : null;
     if (!chosen && !guest) {
       setStatus($("assignTicketStatus"), "Bitte ein Crew-Mitglied ausw\xE4hlen oder einen Ticket-Gast eintragen.");
+      return;
+    }
+    if (chosen && allocations.some((a) => a.fixture_id === assignmentContext.fixtureId && a.attendee_user_id === chosen.user_id)) {
+      setStatus($("assignTicketStatus"), "Dieses Mitglied hat f\xFCr dieses Spiel bereits ein Ticket.");
       return;
     }
     const saveBtn = $("assignTicketSave");
