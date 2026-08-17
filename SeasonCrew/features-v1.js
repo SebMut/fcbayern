@@ -97,7 +97,7 @@
     const list=$('memberList');if(!list)return;
     const rows=[...list.querySelectorAll('.memberRow')];
     rows.forEach(row=>row.querySelector('.memberManageActions')?.remove());
-    const manager=isManager(),uid=session.user.id;
+    const manager=isManager(),remover=canAllocate(),uid=session.user.id;
     for(const m of state.members){
       const row=rows.find(r=>r.querySelector('.memberIdentity b')?.textContent.trim()===`@${m.username}`);if(!row)continue;
       row.dataset.memberUserId=m.user_id;
@@ -109,6 +109,12 @@
         actions.querySelector('[data-save-member-role]').addEventListener('click',()=>changeRole(m.user_id,actions.querySelector('.memberRoleSelect').value,m.username));
         actions.querySelector('[data-make-owner]').addEventListener('click',()=>transferOwner(m.user_id,m.username));
         actions.querySelector('[data-remove-member]')?.addEventListener('click',()=>removeMember(m.user_id,m.username));
+      }
+      if(remover&&!manager&&m.role!=='owner'&&m.user_id!==uid){
+        const actions=document.createElement('div');actions.className='memberManageActions';
+        actions.innerHTML='<button class=\"memberAction danger\" type=\"button\" data-remove-member>Entfernen</button>';
+        row.appendChild(actions);
+        actions.querySelector('[data-remove-member]').addEventListener('click',()=>removeMember(m.user_id,m.username));
       }
       if(m.user_id===uid&&m.role!=='owner'){
         const actions=row.querySelector('.memberManageActions')||document.createElement('div');
@@ -138,7 +144,7 @@
     if(error){toast(error.message);return}toast(`@${name} ist jetzt Owner`);scheduleLoad(80);
   }
   async function removeMember(userId,name){
-    if(!isManager())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;
+    if(!canAllocate())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;
     const {error}=await client().rpc('sc_remove_group_member',{p_group:state.gid,p_user:userId});
     if(error){toast(error.message);return}toast(`@${name} wurde entfernt`);scheduleLoad(80);
   }
