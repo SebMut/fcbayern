@@ -20,39 +20,21 @@ jobs:
           from pathlib import Path
           p = Path('SeasonCrew/features-v1.js')
           s = p.read_text(encoding='utf-8')
-          s = s.replace(
-              "const manager=isManager(),uid=session.user.id;",
-              "const manager=isManager(),remover=canAllocate(),uid=session.user.id;"
-          )
-          old = """        actions.querySelector('[data-remove-member]')?.addEventListener('click',()=>removeMember(m.user_id,m.username));
-      }
-      if(m.user_id===uid&&m.role!=='owner'){"""
-          new = """        actions.querySelector('[data-remove-member]')?.addEventListener('click',()=>removeMember(m.user_id,m.username));
-      }
-      if(remover&&!manager&&m.role!=='owner'&&m.user_id!==uid){
-        const actions=document.createElement('div');actions.className='memberManageActions';
-        actions.innerHTML='<button class=\"memberAction danger\" type=\"button\" data-remove-member>Entfernen</button>';
-        row.appendChild(actions);
-        actions.querySelector('[data-remove-member]').addEventListener('click',()=>removeMember(m.user_id,m.username));
-      }
-      if(m.user_id===uid&&m.role!=='owner'){"""
-          if old not in s:
+          s = s.replace("const manager=isManager(),uid=session.user.id;", "const manager=isManager(),remover=canAllocate(),uid=session.user.id;", 1)
+          anchor = "        actions.querySelector('[data-remove-member]')?.addEventListener('click',()=>removeMember(m.user_id,m.username));\n      }\n      if(m.user_id===uid&&m.role!=='owner'){"
+          insert = "        actions.querySelector('[data-remove-member]')?.addEventListener('click',()=>removeMember(m.user_id,m.username));\n      }\n      if(remover&&!manager&&m.role!=='owner'&&m.user_id!==uid){\n        const actions=document.createElement('div');actions.className='memberManageActions';\n        actions.innerHTML='<button class=\\\"memberAction danger\\\" type=\\\"button\\\" data-remove-member>Entfernen</button>';\n        row.appendChild(actions);\n        actions.querySelector('[data-remove-member]').addEventListener('click',()=>removeMember(m.user_id,m.username));\n      }\n      if(m.user_id===uid&&m.role!=='owner'){"
+          if anchor not in s:
               raise SystemExit('member controls anchor not found')
-          s = s.replace(old, new, 1)
-          s = s.replace(
-              "if(!isManager())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;",
-              "if(!canAllocate())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;",
-              1
-          )
+          s = s.replace(anchor, insert, 1)
+          s = s.replace("if(!isManager())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;", "if(!canAllocate())return;if(!confirm(`@${name} wirklich aus dieser Crew entfernen?`))return;", 1)
           p.write_text(s, encoding='utf-8')
           PY
       - name: Bump frontend cache
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('SeasonCrew/crew-delete.js')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace("features-v1.js?v=1", "features-v1.js?v=2")
+          p = Path('SeasonCrew/crew-delete.js')
+          s = p.read_text(encoding='utf-8').replace('features-v1.js?v=1','features-v1.js?v=2')
           p.write_text(s, encoding='utf-8')
           PY
       - name: Syntax check
