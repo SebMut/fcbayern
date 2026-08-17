@@ -34,9 +34,9 @@
       </form>
       <form class="authForm hidden" id="signupForm">
         <h1>Dein SeasonCrew Account.</h1>
-        <p>Für die Registrierung brauchst du eine gültige Einladung, eine bestätigte E-Mail-Adresse und einen eindeutigen Nutzernamen.</p>
-        <label>Einladungscode <span style="color:#ff7b8b">*</span><input id="signupInvite" autocomplete="off" required placeholder="Code oder Einladungslink"></label>
-        <small class="fieldHint">Pflichtfeld · Du kannst auch den kompletten Einladungslink einfügen.</small>
+        <p>Erstelle deinen Account mit einer bestätigten E-Mail-Adresse und einem eindeutigen Nutzernamen. Einen Einladungscode kannst du optional direkt mitgeben.</p>
+        <label>Einladungscode <span>(optional)</span><input id="signupInvite" autocomplete="off" placeholder="Code oder Einladungslink"></label>
+        <small class="fieldHint">Optional · Wenn du eingeladen wurdest, kannst du auch den kompletten Einladungslink einfügen.</small>
         <label>Nutzername<input id="signupUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9._-]{3,24}" required placeholder="z. B. Mika87"></label>
         <small class="fieldHint">3–24 Zeichen · Buchstaben, Zahlen, Punkt, Minus und Unterstrich.</small>
         <label>E-Mail<input id="signupEmail" type="email" autocomplete="email" required placeholder="du@example.de"></label>
@@ -44,7 +44,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build crew-delete-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build product-v2-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
