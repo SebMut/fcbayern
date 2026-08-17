@@ -1,15 +1,8 @@
 (()=>{
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let sb=null,session=null,state=null,channel=null,loadTimer=null,loading=false,lastGroupId='';
+  let session=null,state=null,channel=null,loadTimer=null,loading=false,lastGroupId='';
 
-  function client(){
-    if(sb)return sb;
-    if(!window.supabase?.createClient)return null;
-    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    return sb;
-  }
+  function client(){return window.SeasonCrewCore?.client?.()||null}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
   function roleLabel(role){return role==='owner'?'Owner':role==='admin'?'Admin':'Mitglied'}

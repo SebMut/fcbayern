@@ -35,7 +35,7 @@
     mod
   ));
 
-  // SeasonCrew/club-kits.js?v=20260817-loginfix1
+  // club-kits.js?v=20260817-loginfix1
   var club_kits_exports = {};
   __export(club_kits_exports, {
     ALIASES: () => ALIASES,
@@ -132,7 +132,7 @@
   }
   var import_meta, CLUB_KITS, ALIASES, DOMAIN_TO_CLUB, DEFAULT_KIT, observer, api;
   var init_club_kits = __esm({
-    "SeasonCrew/club-kits.js?v=20260817-loginfix1"() {
+    "club-kits.js?v=20260817-loginfix1"() {
       import_meta = {};
       CLUB_KITS = {
         "FC Bayern M\xFCnchen": { primary: "#DC052D", secondary: "#FFFFFF" },
@@ -219,7 +219,7 @@
     }
   });
 
-  // FcBayern_Tom/schedule.js
+  // ../FcBayern_Tom/schedule.js
   var raw = "bl01|bl|Bundesliga \xB7 1. Spieltag|2026-08-28|2026-08-28|20:30|VfB Stuttgart|H|Allianz Arena, M\xFCnchen\nbl02|bl|Bundesliga \xB7 2. Spieltag|2026-09-05|2026-09-05|18:30|FC Schalke 04||VELTINS-Arena, Gelsenkirchen\nbl03|bl|Bundesliga \xB7 3. Spieltag|2026-09-13|2026-09-13|17:30|SV 07 Elversberg||URSAPHARM-Arena, Elversberg\nbl04|bl|Bundesliga \xB7 4. Spieltag|2026-09-18|2026-09-18|20:30|1. FC Union Berlin|H|Allianz Arena, M\xFCnchen\nbl05|bl|Bundesliga \xB7 5. Spieltag|2026-10-09|2026-10-11||FC Augsburg||WWK Arena, Augsburg\nbl06|bl|Bundesliga \xB7 6. Spieltag|2026-10-16|2026-10-18||RB Leipzig|H|Allianz Arena, M\xFCnchen\nbl07|bl|Bundesliga \xB7 7. Spieltag|2026-10-23|2026-10-25||SC Freiburg||Europa-Park Stadion, Freiburg\nbl08|bl|Bundesliga \xB7 8. Spieltag|2026-10-30|2026-11-01||Borussia Dortmund|H|Allianz Arena, M\xFCnchen\nbl09|bl|Bundesliga \xB7 9. Spieltag|2026-11-06|2026-11-08||1. FSV Mainz 05||MEWA Arena, Mainz\nbl10|bl|Bundesliga \xB7 10. Spieltag|2026-11-20|2026-11-22||1. FC K\xF6ln|H|Allianz Arena, M\xFCnchen\nbl11|bl|Bundesliga \xB7 11. Spieltag|2026-11-27|2026-11-29||Hamburger SV||Volksparkstadion, Hamburg\nbl12|bl|Bundesliga \xB7 12. Spieltag|2026-12-04|2026-12-06||SC Paderborn 07|H|Allianz Arena, M\xFCnchen\nbl13|bl|Bundesliga \xB7 13. Spieltag|2026-12-11|2026-12-13||TSG Hoffenheim||Sinsheim\nbl14|bl|Bundesliga \xB7 14. Spieltag|2026-12-18|2026-12-20||SV Werder Bremen|H|Allianz Arena, M\xFCnchen\nbl15|bl|Bundesliga \xB7 15. Spieltag|2027-01-08|2027-01-10||Borussia M\xF6nchengladbach||Borussia-Park, M\xF6nchengladbach\nbl16|bl|Bundesliga \xB7 16. Spieltag|2027-01-12|2027-01-14||Bayer 04 Leverkusen|H|Allianz Arena, M\xFCnchen\nbl17|bl|Bundesliga \xB7 17. Spieltag|2027-01-15|2027-01-17||Eintracht Frankfurt||Deutsche Bank Park, Frankfurt\nbl18|bl|Bundesliga \xB7 18. Spieltag|2027-01-22|2027-01-24||VfB Stuttgart||MHP-Arena, Stuttgart\nbl19|bl|Bundesliga \xB7 19. Spieltag|2027-01-29|2027-01-31||FC Schalke 04|H|Allianz Arena, M\xFCnchen\nbl20|bl|Bundesliga \xB7 20. Spieltag|2027-02-05|2027-02-07||SV 07 Elversberg|H|Allianz Arena, M\xFCnchen\nbl21|bl|Bundesliga \xB7 21. Spieltag|2027-02-12|2027-02-14||1. FC Union Berlin||Stadion An der Alten F\xF6rsterei, Berlin\nbl22|bl|Bundesliga \xB7 22. Spieltag|2027-02-19|2027-02-21||FC Augsburg|H|Allianz Arena, M\xFCnchen\nbl23|bl|Bundesliga \xB7 23. Spieltag|2027-02-26|2027-02-28||RB Leipzig||Red Bull Arena, Leipzig\nbl24|bl|Bundesliga \xB7 24. Spieltag|2027-03-02|2027-03-04||SC Freiburg|H|Allianz Arena, M\xFCnchen\nbl25|bl|Bundesliga \xB7 25. Spieltag|2027-03-05|2027-03-07||Borussia Dortmund||Signal Iduna Park, Dortmund\nbl26|bl|Bundesliga \xB7 26. Spieltag|2027-03-12|2027-03-14||1. FSV Mainz 05|H|Allianz Arena, M\xFCnchen\nbl27|bl|Bundesliga \xB7 27. Spieltag|2027-03-19|2027-03-21||1. FC K\xF6ln||RheinEnergieStadion, K\xF6ln\nbl28|bl|Bundesliga \xB7 28. Spieltag|2027-04-02|2027-04-04||Hamburger SV|H|Allianz Arena, M\xFCnchen\nbl29|bl|Bundesliga \xB7 29. Spieltag|2027-04-09|2027-04-11||SC Paderborn 07||Home-Deluxe-Arena, Paderborn\nbl30|bl|Bundesliga \xB7 30. Spieltag|2027-04-16|2027-04-18||TSG Hoffenheim|H|Allianz Arena, M\xFCnchen\nbl31|bl|Bundesliga \xB7 31. Spieltag|2027-04-23|2027-04-25||SV Werder Bremen||Weserstadion, Bremen\nbl32|bl|Bundesliga \xB7 32. Spieltag|2027-05-07|2027-05-09||Borussia M\xF6nchengladbach|H|Allianz Arena, M\xFCnchen\nbl33|bl|Bundesliga \xB7 33. Spieltag|2027-05-14|2027-05-16||Bayer 04 Leverkusen||BayArena, Leverkusen\nbl34|bl|Bundesliga \xB7 34. Spieltag|2027-05-22|2027-05-22|15:30|Eintracht Frankfurt|H|Allianz Arena, M\xFCnchen\ndfb01|dfb|DFB-Pokal \xB7 1. Runde|2026-09-02|2026-09-02|20:45|VfL Osnabr\xFCck||Bremer Br\xFCcke, Osnabr\xFCck\ndfb02|dfb|DFB-Pokal \xB7 2. Runde|2026-10-27|2026-10-28||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb03|dfb|DFB-Pokal \xB7 Achtelfinale|2026-12-01|2026-12-02||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb04a|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster A|2027-02-02|2027-02-03||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb04b|dfb|DFB-Pokal \xB7 Viertelfinale \u2013 Fenster B|2027-02-09|2027-02-10||m\xF6glicher Termin|PX|eines der beiden Viertelfinal-Fenster\ndfb05|dfb|DFB-Pokal \xB7 Halbfinale|2027-04-20|2027-04-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ndfb06|dfb|DFB-Pokal \xB7 Finale|2027-05-29|2027-05-29||m\xF6gliches Finale|PN|Olympiastadion Berlin\ncl01|cl|Champions League \xB7 Ligaphase 1|2026-09-08|2026-09-10||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl02|cl|Champions League \xB7 Ligaphase 2|2026-10-13|2026-10-14||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl03|cl|Champions League \xB7 Ligaphase 3|2026-10-20|2026-10-21||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl04|cl|Champions League \xB7 Ligaphase 4|2026-11-03|2026-11-04||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl05|cl|Champions League \xB7 Ligaphase 5|2026-11-24|2026-11-25||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl06|cl|Champions League \xB7 Ligaphase 6|2026-12-08|2026-12-09||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl07|cl|Champions League \xB7 Ligaphase 7|2027-01-19|2027-01-20||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\ncl08|cl|Champions League \xB7 Ligaphase 8|2027-01-27|2027-01-27||Gegner offen|P|Heim/Ausw\xE4rts nach Auslosung\nclpo1|cl|Champions League \xB7 Play-off Hinspiel|2027-02-16|2027-02-17||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclpo2|cl|Champions League \xB7 Play-off R\xFCckspiel|2027-02-23|2027-02-24||nur bei Tabellenplatz 9\u201324|P|Heim/Ausw\xE4rts offen\nclr161|cl|Champions League \xB7 Achtelfinale Hinspiel|2027-03-09|2027-03-10||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclr162|cl|Champions League \xB7 Achtelfinale R\xFCckspiel|2027-03-16|2027-03-17||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf1|cl|Champions League \xB7 Viertelfinale Hinspiel|2027-04-06|2027-04-07||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclqf2|cl|Champions League \xB7 Viertelfinale R\xFCckspiel|2027-04-13|2027-04-14||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf1|cl|Champions League \xB7 Halbfinale Hinspiel|2027-04-27|2027-04-28||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclsf2|cl|Champions League \xB7 Halbfinale R\xFCckspiel|2027-05-04|2027-05-05||m\xF6glicher Termin|P|Heim/Ausw\xE4rts offen\nclfinal|cl|Champions League \xB7 Finale|2027-06-05|2027-06-05||m\xF6gliches Finale|PN|Estadio Metropolitano, Madrid";
   var BASE_M = raw.split("\n").map((x) => {
     let [id, c, l, s, e, t, o, f, p] = x.split("|");
@@ -227,7 +227,7 @@
   });
   var MON = ["Jan", "Feb", "M\xE4r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
-  // SeasonCrew/schedule.js
+  // schedule.js
   var D = Object.freeze({});
   queueMicrotask(() => {
     Promise.resolve().then(() => (init_club_kits(), club_kits_exports)).catch((error) => {
@@ -235,11 +235,13 @@
     });
   });
 
-  // SeasonCrew/app.js
-  var createClient = (...args) => window.supabase.createClient(...args);
-  var SUPABASE_URL = "https://kmhadzujovvxvpgblgkk.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y";
-  var sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  // app.js
+  var sb = window.SeasonCrewCore?.client?.();
+  if (!sb) {
+    const status = document.getElementById("authStatus");
+    if (status) status.textContent = "Die Login-Komponente konnte nicht geladen werden. Bitte Seite neu laden.";
+    throw new Error("SeasonCrew Supabase core unavailable");
+  }
   var $ = (id) => document.getElementById(id);
   var session = null;
   var user = null;
@@ -264,8 +266,11 @@
   var els = {
     authScreen: $("authScreen"),
     authStatus: $("authStatus"),
+    authTabs: document.querySelector(".authTabs"),
     loginForm: $("loginForm"),
     signupForm: $("signupForm"),
+    forgotForm: $("forgotForm"),
+    recoveryForm: $("recoveryForm"),
     groupSelect: $("groupSelect"),
     noGroups: $("noGroups"),
     workspace: $("workspace"),
@@ -396,16 +401,100 @@
     }
     return token;
   }
+  function showAuthView(view, { keepStatus = false } = {}) {
+    const forms = { login: els.loginForm, signup: els.signupForm, forgot: els.forgotForm, recovery: els.recoveryForm };
+    Object.entries(forms).forEach(([name, form]) => form?.classList.toggle("hidden", name !== view));
+    const tabbed = view === "login" || view === "signup";
+    els.authTabs?.classList.toggle("hidden", !tabbed);
+    if (tabbed) document.querySelectorAll("[data-auth-tab]").forEach((b) => b.classList.toggle("active", b.dataset.authTab === view));
+    if (view === "signup") syncSignupInvite();
+    if (!keepStatus) setStatus(els.authStatus, "");
+  }
   function setAuthTab(tab) {
-    document.querySelectorAll("[data-auth-tab]").forEach((b) => b.classList.toggle("active", b.dataset.authTab === tab));
-    els.loginForm.classList.toggle("hidden", tab !== "login");
-    els.signupForm.classList.toggle("hidden", tab !== "signup");
-    setStatus(els.authStatus, "");
-    if (tab === "signup") syncSignupInvite();
+    showAuthView(tab);
+  }
+  function recoveryRequested() {
+    const u = new URL(location.href);
+    return u.searchParams.get("recovery") === "1" || /type=recovery/i.test(location.hash);
+  }
+  function clearRecoveryUrl() {
+    const u = new URL(location.href);
+    u.searchParams.delete("recovery");
+    u.hash = "";
+    history.replaceState({}, "", u);
+  }
+  function showRecoveryView(message = "Lege jetzt ein neues Passwort f\xFCr deinen SeasonCrew-Account fest.") {
+    document.body.classList.add("auth-locked");
+    els.authScreen.classList.remove("hidden");
+    showAuthView("recovery");
+    setStatus(els.authStatus, message, true);
   }
   document.querySelectorAll("[data-auth-tab]").forEach((b) => b.addEventListener("click", () => setAuthTab(b.dataset.authTab)));
+  $("forgotPasswordBtn")?.addEventListener("click", () => {
+    if ($("forgotEmail") && !$("forgotEmail").value) $("forgotEmail").value = $("loginEmail")?.value || "";
+    showAuthView("forgot");
+  });
+  $("forgotBackBtn")?.addEventListener("click", () => showAuthView("login"));
+  $("recoveryCancelBtn")?.addEventListener("click", async () => {
+    await sb.auth.signOut();
+    session = null;
+    user = null;
+    clearRecoveryUrl();
+    showAuthView("login");
+    setStatus(els.authStatus, "Passwort\xE4nderung abgebrochen. Du kannst dich normal einloggen.");
+  });
   var initialInvite = syncSignupInvite();
   if (initialInvite) setAuthTab("signup");
+  els.forgotForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = $("forgotEmail")?.value.trim();
+    if (!email) return;
+    setStatus(els.authStatus, "Reset-Link wird angefordert \u2026");
+    const redirectTo = window.SeasonCrewCore.appUrl({ recovery: "1" });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      setStatus(els.authStatus, /rate limit/i.test(error.message || "") ? "Zu viele Anfragen. Bitte versuche es etwas sp\xE4ter erneut." : "Der Reset-Link konnte gerade nicht versendet werden. Bitte versuche es erneut.");
+      return;
+    }
+    setStatus(els.authStatus, "Falls zu dieser E-Mail ein SeasonCrew-Account existiert, wurde ein Link zum Zur\xFCcksetzen des Passworts versendet.", true);
+  });
+  els.recoveryForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const password = $("recoveryPassword")?.value || "", confirmPassword = $("recoveryPasswordConfirm")?.value || "";
+    if (password.length < 8) {
+      setStatus(els.authStatus, "Das neue Passwort muss mindestens 8 Zeichen lang sein.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setStatus(els.authStatus, "Die beiden Passw\xF6rter stimmen nicht \xFCberein.");
+      return;
+    }
+    setStatus(els.authStatus, "Passwort wird ge\xE4ndert \u2026");
+    const { data: { session: activeSession } } = await sb.auth.getSession();
+    if (!activeSession) {
+      setStatus(els.authStatus, "Der Reset-Link ist ung\xFCltig oder abgelaufen. Bitte fordere einen neuen Link an.");
+      return;
+    }
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) {
+      setStatus(els.authStatus, "Passwort konnte nicht ge\xE4ndert werden: " + error.message);
+      return;
+    }
+    await sb.auth.signOut();
+    session = null;
+    user = null;
+    clearRecoveryUrl();
+    $("recoveryPassword").value = "";
+    $("recoveryPasswordConfirm").value = "";
+    showAuthView("login");
+    setStatus(els.authStatus, "Passwort ge\xE4ndert. Du kannst dich jetzt mit dem neuen Passwort einloggen.", true);
+  });
+  sb.auth.onAuthStateChange((event, nextSession) => {
+    if (event !== "PASSWORD_RECOVERY") return;
+    session = nextSession || null;
+    user = nextSession?.user || null;
+    showRecoveryView();
+  });
   els.loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     setStatus(els.authStatus, "Einloggen \u2026");
@@ -1259,9 +1348,14 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
   async function boot() {
     const invite = extractInviteToken(new URL(location.href).searchParams.get("invite"));
     if (invite) localStorage.setItem("seasoncrew-pending-invite", invite);
+    const isRecovery = recoveryRequested();
     const { data: { session: s } } = await sb.auth.getSession();
     session = s;
     user = s?.user || null;
+    if (isRecovery) {
+      showRecoveryView(user ? "Reset-Link best\xE4tigt. Bitte w\xE4hle jetzt dein neues Passwort." : "Reset-Link wird gepr\xFCft \u2026");
+      return;
+    }
     if (!user) {
       document.body.classList.add("auth-locked");
       els.authScreen.classList.remove("hidden");
@@ -1269,6 +1363,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
         setAuthTab("signup");
         setStatus(els.authStatus, "Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.", true);
       } else {
+        showAuthView("login");
         setStatus(els.authStatus, "");
       }
       return;

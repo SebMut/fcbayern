@@ -3,12 +3,10 @@
   window.__seasonCrewPricingRuntimeV2=true;
   window.__seasonCrewPricingRuntime=true;
 
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let client=null,priceMap=new Map(),ticketMap=new Map(),loadTimer=null,statsTimer=null,loading=false,lastGroup='';
+  let priceMap=new Map(),ticketMap=new Map(),loadTimer=null,statsTimer=null,loading=false,lastGroup='';
 
-  function sb(){if(client)return client;if(!window.supabase?.createClient)return null;client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return client}
+  function sb(){return window.SeasonCrewCore?.client?.()||null}
   function groupId(){return $('groupSelect')?.value||''}
   function money(value){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0)}
   function fixtureIds(){return [...document.querySelectorAll('.gameCard[id^="game-"]')].map(card=>card.id.replace(/^game-/,'')).filter(Boolean)}

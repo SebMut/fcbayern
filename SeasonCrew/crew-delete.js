@@ -1,20 +1,17 @@
 (()=>{
-  const URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
-  let sb=null;
   const $=id=>document.getElementById(id);
 
   if(!document.querySelector('link[data-seasoncrew-features-v1]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./features-v1.css?v=1';link.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-features-v1]')){
-    const script=document.createElement('script');script.src='./features-v1.js?v=6';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./features-v1.js?v=7';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
   }
   if(!document.querySelector('link[data-seasoncrew-product-v2]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./product-v2.css?v=3';link.dataset.seasoncrewProductV2='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-product-v2]')){
-    const script=document.createElement('script');script.src='./product-v2.js?v=10';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./product-v2.js?v=11';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
   }
 
   const role=()=>String($('memberRole')?.textContent||'').trim();
@@ -22,12 +19,7 @@
   const crewName=()=>String($('groupSelect')?.selectedOptions?.[0]?.textContent||$('groupTitle')?.textContent||'').trim();
   const crewId=()=>String($('groupSelect')?.value||'').trim();
 
-  function client(){
-    if(sb)return sb;
-    if(!window.supabase?.createClient)return null;
-    sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    return sb;
-  }
+  function client(){return window.SeasonCrewCore?.client?.()||null}
 
   function ensureZone(){
     const settings=$('settingsForm');

@@ -1,8 +1,5 @@
 (()=>{
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let noteClient=null;
 
   if(!document.querySelector('link[data-seasoncrew-brand-v2]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./brand-v2.css?v=20260817-1';link.dataset.seasoncrewBrandV2='1';document.head.appendChild(link);
@@ -11,7 +8,7 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./crew-delete.css?v=1';link.dataset.seasoncrewCrewDelete='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-crew-delete]')){
-    const script=document.createElement('script');script.src='./crew-delete.js?v=8';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./crew-delete.js?v=9';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
   }
 
   const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Mitglied';
@@ -19,12 +16,7 @@
   const role=()=>String($('memberRole')?.textContent||'Profil').trim()||'Profil';
   const berlinDate=()=>new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());
 
-  function getNoteClient(){
-    if(noteClient)return noteClient;
-    if(!window.supabase?.createClient)return null;
-    noteClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    return noteClient;
-  }
+  function getNoteClient(){return window.SeasonCrewCore?.client?.()||null}
 
   function toast(text){
     const el=$('toast');if(!el)return;

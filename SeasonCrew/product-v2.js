@@ -1,11 +1,9 @@
 (()=>{
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let sb=null,session=null,state=null,channel=null,timer=null,loading=false,fixtureMap=new Map();
+  let session=null,state=null,channel=null,timer=null,loading=false,fixtureMap=new Map();
   const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
-  function client(){if(sb)return sb;if(!window.supabase?.createClient)return null;sb=window.supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return sb}
+  function client(){return window.SeasonCrewCore?.client?.()||null}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}

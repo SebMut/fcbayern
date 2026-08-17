@@ -1,0 +1,13 @@
+{
+  "name":"seasoncrew-tests",
+  "private":true,
+  "type":"module",
+  "scripts":{
+    "build":"esbuild app.js --bundle --format=iife --target=safari15 --outfile=app.bundle.js",
+    "test:e2e":"playwright test"
+  },
+  "devDependencies":{
+    "@playwright/test":"1.55.0",
+    "esbuild":"0.25.9"
+  }
+}

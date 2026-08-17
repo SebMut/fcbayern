@@ -2,17 +2,10 @@
   if(window.__seasonCrewWishActionsV2)return;
   window.__seasonCrewWishActionsV2=true;
 
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
-  let sb=null,decorateTimer=null;
+  let decorateTimer=null;
   const $=id=>document.getElementById(id);
 
-  function client(){
-    if(sb)return sb;
-    if(!window.supabase?.createClient)return null;
-    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    return sb;
-  }
+  function client(){return window.SeasonCrewCore?.client?.()||null}
 
   function toast(text){
     const el=$('toast');if(!el)return;

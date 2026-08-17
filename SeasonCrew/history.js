@@ -1,6 +1,6 @@
 import { BASE_M } from './schedule.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';
-const sb=createClient('https://kmhadzujovvxvpgblgkk.supabase.co','sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y',{auth:{persistSession:true,autoRefreshToken:true}});
+const sb=window.SeasonCrewCore?.client?.();
+if(!sb)throw new Error('SeasonCrew Supabase core unavailable');
 const $=id=>document.getElementById(id);const sel=$('historyGroup'),type=$('historyType'),search=$('historySearch'),content=$('historyContent');
 let user=null,profile=null,groups=[],current=null,logs=[],tickets=new Map(),fixtures=new Map(BASE_M.map(m=>[m.id,m]));
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}

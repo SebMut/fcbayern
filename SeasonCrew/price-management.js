@@ -1,6 +1,4 @@
 (()=>{
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const RULE_FIELDS=[
     ['dfb.r1','DFB-Pokal · 1. Runde'],
     ['dfb.r2','DFB-Pokal · 2. Runde'],
@@ -27,7 +25,7 @@
   };
   const ADMIN_TABS=new Set(['crew','prices','applications','invites','tickets','members']);
 
-  let client=null,groupData=null,fixtures=[],activeTab='profile';
+  let groupData=null,fixtures=[],activeTab='profile';
   const $=id=>document.getElementById(id);
 
   function parseMoney(value){
@@ -198,12 +196,7 @@
     if(name==='prices')scheduleRefresh();
   }
 
-  async function ensureClient(){
-    if(client)return client;
-    if(!window.supabase?.createClient)throw new Error('Supabase ist noch nicht geladen.');
-    client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:false,detectSessionInUrl:false}});
-    return client;
-  }
+  async function ensureClient(){const client=window.SeasonCrewCore?.client?.();if(!client)throw new Error('Supabase ist noch nicht geladen.');return client}
 
   async function loadFixtures(){
     if(fixtures.length)return fixtures;

@@ -1,9 +1,6 @@
 import { BASE_M, D, MON } from './schedule.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';
-
-const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
-const sb=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const sb=window.SeasonCrewCore?.client?.();
+if(!sb){const status=document.getElementById('authStatus');if(status)status.textContent='Die Login-Komponente konnte nicht geladen werden. Bitte Seite neu laden.';throw new Error('SeasonCrew Supabase core unavailable')}
 const $=id=>document.getElementById(id);
 
 let session=null,user=null,profile=null,groups=[],memberships=new Map(),currentGroup=null,tickets=[],allocations=[],notes=[],fixtures=[],members=[],filter='all';
@@ -11,7 +8,7 @@ let activeInvite=null,pendingRequests=[],ownPendingRequests=[];
 let presenceChannel=null,realtimeChannel=null,paymentContext=null,assignmentContext=null,reloadTimer=null;
 
 const els={
-  authScreen:$('authScreen'),authStatus:$('authStatus'),loginForm:$('loginForm'),signupForm:$('signupForm'),
+  authScreen:$('authScreen'),authStatus:$('authStatus'),authTabs:document.querySelector('.authTabs'),loginForm:$('loginForm'),signupForm:$('signupForm'),forgotForm:$('forgotForm'),recoveryForm:$('recoveryForm'),
   groupSelect:$('groupSelect'),noGroups:$('noGroups'),workspace:$('workspace'),helloUser:$('helloUser'),seasonPill:$('seasonPill'),groupTitle:$('groupTitle'),clubName:$('clubName'),memberRole:$('memberRole'),onlineBadge:$('onlineBadge'),syncInfo:$('syncInfo'),games:$('games'),searchInput:$('searchInput'),
   createDialog:$('createGroupDialog'),joinDialog:$('joinGroupDialog'),settingsDialog:$('settingsDialog'),paymentDialog:$('paymentDialog'),toast:$('toast'),
   superadminBadge:$('superadminBadge'),heroInviteBtn:$('heroInviteBtn'),pendingNotice:$('pendingNotice')
@@ -64,14 +61,55 @@ function syncSignupInvite(){
   }
   return token;
 }
-function setAuthTab(tab){
-  document.querySelectorAll('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===tab));
-  els.loginForm.classList.toggle('hidden',tab!=='login');els.signupForm.classList.toggle('hidden',tab!=='signup');setStatus(els.authStatus,'');
-  if(tab==='signup')syncSignupInvite();
+function showAuthView(view,{keepStatus=false}={}){
+  const forms={login:els.loginForm,signup:els.signupForm,forgot:els.forgotForm,recovery:els.recoveryForm};
+  Object.entries(forms).forEach(([name,form])=>form?.classList.toggle('hidden',name!==view));
+  const tabbed=view==='login'||view==='signup';
+  els.authTabs?.classList.toggle('hidden',!tabbed);
+  if(tabbed)document.querySelectorAll('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===view));
+  if(view==='signup')syncSignupInvite();
+  if(!keepStatus)setStatus(els.authStatus,'');
+}
+function setAuthTab(tab){showAuthView(tab)}
+function recoveryRequested(){const u=new URL(location.href);return u.searchParams.get('recovery')==='1'||/type=recovery/i.test(location.hash)}
+function clearRecoveryUrl(){const u=new URL(location.href);u.searchParams.delete('recovery');u.hash='';history.replaceState({},'',u)}
+function showRecoveryView(message='Lege jetzt ein neues Passwort für deinen SeasonCrew-Account fest.'){
+  document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');showAuthView('recovery');setStatus(els.authStatus,message,true);
 }
 document.querySelectorAll('[data-auth-tab]').forEach(b=>b.addEventListener('click',()=>setAuthTab(b.dataset.authTab)));
+$('forgotPasswordBtn')?.addEventListener('click',()=>{if($('forgotEmail')&&!$('forgotEmail').value)$('forgotEmail').value=$('loginEmail')?.value||'';showAuthView('forgot')});
+$('forgotBackBtn')?.addEventListener('click',()=>showAuthView('login'));
+$('recoveryCancelBtn')?.addEventListener('click',async()=>{await sb.auth.signOut();session=null;user=null;clearRecoveryUrl();showAuthView('login');setStatus(els.authStatus,'Passwortänderung abgebrochen. Du kannst dich normal einloggen.')});
 const initialInvite=syncSignupInvite();
 if(initialInvite)setAuthTab('signup');
+
+els.forgotForm?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=$('forgotEmail')?.value.trim();if(!email)return;
+  setStatus(els.authStatus,'Reset-Link wird angefordert …');
+  const redirectTo=window.SeasonCrewCore.appUrl({recovery:'1'});
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
+  if(error){setStatus(els.authStatus,/rate limit/i.test(error.message||'')?'Zu viele Anfragen. Bitte versuche es etwas später erneut.':'Der Reset-Link konnte gerade nicht versendet werden. Bitte versuche es erneut.');return}
+  setStatus(els.authStatus,'Falls zu dieser E-Mail ein SeasonCrew-Account existiert, wurde ein Link zum Zurücksetzen des Passworts versendet.',true);
+});
+
+els.recoveryForm?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const password=$('recoveryPassword')?.value||'',confirmPassword=$('recoveryPasswordConfirm')?.value||'';
+  if(password.length<8){setStatus(els.authStatus,'Das neue Passwort muss mindestens 8 Zeichen lang sein.');return}
+  if(password!==confirmPassword){setStatus(els.authStatus,'Die beiden Passwörter stimmen nicht überein.');return}
+  setStatus(els.authStatus,'Passwort wird geändert …');
+  const {data:{session:activeSession}}=await sb.auth.getSession();
+  if(!activeSession){setStatus(els.authStatus,'Der Reset-Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.');return}
+  const {error}=await sb.auth.updateUser({password});
+  if(error){setStatus(els.authStatus,'Passwort konnte nicht geändert werden: '+error.message);return}
+  await sb.auth.signOut();session=null;user=null;clearRecoveryUrl();$('recoveryPassword').value='';$('recoveryPasswordConfirm').value='';showAuthView('login');setStatus(els.authStatus,'Passwort geändert. Du kannst dich jetzt mit dem neuen Passwort einloggen.',true);
+});
+
+sb.auth.onAuthStateChange((event,nextSession)=>{
+  if(event!=='PASSWORD_RECOVERY')return;
+  session=nextSession||null;user=nextSession?.user||null;showRecoveryView();
+});
 
 els.loginForm.addEventListener('submit',async e=>{
   e.preventDefault();setStatus(els.authStatus,'Einloggen …');
@@ -498,8 +536,13 @@ async function cleanupChannels(){if(presenceChannel){try{await presenceChannel.u
 
 async function boot(){
   const invite=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(invite)localStorage.setItem('seasoncrew-pending-invite',invite);
+  const isRecovery=recoveryRequested();
   const {data:{session:s}}=await sb.auth.getSession();session=s;user=s?.user||null;
-  if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}else{setStatus(els.authStatus,'')}return}
+  if(isRecovery){
+    showRecoveryView(user?'Reset-Link bestätigt. Bitte wähle jetzt dein neues Passwort.':'Reset-Link wird geprüft …');
+    return;
+  }
+  if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');if(invite){setAuthTab('signup');setStatus(els.authStatus,'Du wurdest eingeladen. Erstelle einen Account oder logge dich ein; danach wird die Beitrittsanfrage automatisch gestellt.',true)}else{showAuthView('login');setStatus(els.authStatus,'')}return}
   await enterApp();
 }
 boot();
