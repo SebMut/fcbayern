@@ -1,4 +1,4 @@
-name: SeasonCrew invitation markup fix
+name: SeasonCrew temporary helper cleanup
 
 on:
   push:
@@ -11,34 +11,21 @@ permissions:
   contents: write
 
 jobs:
-  fix:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Fix duplicate invitation code markup
+      - name: Remove one-time refactor helpers
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('SeasonCrew/app.js');s=p.read_text()
-          old='<div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><small>Einladungscode</small><div class="inviteCodeRow"><code>'
-          new='<div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><code>'
-          if old not in s: raise SystemExit('Duplicate invitation markup not found')
-          s=s.replace(old,new,1)
-          # One duplicate row means one extra closing div before the next small label.
-          old_close='</button></div></div><small class="inviteLinkLabel">Einladungslink</small>'
-          new_close='</button></div></div><small class="inviteLinkLabel">Einladungslink</small>'
-          p.write_text(s)
-          PY
-      - name: Verify source syntax and markup
-        run: |
-          grep -q '<div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><code>' SeasonCrew/app.js
-          if grep -q '<div class="inviteCodeRow"><small>Einladungscode</small>' SeasonCrew/app.js; then exit 1; fi
-      - name: Commit source fix
+          rm -f SeasonCrew/seasoncrew_priority_roadmap_patch.py
+          rm -f SeasonCrew/seasoncrew_priority_cleanup.py
+      - name: Commit cleanup
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SeasonCrew/app.js
-          git commit -m "Fix SeasonCrew invitation code markup"
+          git add -A SeasonCrew/seasoncrew_priority_roadmap_patch.py SeasonCrew/seasoncrew_priority_cleanup.py
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Remove SeasonCrew one-time refactor helpers"
           git push
