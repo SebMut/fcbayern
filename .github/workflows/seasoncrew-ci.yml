@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         working-directory: SeasonCrew
         run: npm ci
+      - name: Audit dependencies
+        working-directory: SeasonCrew
+        run: npm audit --audit-level=high
       - name: Install Chromium
         working-directory: SeasonCrew
         run: npx playwright install --with-deps chromium
