@@ -243,7 +243,7 @@
 
       if (!data.session) {
         setTab('login');
-        setStatus('Account angelegt. In Supabase ist die E-Mail-Bestätigung serverseitig noch aktiv. Bitte dort „Confirm email“ deaktivieren; danach ist keine Bestätigungsmail mehr nötig.');
+        setStatus('Account erstellt. Bitte bestätige deine E-Mail-Adresse über die Nachricht, die wir dir geschickt haben. Danach kannst du dich einloggen.', true);
         return;
       }
 
