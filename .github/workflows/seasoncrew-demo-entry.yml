@@ -1,0 +1,40 @@
+name: SeasonCrew demo entry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'SeasonCrew/add_demo_entry.py'
+      - '.github/workflows/seasoncrew-demo-entry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install demo entry
+        run: python3 SeasonCrew/add_demo_entry.py
+      - name: Validate demo JavaScript
+        run: |
+          node --check SeasonCrew/demo.js
+          node --check SeasonCrew/demo-entry.js
+      - name: Verify demo files
+        run: |
+          test -f SeasonCrew/demo.html
+          test -f SeasonCrew/demo.css
+          grep -q 'demo-entry.js' SeasonCrew/index.html
+          grep -q 'demo.html' SeasonCrew/demo-entry.js
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m 'Expose SeasonCrew customer demo below login'
+          git push
