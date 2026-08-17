@@ -1,117 +1,224 @@
 :root{
-  --brand-navy:#061a3a;
-  --brand-navy-2:#0b2a5a;
-  --brand-red:#e30620;
-  --brand-red-2:#f01836;
-  --brand-red-soft:#fff1f3;
-  --ink:#061a3a;
-  --ink2:#0b2449;
-  --accent:#e30620;
-  --accent2:#f01836;
-  --red:#e30620;
-  --redSoft:#fff1f3;
-  --blue:#0b2a5a;
+  --brand-charcoal:#1F2A30;
+  --brand-charcoal-2:#2A373D;
+  --brand-charcoal-3:#11191D;
+  --brand-lime:#B7FF00;
+  --brand-lime-hover:#A7EA00;
+  --brand-lime-soft:#F3FFD5;
+  --brand-lime-pale:#FAFFE9;
+  --ink:#1F2A30;
+  --ink2:#2A373D;
+  --paper:#F5F7F7;
+  --card:#fff;
+  --muted:#748087;
+  --line:#DFE5E7;
+  --accent:#B7FF00;
+  --accent2:#A7EA00;
+  --lime:#B7FF00;
+  --green:#B7FF00;
+  --greenSoft:#F3FFD5;
+  --red:#1F2A30;
+  --redSoft:#F1F3F4;
+  --blue:#1F2A30;
+  --shadow:0 18px 55px rgba(31,42,48,.08);
 }
 
-/* SeasonCrew logo mark: ticket + SC + crew */
+body{background:linear-gradient(180deg,#f8fafa 0,#f4f6f6 100%);color:var(--brand-charcoal)}
+::selection{background:var(--brand-lime);color:var(--brand-charcoal)}
+
+/* Approved SeasonCrew ticket mark */
 .brandMark{
-  width:52px;
-  height:36px;
-  border-radius:0;
-  transform:none;
-  display:block;
-  background-color:transparent;
-  background-repeat:no-repeat;
-  background-position:center;
-  background-size:contain;
-  box-shadow:none;
-  flex:0 0 auto;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 76'%3E%3Crect x='3' y='4' width='56' height='68' rx='10' fill='%23061a3a'/%3E%3Crect x='61' y='4' width='56' height='68' rx='10' fill='%23e30620'/%3E%3Crect x='58' y='4' width='4' height='68' fill='white'/%3E%3Ccircle cx='3' cy='38' r='8' fill='white'/%3E%3Ccircle cx='117' cy='38' r='8' fill='white'/%3E%3Ctext x='16' y='51' font-family='Arial,sans-serif' font-size='45' font-weight='900' fill='white'%3ES%3C/text%3E%3Ctext x='68' y='51' font-family='Arial,sans-serif' font-size='45' font-weight='900' fill='white'%3EC%3C/text%3E%3Ccircle cx='60' cy='58' r='5' fill='white'/%3E%3Ccircle cx='49' cy='61' r='3.6' fill='white'/%3E%3Ccircle cx='71' cy='61' r='3.6' fill='white'/%3E%3Cpath d='M53 72c.5-7 3-10 7-10s6.5 3 7 10H53Z' fill='white'/%3E%3Cpath d='M43 72c.3-5 2.2-7.5 6-7.5 2.2 0 3.7 1 4.7 2.4-.8 1.5-1.2 3.2-1.4 5.1H43Z' fill='white'/%3E%3Cpath d='M77 72c-.3-5-2.2-7.5-6-7.5-2.2 0-3.7 1-4.7 2.4.8 1.5 1.2 3.2 1.4 5.1H77Z' fill='white'/%3E%3C/svg%3E");
+  width:54px;height:38px;border-radius:0!important;transform:none!important;display:block!important;flex:0 0 auto;
+  background:transparent url('seasoncrew-mark.svg?v=20260817-1') center/contain no-repeat!important;
+  box-shadow:none!important;
 }
 .brandMark i{display:none!important}
-.brandMark.small{width:40px;height:28px;border-radius:0;transform:none}
+.brandMark.small{width:42px;height:30px;border-radius:0!important;transform:none!important}
 
-/* Two-color wordmark */
 .authBrand strong,.appBrand strong{
-  color:transparent;
-  background:linear-gradient(90deg,var(--brand-navy) 0 58%,var(--brand-red) 58% 100%);
-  -webkit-background-clip:text;
-  background-clip:text;
-  font-weight:800;
+  color:transparent!important;
+  background:linear-gradient(90deg,var(--brand-charcoal) 0 60%,var(--brand-lime) 60% 100%);
+  -webkit-background-clip:text;background-clip:text;
+  font-weight:800!important;
 }
-.authBrand{gap:14px}
-.authBrand>div{line-height:1.05}
-.authBrand small{color:#75839a;letter-spacing:.09em}
+.appBrand strong{font-size:17px!important;letter-spacing:-.025em}
+.authBrand small{color:#7c878d!important;letter-spacing:.11em}
 
-/* Main branded surfaces */
+/* Login becomes a real branded landing page */
 .authScreen{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  padding:72px max(6vw,28px)!important;
   background:
-    radial-gradient(circle at 78% 18%,rgba(227,6,32,.32) 0,transparent 30%),
-    radial-gradient(circle at 15% 82%,rgba(31,67,123,.55) 0,transparent 31%),
-    linear-gradient(145deg,#041329 0%,#061a3a 58%,#0a2147 100%);
+    radial-gradient(circle at 17% 22%,rgba(183,255,0,.14),transparent 28%),
+    linear-gradient(135deg,#ffffff 0%,#f7f9f9 58%,#f2f5f5 100%)!important;
+  overflow:auto;
 }
-.authShell{border:1px solid rgba(6,26,58,.08)}
+.authScreen:before{
+  content:"";position:absolute;left:max(6vw,30px);top:50%;transform:translateY(-52%);
+  width:min(48vw,700px);height:min(66vh,570px);
+  background:url('seasoncrew-logo.svg?v=20260817-1') center/contain no-repeat;
+  pointer-events:none;
+}
+.authScreen:after{
+  content:"Dauerkarten gemeinsam organisieren. Klar, schnell und ohne Chat-Chaos.";
+  position:absolute;left:max(8vw,52px);top:calc(50% + 220px);max-width:520px;
+  color:#6e7a80;font-size:15px;line-height:1.55;text-align:center;font-weight:650;
+}
+.authShell{
+  position:relative;z-index:2;width:min(465px,43vw)!important;margin:0!important;
+  background:rgba(255,255,255,.98)!important;border:1px solid #e1e6e7!important;border-radius:24px!important;
+  padding:30px!important;box-shadow:0 30px 80px rgba(31,42,48,.14)!important;
+}
+.authBrand{display:none!important}
+.authTabs{background:#f0f3f3!important;border:1px solid #e5e9ea!important}
+.authTabs button{color:#7a858b!important}
+.authTabs button.active{background:#fff!important;color:var(--brand-charcoal)!important;box-shadow:0 4px 12px rgba(31,42,48,.07)!important}
+.authForm h1{color:var(--brand-charcoal)!important}
+.authForm>p{color:#6f7b81!important}
+.authForm label,.dialogCard label{color:#5f6b71!important}
+.authForm input,.dialogCard input,.dialogCard select,.historyTools select,.historyTools input{
+  border-color:#dce3e5!important;background:#fff!important;color:var(--brand-charcoal)!important;
+}
+.authForm input:focus,.dialogCard input:focus,.dialogCard select:focus,.historyTools select:focus,.historyTools input:focus{
+  border-color:var(--brand-lime)!important;box-shadow:0 0 0 3px rgba(183,255,0,.18)!important;
+}
+.authFoot{color:#99a2a6!important}
+.authStatus,.dialogStatus{color:var(--brand-charcoal)!important}
+.authStatus.ok,.dialogStatus.ok{color:#608600!important}
+
+/* Core actions */
 .primaryButton{
-  background:var(--brand-red);
-  box-shadow:0 10px 25px rgba(227,6,32,.18);
+  background:var(--brand-lime)!important;color:var(--brand-charcoal)!important;
+  border:1px solid rgba(31,42,48,.04)!important;
+  box-shadow:0 10px 24px rgba(183,255,0,.24)!important;
 }
-.primaryButton:hover{background:var(--brand-red-2)}
-.authForm input:focus,.dialogCard input:focus,.dialogCard select:focus{
-  border-color:rgba(227,6,32,.55);
-  box-shadow:0 0 0 3px rgba(227,6,32,.08);
+.primaryButton:hover{background:var(--brand-lime-hover)!important;transform:translateY(-1px)}
+.secondaryButton,.headerButton,.iconButton,.crewSettingsButton{
+  background:#fff!important;color:var(--brand-charcoal)!important;border-color:#dce2e4!important;
+}
+.secondaryButton:hover,.headerButton:hover,.crewSettingsButton:hover{
+  background:var(--brand-lime-pale)!important;border-color:rgba(183,255,0,.8)!important;color:var(--brand-charcoal)!important;
 }
 
+/* Header */
+.topbar{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e0e5e6!important;box-shadow:0 5px 18px rgba(31,42,48,.035)}
+.groupSwitch select{color:var(--brand-charcoal)!important;border-color:#dce2e4!important}
+.groupSwitch label{color:#7d888d!important}
+.onlineBadge{background:#f8faf9!important;border-color:#dfe5e6!important;color:#59656b!important}
+.onlineBadge i{background:var(--brand-lime)!important;box-shadow:0 0 0 4px rgba(183,255,0,.15)!important}
+.crewSettingsGear{color:var(--brand-charcoal)!important}
+.profileButton{border-color:#dce2e4!important;color:var(--brand-charcoal)!important}
+.profileButton:hover{border-color:var(--brand-lime)!important}
+.profileAvatar{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.superadminBadge{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important;border-color:rgba(183,255,0,.55)!important}
+
+/* Logged-in hero */
 .groupHero{
-  background:linear-gradient(135deg,#061a3a 0%,#0a254f 72%,#101d39 100%);
-  box-shadow:0 24px 70px rgba(6,26,58,.18);
+  background:
+    radial-gradient(circle at 91% 12%,rgba(183,255,0,.35),transparent 25%),
+    linear-gradient(135deg,var(--brand-charcoal-3),var(--brand-charcoal) 58%,#29363c)!important;
+  box-shadow:0 24px 70px rgba(31,42,48,.18)!important;
+  border:1px solid rgba(255,255,255,.05);
 }
-.groupHero:before{
-  background:radial-gradient(circle,rgba(28,73,139,.9) 0,transparent 70%);
-}
-.groupHero:after{
-  background:radial-gradient(circle,rgba(227,6,32,.85) 0,transparent 68%);
-}
-.seasonPill{
-  background:rgba(227,6,32,.13);
-  border-color:rgba(255,255,255,.18);
-  color:#fff;
-}
-.groupHero .secondaryButton:hover{background:rgba(255,255,255,.14)}
+.groupHero:before{background:radial-gradient(circle,rgba(183,255,0,.55) 0,transparent 70%)!important;opacity:.42!important}
+.groupHero:after{background:radial-gradient(circle,rgba(183,255,0,.28) 0,transparent 68%)!important;opacity:.48!important}
+.groupHero .hello{color:#c2cbce!important}
+.groupHero p{color:#aeb8bc!important}
+.seasonPill{background:rgba(183,255,0,.13)!important;border-color:rgba(183,255,0,.42)!important;color:var(--brand-lime)!important}
+.groupHero .secondaryButton{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important}
+.groupHero .secondaryButton:hover{background:rgba(183,255,0,.14)!important;border-color:rgba(183,255,0,.65)!important;color:#fff!important}
+.groupHero .primaryButton{box-shadow:none!important}
 
-.filterGroup button.active,
-.gameCard.nextGame:before{
-  background:var(--brand-navy);
-  border-color:var(--brand-navy);
+/* Dashboard/stat cards */
+.statCard,.scheduleShell,.gameCard,.dialogCard,.noGroups,.historyTools,.historyItem,.loadingCard{
+  border-color:#e0e5e6!important;box-shadow:0 8px 30px rgba(31,42,48,.045)!important;
 }
-.statCard.primary{border-top-color:var(--brand-navy)}
-.statCard.warn{border-top-color:var(--brand-red)}
-.statCard.warn strong{color:var(--brand-red)}
-.ticketCard.assigned{background:var(--brand-navy);border-color:var(--brand-navy)}
-.ticketCard.unpaid{background:#a40b20;border-color:#a40b20}
+.statCard.primary,.statCard.warn,.statCard.money{border-top-color:var(--brand-lime)!important}
+.statCard.warn strong,.statCard.money strong{color:var(--brand-charcoal)!important}
+.statCard strong{color:var(--brand-charcoal)}
+.statCard small,.statCard span{color:#7f898e!important}
+.sectionLabel{color:#7d888d!important}
+.scheduleHead h2,.historyHero h1{color:var(--brand-charcoal)!important}
 
+/* Filters and schedule */
+.filterGroup button{color:#667278!important;border-color:#dde3e5!important;background:#fff!important}
+.filterGroup button:hover{border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.filterGroup button.active{background:var(--brand-charcoal)!important;border-color:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.searchBox{border-color:#dfe4e6!important}
+.searchBox:focus-within{border-color:var(--brand-lime)!important;box-shadow:0 0 0 3px rgba(183,255,0,.12)}
+.monthTitle{color:var(--brand-charcoal)!important}
+.monthTitle:after{background:#e2e6e7!important}
+.gameCard:hover{border-color:#c8d1d4!important;box-shadow:0 10px 28px rgba(31,42,48,.07)!important}
+.gameCard.nextGame{border-color:var(--brand-lime)!important;box-shadow:0 0 0 2px rgba(183,255,0,.16)!important}
+.gameCard.nextGame:before{background:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.gameCard.allPaid{background:var(--brand-lime-pale)!important;border-color:rgba(183,255,0,.7)!important}
+.fixtureMeta .competition{color:#758086!important}
+.fixtureMeta h3{color:var(--brand-charcoal)!important}
+.fixtureMeta p,.gameDate span,.fixtureCount{color:#7c878c!important}
+
+/* Ticket states: only charcoal + lime + neutrals */
+.ticketCard{border-color:#e0e5e6!important;background:#fafbfb!important}
+.ticketCard.unassigned:hover{border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.ticketCard.assigned{background:var(--brand-charcoal)!important;border-color:var(--brand-charcoal)!important;color:#fff!important}
+.ticketCard.paid{background:var(--brand-lime)!important;border-color:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.ticketCard.unpaid{background:var(--brand-charcoal)!important;border:2px solid var(--brand-lime)!important;color:#fff!important}
+.ticketCard.paid .ticketHead small{color:#536300!important}
+.ticketCard.assigned .ticketHead small,.ticketCard.unpaid .ticketHead small{color:#c8d0d3!important}
+.ticketCard.paid .releaseBtn{border-color:rgba(31,42,48,.25)!important;color:var(--brand-charcoal)!important}
+.ticketCard.paid .ticketActions{border-top-color:rgba(31,42,48,.25)!important}
+.ticketCard.paid .ticketActions button{border-right-color:rgba(31,42,48,.25)!important}
+.ticketCard.paid .paidToggle input{accent-color:var(--brand-charcoal)!important}
+.guestNoteSave{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.guestNotePrefix{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
+
+/* Empty states and dialogs */
 .emptyIcon{
-  width:64px;
-  height:44px;
-  border-radius:10px;
-  color:#fff;
-  background:linear-gradient(90deg,var(--brand-navy) 0 49%,var(--brand-red) 51% 100%);
-  transform:none;
-  box-shadow:0 10px 28px rgba(6,26,58,.12);
+  width:68px!important;height:48px!important;border-radius:0!important;transform:none!important;font-size:0!important;
+  background:transparent url('seasoncrew-mark.svg?v=20260817-1') center/contain no-repeat!important;box-shadow:none!important;
 }
-.emptyIcon::before{content:"SC";font:900 18px Space Grotesk,Manrope,sans-serif;letter-spacing:-.08em}
-.emptyIcon{font-size:0}
+.emptyIcon:before{content:none!important}
+.dialog::backdrop{background:rgba(17,25,29,.66)!important}
+.dialogHead small,.settingsSectionHead p,.dialogIntro{color:#778389!important}
+.closeButton:hover{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
+.inviteBox,.ticketSettingRow,.memberRow,.joinRequestRow{border-color:#e0e5e6!important}
+.inviteCodeRow code{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.roleBadge.owner,.roleBadge.admin{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important;border-color:rgba(183,255,0,.55)!important}
 
-/* Small accent consistency across dialogs/product extensions */
-.notificationButton:has(#notificationCount:not(.hidden)){
-  border-color:rgba(227,6,32,.32);
+/* Notifications */
+.notificationButton:has(#notificationCount:not(.hidden)){border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.notificationButton b,#notificationCount{background:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.notificationBell,.notificationUnreadIcon{color:var(--brand-charcoal)!important}
+.notificationItem.unread{background:var(--brand-lime-pale)!important}
+.notificationItem.unread:before{background:var(--brand-lime)!important}
+
+/* History */
+.historyPage{color:var(--brand-charcoal)!important}
+.historyHero{
+  background:linear-gradient(135deg,var(--brand-charcoal-3),var(--brand-charcoal))!important;color:#fff!important;
+  border-radius:22px!important;padding:26px 28px!important;margin-bottom:14px!important;
+  box-shadow:0 20px 55px rgba(31,42,48,.14)!important;
 }
-.notificationButton b{background:var(--brand-red)!important}
-.superadminBadge{background:var(--brand-red-soft)!important;color:var(--brand-red)!important;border-color:rgba(227,6,32,.18)!important}
-.profileAvatar{background:linear-gradient(135deg,var(--brand-navy),var(--brand-red))!important;color:#fff!important}
+.historyHero .sectionLabel{color:var(--brand-lime)!important}
+.historyHero h1{color:#fff!important}
+.historyHero p{color:#b7c0c4!important}
+.historyTools{background:#fff!important}
+.historyType,.historyBadge,.historyAction{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
 
+/* Lime focus/accent consistency */
+input[type='checkbox'],input[type='radio']{accent-color:var(--brand-lime)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand-lime)!important;outline-offset:2px}
+
+@media(max-width:900px){
+  .authScreen{justify-content:center!important;padding:24px!important}
+  .authScreen:before{left:50%;top:18px;transform:translateX(-50%);width:340px;height:220px;opacity:.12}
+  .authScreen:after{display:none}
+  .authShell{width:min(470px,100%)!important;margin:auto!important}
+  .authBrand{display:flex!important}
+}
 @media(max-width:760px){
-  .brandMark{width:46px;height:32px}
-  .brandMark.small{width:34px;height:24px}
-  .appBrand{gap:7px}
-  .appBrand strong{font-size:15px}
+  .brandMark{width:46px;height:32px}.brandMark.small{width:36px;height:26px}
+  .appBrand strong{font-size:15px!important}.appBrand{gap:7px}
+  .authScreen{align-items:flex-start!important;padding-top:20px!important}
+  .authShell{border-radius:20px!important;padding:22px!important}
+  .groupHero{border-radius:19px!important}
 }
