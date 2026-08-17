@@ -24,7 +24,7 @@ jobs:
           node-version: '22'
       - name: Build Safari-compatible bundle
         working-directory: SeasonCrew
-        run: npx --yes esbuild@0.25.9 app.js --bundle --format=iife --target=safari15 --outfile=app.bundle.js
+        run: npx --yes esbuild@0.28.1 app.js --bundle --format=iife --target=safari15 --outfile=app.bundle.js
       - name: Cache-bust generated app assets
         env:
           SOURCE_SHA: ${{ github.sha }}
