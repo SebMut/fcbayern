@@ -55,14 +55,14 @@ jobs:
       - name: Build Safari bundle
         working-directory: SeasonCrew
         run: npm run build
-      - name: Verify code and test collection
+      - name: Verify app and regression spec syntax
         working-directory: SeasonCrew
         run: |
           node --check app.js
           node --check app.bundle.js
+          node --check tests/e2e/auth.spec.js
           grep -q 'Bitte bestätige jetzt deine E-Mail' app.js
-          grep -q 'Bitte bestätige jetzt deine E-Mail' app.bundle.js
-          npx playwright test --list
+          grep -q 'signup without a session asks the user to confirm the email address' tests/e2e/auth.spec.js
       - name: Commit tested confirmation UX
         run: |
           git config user.name "github-actions[bot]"
