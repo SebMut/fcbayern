@@ -215,15 +215,15 @@
     if(document.querySelector('script[data-seasoncrew-auth-fallback]'))return;
     window.seasonCrewModuleFailed=true;
     const script=document.createElement('script');
-    script.src='auth-fallback-v6.js?v=2f7db69';
+    script.src='auth-fallback-v6.js?v=2598c19';
     script.dataset.seasoncrewAuthFallback='1';
     document.body.appendChild(script);
   };
 </script>
-<script src="app.bundle.js?v=2f7db69"
+<script src="app.bundle.js?v=2598c19"
   onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
   onerror="window.seasonCrewLoadFallback()"></script>
-<script type="module" src="club-kits.js?v=2f7db69"></script>
+<script type="module" src="club-kits.js?v=2598c19"></script>
 <!-- SEASONCREW_APP_LOADER_END -->
 </body>
 </html>

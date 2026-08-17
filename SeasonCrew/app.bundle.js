@@ -376,13 +376,30 @@
   function noteMap() {
     return new Map(notes.map((n) => [n.fixture_id, n]));
   }
+  function pendingInviteToken() {
+    const urlToken = extractInviteToken(new URL(location.href).searchParams.get("invite"));
+    const savedToken = extractInviteToken(localStorage.getItem("seasoncrew-pending-invite"));
+    return urlToken || savedToken;
+  }
+  function syncSignupInvite() {
+    const token = pendingInviteToken();
+    const input = $("signupInvite");
+    if (token) {
+      localStorage.setItem("seasoncrew-pending-invite", token);
+      if (input && !input.value.trim()) input.value = token;
+    }
+    return token;
+  }
   function setAuthTab(tab) {
     document.querySelectorAll("[data-auth-tab]").forEach((b) => b.classList.toggle("active", b.dataset.authTab === tab));
     els.loginForm.classList.toggle("hidden", tab !== "login");
     els.signupForm.classList.toggle("hidden", tab !== "signup");
     setStatus(els.authStatus, "");
+    if (tab === "signup") syncSignupInvite();
   }
   document.querySelectorAll("[data-auth-tab]").forEach((b) => b.addEventListener("click", () => setAuthTab(b.dataset.authTab)));
+  var initialInvite = syncSignupInvite();
+  if (initialInvite) setAuthTab("signup");
   els.loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     setStatus(els.authStatus, "Einloggen \u2026");
@@ -407,10 +424,25 @@
   });
   els.signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const token = extractInviteToken($("signupInvite")?.value) || pendingInviteToken();
     const username = $("signupUsername").value.trim(), email = $("signupEmail").value.trim();
     if (!validUsername(username)) {
       setStatus(els.authStatus, "Nutzername: 3\u201324 Zeichen, nur Buchstaben, Zahlen, Punkt, Minus oder Unterstrich.");
       return;
+    }
+    if (token) {
+      setStatus(els.authStatus, "Einladungscode wird gepr\xFCft \u2026");
+      const { data: inviteRows, error: inviteError } = await sb.rpc("sc_validate_invite", { p_token: token });
+      const invite = Array.isArray(inviteRows) ? inviteRows[0] : inviteRows;
+      if (inviteError) {
+        setStatus(els.authStatus, "Einladung konnte nicht gepr\xFCft werden: " + inviteError.message);
+        return;
+      }
+      if (!invite?.valid) {
+        setStatus(els.authStatus, "Dieser Einladungscode ist ung\xFCltig oder abgelaufen.");
+        return;
+      }
+      localStorage.setItem("seasoncrew-pending-invite", token);
     }
     setStatus(els.authStatus, "Nutzername wird gepr\xFCft \u2026");
     const { data: available, error: checkError } = await sb.rpc("sc_username_available", { p_username: username });
@@ -426,7 +458,10 @@
     const redirectTo = new URL("./", location.href);
     redirectTo.search = "";
     redirectTo.hash = "";
-    const { data, error } = await sb.auth.signUp({ email, password: $("signupPassword").value, options: { emailRedirectTo: redirectTo.href, data: { username } } });
+    if (token) redirectTo.searchParams.set("invite", token);
+    const metadata = { username };
+    if (token) metadata.invite_token = token;
+    const { data, error } = await sb.auth.signUp({ email, password: $("signupPassword").value, options: { emailRedirectTo: redirectTo.href, data: metadata } });
     if (error) {
       setStatus(els.authStatus, error.message);
       return;
