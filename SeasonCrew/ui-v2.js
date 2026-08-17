@@ -161,9 +161,11 @@
     if(dialog?.open){
       const card=dialog.querySelector(':scope > .dialogCard, :scope > form.dialogCard');
       if(card){
+        const targetInside=e.target instanceof Node&&card.contains(e.target);
         const rect=card.getBoundingClientRect();
-        const outside=e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom;
-        if(e.target===dialog||outside){
+        const hasUsablePoint=Number.isFinite(e.clientX)&&Number.isFinite(e.clientY)&&(e.clientX!==0||e.clientY!==0);
+        const outsideByPoint=hasUsablePoint&&(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom);
+        if(e.target===dialog||(!targetInside&&outsideByPoint)){
           e.preventDefault();
           closeDialog(dialog);
           return;
@@ -174,6 +176,12 @@
     if(!guestRole())return;
     const blocked=e.target.closest('[data-assign-fixture],[data-release-fixture],[data-paypal-fixture]');
     if(blocked){e.preventDefault();e.stopImmediatePropagation()}
+  },true);
+  document.addEventListener('submit',e=>{
+    if(e.target?.id==='settingsForm'){
+      e.preventDefault();
+      e.stopPropagation();
+    }
   },true);
   document.addEventListener('change',e=>{
     if(!guestRole())return;
