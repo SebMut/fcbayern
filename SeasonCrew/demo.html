@@ -24,7 +24,7 @@
         <label for="roleView">Ansicht</label>
         <select id="roleView">
           <option value="admin">Admin</option>
-          <option value="guest">Gast · Alex</option>
+          <option value="guest">Mitglied · Alex</option>
         </select>
       </div>
       <div class="topbarActions">
@@ -88,7 +88,7 @@
     <form method="dialog" class="dialogCard" id="assignForm">
       <div class="dialogHead"><div><small>Karte vergeben</small><h3 id="assignTitle">Ticket auswählen</h3></div><button value="cancel" class="iconClose" aria-label="Schließen">×</button></div>
       <label>Person<select id="assignMember"></select></label>
-      <label>Oder Gastname<input id="assignGuest" placeholder="z. B. Max Mustermann"></label>
+      <label>Oder Ticket-Gast<input id="assignGuest" placeholder="z. B. Max Mustermann"></label>
       <div class="dialogActions"><button value="cancel" class="secondaryBtn">Abbrechen</button><button id="assignSaveBtn" value="default" class="primaryBtn">Karte vergeben</button></div>
     </form>
   </dialog>
@@ -137,7 +137,7 @@
       <div class="dialogHead"><div><small>Demo-Guide</small><h3>Das kannst du ausprobieren</h3></div><button class="iconClose" data-close="helpDialog" aria-label="Schließen">×</button></div>
       <div class="helpGrid">
         <article><b>🎟 Karten vergeben</b><p>Klicke eine freie Karte an und ordne sie einem Crew-Mitglied oder Gast zu.</p></article>
-        <article><b>💶 Zahlungen verwalten</b><p>Markiere Tickets als bezahlt und vergleiche Admin- und Gastansicht.</p></article>
+        <article><b>💶 Zahlungen verwalten</b><p>Markiere Tickets als bezahlt und vergleiche Admin- und Mitgliedsansicht.</p></article>
         <article><b>👤 Rollen testen</b><p>Oben kannst du zwischen Admin und Gast wechseln. Gäste sehen nur ihre eigenen offenen Zahlungen.</p></article>
         <article><b>📝 Notizen & History</b><p>Speichere Spielnotizen. Jede Änderung landet in der lokalen Demo-History.</p></article>
         <article><b>👥 Crew verwalten</b><p>Öffne Mitglieder, simuliere eine Einladung und eine neue Bewerbung.</p></article>
@@ -147,6 +147,6 @@
   </dialog>
 
   <div class="toast" id="toast" aria-live="polite"></div>
-  <script src="demo.js?v=2"></script>
+  <script src="demo.js?v=3"></script>
 </body>
 </html>

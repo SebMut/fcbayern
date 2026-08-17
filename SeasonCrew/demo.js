@@ -16,10 +16,10 @@
     paypalMe:'SeasonCrewDemo',
     members:[
       {id:'miriam',name:'Miriam',role:'Admin',online:true},
-      {id:'alex',name:'Alex',role:'Gast',online:true},
-      {id:'lea',name:'Lea',role:'Gast',online:true},
-      {id:'chris',name:'Chris',role:'Gast',online:false},
-      {id:'dana',name:'Dana',role:'Gast',online:false}
+      {id:'alex',name:'Alex',role:'Mitglied',online:true},
+      {id:'lea',name:'Lea',role:'Mitglied',online:true},
+      {id:'chris',name:'Chris',role:'Mitglied',online:false},
+      {id:'dana',name:'Dana',role:'Mitglied',online:false}
     ],
     tickets:[
       {id:'t1',label:'Dauerkarte 1',block:'112',row:'8',seat:'14'},
@@ -43,7 +43,7 @@
       {matchId:'m2',ticketId:'t1',memberId:'alex',name:'Alex',paid:false,amount:55},
       {matchId:'m2',ticketId:'t2',memberId:'lea',name:'Lea',paid:false,amount:55},
       {matchId:'m3',ticketId:'t1',memberId:'alex',name:'Alex',paid:false,amount:72},
-      {matchId:'m3',ticketId:'t3',memberId:null,name:'Gast Felix',paid:false,amount:72},
+      {matchId:'m3',ticketId:'t3',memberId:null,name:'Ticket-Gast Felix',paid:false,amount:72},
       {matchId:'m4',ticketId:'t2',memberId:'chris',name:'Chris',paid:true,amount:55}
     ],
     history:[
@@ -95,7 +95,7 @@
     document.body.classList.toggle('guestMode',!isAdmin());
     if($('roleView'))$('roleView').value=state.role;
     if($('viewerName'))$('viewerName').textContent=isAdmin()?'Miriam':'Alex';
-    if($('viewerRole'))$('viewerRole').textContent=isAdmin()?'Admin':'Gast';
+    if($('viewerRole'))$('viewerRole').textContent=isAdmin()?'Admin':'Mitglied';
     if($('inviteBtn'))$('inviteBtn').style.display=isAdmin()?'inline-flex':'none';
     renderStats();renderGames();renderNotifications();
     document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===state.filter));
@@ -131,7 +131,7 @@
   }
 
   function openAssign(matchId,ticketId){
-    if(!isAdmin()){toast('In der Gastansicht können freie Karten nicht vergeben werden.');return}
+    if(!isAdmin()){toast('In der Mitgliedsansicht können freie Karten nicht vergeben werden.');return}
     assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;
     $('assignTitle').textContent=`${t.label} · ${m.opponent}`;$('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
   }
@@ -144,7 +144,7 @@
   }
 
   function openPaypal(matchId,ticketId){
-    const a=alloc(matchId,ticketId),m=match(matchId),t=ticket(ticketId);if(!a||!m||!t)return;if(!isAdmin()&&a.memberId!=='alex'){toast('Als Gast siehst du nur deine eigenen Zahlungen.');return}
+    const a=alloc(matchId,ticketId),m=match(matchId),t=ticket(ticketId);if(!a||!m||!t)return;if(!isAdmin()&&a.memberId!=='alex'){toast('Als Mitglied siehst du nur deine eigenen Zahlungen.');return}
     paypalContext={a,m,t};const demoLink=`paypal.me/${state.paypalMe}/${Number(a.amount).toFixed(2)}EUR`;$('demoPaypalPerson').textContent=`${a.name} · ${t.label} · ${m.opponent}`;$('demoPaypalAmount').textContent=money(a.amount);$('demoPaypalLink').textContent=demoLink;openModal('paypalDemoDialog');
   }
   function paypalMessage(){if(!paypalContext)return '';const {a,m,t}=paypalContext;return `Hi ${a.name}, für ${t.label} gegen ${m.opponent} sind noch ${money(a.amount)} offen. Demo-PayPal-Link: paypal.me/${state.paypalMe}/${Number(a.amount).toFixed(2)}EUR`}
@@ -152,7 +152,7 @@
   function renderHistory(){$('historyList').innerHTML=state.history.map(h=>`<div class="historyRow"><time>${esc(h.time)}</time><div><b>${esc(h.actor)}</b><small>${esc(h.text)}</small></div></div>`).join('')}
   function renderMembers(){$('membersList').innerHTML=state.members.map(m=>`<div class="memberRow"><span class="memberAvatar">${esc(m.name[0])}</span><div><strong>${esc(m.name)}</strong><small>${m.online?'● online':'○ offline'}</small></div><span class="rolePill">${esc(m.role)}</span></div>`).join('')}
   function renderNotifications(){const unread=state.notifications.filter(n=>!n.read).length;$('notificationCount').textContent=unread;$('notificationCount').style.display=unread?'inline':'none';$('notificationsList').innerHTML=state.notifications.length?state.notifications.map(n=>`<div class="notificationRow"><div><strong>${n.read?'':'🔔 '}${esc(n.title)}</strong><small>${esc(n.text)}</small></div></div>`).join(''):'<div class="demoFeatureNote">Keine Benachrichtigungen.</div>'}
-  function requestMarkup(){return `<div class="memberRow" style="margin-top:12px"><span class="memberAvatar">J</span><div><strong>Jonas</strong><small>möchte der Crew beitreten</small></div>${isAdmin()?'<button class="payDone" data-action="approve-request" type="button">Als Gast freigeben</button>':'<span class="rolePill">wartet</span>'}</div>`}
+  function requestMarkup(){return `<div class="memberRow" style="margin-top:12px"><span class="memberAvatar">J</span><div><strong>Jonas</strong><small>möchte der Crew beitreten</small></div>${isAdmin()?'<button class="payDone" data-action="approve-request" type="button">Als Mitglied freigeben</button>':'<span class="rolePill">wartet</span>'}</div>`}
 
   function handleAction(action,el,event){
     const matchId=el.dataset.match,ticketId=el.dataset.ticket;
@@ -163,7 +163,7 @@
     if(action==='save-note'){event.preventDefault();if(!isAdmin())return;const m=match(matchId),area=document.querySelector(`[data-note="${matchId}"]`);if(!m||!area)return;m.note=area.value.trim();addHistory(`Notiz für ${m.opponent} aktualisiert`);render();toast('Notiz gespeichert');return}
     if(action==='copy-paypal'){event.preventDefault();copyText(paypalMessage()).then(ok=>toast(ok?'PayPal-Nachricht kopiert':'Kopieren nicht möglich'));return}
     if(action==='simulate-paypal'){event.preventDefault();toast('Demo: PayPal.Me würde jetzt geöffnet.');return}
-    if(action==='approve-request'){event.preventDefault();if(!state.members.some(x=>x.id==='jonas'))state.members.push({id:'jonas',name:'Jonas',role:'Gast',online:false});state.joinRequest=null;addHistory('Jonas als Gast freigegeben');$('inviteRequestPreview').innerHTML='<div class="demoFeatureNote">Jonas wurde als Gast zur Crew hinzugefügt.</div>';toast('Jonas freigegeben')}
+    if(action==='approve-request'){event.preventDefault();if(!state.members.some(x=>x.id==='jonas'))state.members.push({id:'jonas',name:'Jonas',role:'Mitglied',online:false});state.joinRequest=null;addHistory('Jonas als Mitglied freigegeben');$('inviteRequestPreview').innerHTML='<div class="demoFeatureNote">Jonas wurde als Mitglied zur Crew hinzugefügt.</div>';toast('Jonas freigegeben')}
   }
 
   document.addEventListener('click',event=>{
@@ -184,7 +184,7 @@
 
   document.addEventListener('change',event=>{
     const el=event.target;
-    if(el.id==='roleView'){state.role=el.value==='guest'?'guest':'admin';save();render();toast(isAdmin()?'Admin-Ansicht aktiv':'Gast-Ansicht von Alex aktiv');return}
+    if(el.id==='roleView'){state.role=el.value==='guest'?'guest':'admin';save();render();toast(isAdmin()?'Admin-Ansicht aktiv':'Mitglied-Ansicht von Alex aktiv');return}
     if(el.matches('[data-action="paid-toggle"]')){if(!isAdmin()){el.checked=!el.checked;return}setPaid(el.dataset.match,el.dataset.ticket,el.checked)}
   });
   document.addEventListener('input',event=>{if(event.target.id==='searchInput')renderGames()});
@@ -193,7 +193,7 @@
   $('filters')?.addEventListener('click',event=>{const btn=event.target.closest('[data-filter]');if(!btn)return;event.preventDefault();state.filter=btn.dataset.filter||'all';save();renderGames();document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===state.filter))});
   $('assignForm')?.addEventListener('submit',event=>{
     event.preventDefault();if(event.submitter?.value==='cancel'){closeModal('assignDialog');assignContext=null;return}if(!assignContext)return;
-    const memberId=$('assignMember').value,guest=$('assignGuest').value.trim();if(!memberId&&!guest){toast('Bitte Person oder Gastname wählen');return}
+    const memberId=$('assignMember').value,guest=$('assignGuest').value.trim();if(!memberId&&!guest){toast('Bitte Person oder Ticket-Gast wählen');return}
     const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(!m||!t)return;const name=guest||(p?.name||'Gast');
     state.allocations.push({matchId:m.id,ticketId:t.id,memberId:guest?null:p?.id||null,name,paid:false,amount:m.price});addHistory(`${t.label} gegen ${m.opponent} an ${name} vergeben`);closeModal('assignDialog');assignContext=null;render();toast('Karte vergeben');
   });

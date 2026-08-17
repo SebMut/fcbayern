@@ -20,7 +20,7 @@ const els={
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
 function parseMoney(v){const n=Number(String(v??'').trim().replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null}
-function roleLabel(r){return r==='superadmin'?'Superadmin':r==='owner'?'Owner':r==='admin'?'Admin':'Gast'}
+function roleLabel(r){return r==='superadmin'?'Superadmin':r==='owner'?'Owner':r==='admin'?'Admin':'Mitglied'}
 function roleView(){return window.SeasonCrewRoleView?.get(profile?.is_superadmin)||null}
 function effectiveRole(){return roleView()||memberships.get(currentGroup?.id)||'guest'}
 function isAdmin(){return ['superadmin','owner','admin'].includes(effectiveRole())}
@@ -137,7 +137,7 @@ async function loadOwnRequests(){
 
 function renderPendingNotice(extra=''){
   if(!els.pendingNotice)return;
-  const text=extra||(ownPendingRequests.length?`Deine Beitrittsanfrage wartet auf die Freigabe eines Gruppen-Admins. Danach wirst du als Gast oder Admin aufgenommen.`:'');
+  const text=extra||(ownPendingRequests.length?`Deine Beitrittsanfrage wartet auf die Freigabe eines Gruppen-Admins. Danach wirst du als Mitglied oder Admin aufgenommen.`:'');
   els.pendingNotice.textContent=text;els.pendingNotice.classList.toggle('hidden',!text);
 }
 
@@ -300,7 +300,7 @@ function ticketById(id){return tickets.find(t=>t.id===id)}
 function allocationByIds(f,t){return allocations.find(a=>a.fixture_id===f&&a.ticket_id===t)}
 function openPayment(fixtureId,ticketId){
   const a=allocationByIds(fixtureId,ticketId),m=fixtureById(fixtureId),t=ticketById(ticketId);if(!a||!m||!t)return;
-  paymentContext={a,m,t};$('paymentPerson').textContent=`${a.attendee_name||'Gast'} · ${ticketLabel(t)}`;$('paymentMatch').textContent=`${m.l} · ${m.o} · ${gameDate(m)[0]}`;$('paymentAmount').value=Number(a.amount||currentGroup.default_price||50).toFixed(2).replace('.',',');setStatus($('paymentStatus'),'');updatePaymentPreview();els.paymentDialog.showModal();
+  paymentContext={a,m,t};$('paymentPerson').textContent=`${a.attendee_name||'Ticket-Gast'} · ${ticketLabel(t)}`;$('paymentMatch').textContent=`${m.l} · ${m.o} · ${gameDate(m)[0]}`;$('paymentAmount').value=Number(a.amount||currentGroup.default_price||50).toFixed(2).replace('.',',');setStatus($('paymentStatus'),'');updatePaymentPreview();els.paymentDialog.showModal();
 }
 function paymentData(){
   if(!paymentContext)return null;const amount=parseMoney($('paymentAmount').value);if(amount==null)return null;const {a,m,t}=paymentContext,paypal=cleanPaypal(currentGroup.paypal_me);const link=paypal?`https://paypal.me/${paypal}/${amount.toFixed(2)}`:'';const match=`${m.l} · ${m.o}`;const text=`Hi ${a.attendee_name||'!'},\n\n${match}\nTicket: ${ticketLabel(t)}\nDatum: ${gameDate(m)[0]}\nBetrag: ${money(amount)}${link?`\n\nPayPal: ${link}`:''}`;return{amount,link,match,text,a,m,t};
@@ -330,7 +330,7 @@ async function renderInviteAdmin(){
   if(!isAdmin())return;
   const canGrantAdmin=['superadmin','owner'].includes(effectiveRole());
   $('requestCount').textContent=String(pendingRequests.length);
-  $('joinRequestList').innerHTML=pendingRequests.length?pendingRequests.map(r=>`<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username||'bewerber')}</b><small>Anfrage ${new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'}).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Gast</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join(''):'<div class="loadingCard">Keine offenen Bewerbungen.</div>';
+  $('joinRequestList').innerHTML=pendingRequests.length?pendingRequests.map(r=>`<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username||'bewerber')}</b><small>Anfrage ${new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'}).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Mitglied</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join(''):'<div class="loadingCard">Keine offenen Bewerbungen.</div>';
   if(!canGrantAdmin)document.querySelectorAll('[data-approve-admin]').forEach(b=>b.remove());
   document.querySelectorAll('[data-approve-guest]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveGuest,true,'guest'));
   document.querySelectorAll('[data-approve-admin]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveAdmin,true,'admin'));
@@ -369,7 +369,7 @@ async function decideRequest(id,approve,role,userId=null){
   const applicantId=userId||request?.user_id;
   const person=request?.username||'Person';
   if(!applicantId){await loadAdminData();renderSettings();setStatus($('settingsStatus'),'Bewerbung wurde aktualisiert. Bitte erneut versuchen.');return}
-  const label=approve?(role==='admin'?'als Admin':'als Gast'):'ablehnen';
+  const label=approve?(role==='admin'?'als Admin':'als Mitglied'):'ablehnen';
   if(!confirm(`Bewerbung wirklich ${label}${approve?' freigeben':''}?`))return;
   const {error}=await sb.rpc('sc_decide_join_request_v2',{p_request:id,p_group:currentGroup.id,p_user:applicantId,p_approve:approve,p_role:role});
   if(error){await loadAdminData();renderSettings();setStatus($('settingsStatus'),error.message);return}
@@ -380,7 +380,7 @@ async function decideRequest(id,approve,role,userId=null){
   await enrichMembers();
   await loadAdminData();
   renderSettings();
-  showToast(approve?`${person} ist jetzt ${role==='admin'?'Admin':'Gast'}`:`${person} wurde abgelehnt`);
+  showToast(approve?`${person} ist jetzt ${role==='admin'?'Admin':'Mitglied'}`:`${person} wurde abgelehnt`);
 }
 async function deleteTicket(id){if(!confirm('Dauerkarte wirklich löschen? Vorhandene Belegungen dieser Karte werden ebenfalls entfernt.'))return;const {error}=await sb.from('sc_tickets').delete().eq('id',id).eq('group_id',currentGroup.id);if(error){setStatus($('settingsStatus'),error.message);return}tickets=tickets.filter(t=>t.id!==id);allocations=allocations.filter(a=>a.ticket_id!==id);render();setStatus($('settingsStatus'),'Karte gelöscht',true)}
 
@@ -396,7 +396,7 @@ async function requestInvite(token){
   localStorage.removeItem('seasoncrew-pending-invite');$('joinCode').value='';if(els.joinDialog.open)els.joinDialog.close();
   await loadOwnRequests();
   if(data?.status==='member'){showToast('Du bist bereits Mitglied dieser Crew.');await loadGroups(data.group_id);return}
-  const msg=`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Ein Admin muss dich noch als Gast oder Admin freigeben.`;renderPendingNotice(msg);showToast('Beitrittsanfrage gesendet');
+  const msg=`Anfrage für „${data?.group_name||'Crew'}“ gesendet. Ein Admin muss dich noch als Mitglied oder Admin freigeben.`;renderPendingNotice(msg);showToast('Beitrittsanfrage gesendet');
   const u=new URL(location.href);u.searchParams.delete('invite');history.replaceState({},'',u);
 }
 

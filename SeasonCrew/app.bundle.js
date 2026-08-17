@@ -297,7 +297,7 @@
     return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
   }
   function roleLabel(r) {
-    return r === "superadmin" ? "Superadmin" : r === "owner" ? "Owner" : r === "admin" ? "Admin" : "Gast";
+    return r === "superadmin" ? "Superadmin" : r === "owner" ? "Owner" : r === "admin" ? "Admin" : "Mitglied";
   }
   function roleView() {
     return window.SeasonCrewRoleView?.get(profile?.is_superadmin) || null;
@@ -506,7 +506,7 @@
   }
   function renderPendingNotice(extra = "") {
     if (!els.pendingNotice) return;
-    const text = extra || (ownPendingRequests.length ? `Deine Beitrittsanfrage wartet auf die Freigabe eines Gruppen-Admins. Danach wirst du als Gast oder Admin aufgenommen.` : "");
+    const text = extra || (ownPendingRequests.length ? `Deine Beitrittsanfrage wartet auf die Freigabe eines Gruppen-Admins. Danach wirst du als Mitglied oder Admin aufgenommen.` : "");
     els.pendingNotice.textContent = text;
     els.pendingNotice.classList.toggle("hidden", !text);
   }
@@ -795,7 +795,7 @@
     const a = allocationByIds(fixtureId, ticketId), m = fixtureById(fixtureId), t = ticketById(ticketId);
     if (!a || !m || !t) return;
     paymentContext = { a, m, t };
-    $("paymentPerson").textContent = `${a.attendee_name || "Gast"} \xB7 ${ticketLabel(t)}`;
+    $("paymentPerson").textContent = `${a.attendee_name || "Ticket-Gast"} \xB7 ${ticketLabel(t)}`;
     $("paymentMatch").textContent = `${m.l} \xB7 ${m.o} \xB7 ${gameDate(m)[0]}`;
     $("paymentAmount").value = Number(a.amount || currentGroup.default_price || 50).toFixed(2).replace(".", ",");
     setStatus($("paymentStatus"), "");
@@ -873,7 +873,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Bit
     if (!isAdmin()) return;
     const canGrantAdmin = ["superadmin", "owner"].includes(effectiveRole());
     $("requestCount").textContent = String(pendingRequests.length);
-    $("joinRequestList").innerHTML = pendingRequests.length ? pendingRequests.map((r) => `<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username || "bewerber")}</b><small>Anfrage ${new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "short" }).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Gast</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join("") : '<div class="loadingCard">Keine offenen Bewerbungen.</div>';
+    $("joinRequestList").innerHTML = pendingRequests.length ? pendingRequests.map((r) => `<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username || "bewerber")}</b><small>Anfrage ${new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "short" }).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Mitglied</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join("") : '<div class="loadingCard">Keine offenen Bewerbungen.</div>';
     if (!canGrantAdmin) document.querySelectorAll("[data-approve-admin]").forEach((b) => b.remove());
     document.querySelectorAll("[data-approve-guest]").forEach((b) => b.onclick = () => decideRequest(b.dataset.approveGuest, true, "guest"));
     document.querySelectorAll("[data-approve-admin]").forEach((b) => b.onclick = () => decideRequest(b.dataset.approveAdmin, true, "admin"));
@@ -1004,7 +1004,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Bit
       setStatus($("settingsStatus"), "Bewerbung wurde aktualisiert. Bitte erneut versuchen.");
       return;
     }
-    const label = approve ? role === "admin" ? "als Admin" : "als Gast" : "ablehnen";
+    const label = approve ? role === "admin" ? "als Admin" : "als Mitglied" : "ablehnen";
     if (!confirm(`Bewerbung wirklich ${label}${approve ? " freigeben" : ""}?`)) return;
     const { error } = await sb.rpc("sc_decide_join_request_v2", { p_request: id, p_group: currentGroup.id, p_user: applicantId, p_approve: approve, p_role: role });
     if (error) {
@@ -1023,7 +1023,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Bit
     await enrichMembers();
     await loadAdminData();
     renderSettings();
-    showToast(approve ? `${person} ist jetzt ${role === "admin" ? "Admin" : "Gast"}` : `${person} wurde abgelehnt`);
+    showToast(approve ? `${person} ist jetzt ${role === "admin" ? "Admin" : "Mitglied"}` : `${person} wurde abgelehnt`);
   }
   async function deleteTicket(id) {
     if (!confirm("Dauerkarte wirklich l\xF6schen? Vorhandene Belegungen dieser Karte werden ebenfalls entfernt.")) return;
@@ -1088,7 +1088,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Bit
       await loadGroups(data.group_id);
       return;
     }
-    const msg = `Anfrage f\xFCr \u201E${data?.group_name || "Crew"}\u201C gesendet. Ein Admin muss dich noch als Gast oder Admin freigeben.`;
+    const msg = `Anfrage f\xFCr \u201E${data?.group_name || "Crew"}\u201C gesendet. Ein Admin muss dich noch als Mitglied oder Admin freigeben.`;
     renderPendingNotice(msg);
     showToast("Beitrittsanfrage gesendet");
     const u = new URL(location.href);

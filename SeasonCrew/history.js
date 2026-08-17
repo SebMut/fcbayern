@@ -9,7 +9,7 @@ function fmt(ts){return new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',time
 function fixtureName(id){const m=fixtures.get(id);return m?`${m.l} · ${m.o}`:id||'Saison'}
 function ticketName(id,before={},after={}){return tickets.get(id)?.label||after.label||before.label||'Dauerkarte'}
 function actionLabel(log){if(log.entity_type==='auth')return'Login';if(log.entity_type==='allocations')return'Belegung';if(log.entity_type==='fixture_notes')return'Notiz';if(log.entity_type==='tickets')return'Dauerkarte';if(log.entity_type==='paypal')return'PayPal';if(log.entity_type==='invite')return'Einladung';if(log.entity_type==='membership_request')return'Bewerbung';if(log.entity_type==='ticket_wish')return'Ticketwunsch';if(log.entity_type==='member')return'Mitglied';if(log.entity_type==='crew')return'Crew';if(log.entity_type==='season')return'Saison';return log.entity_type}
-function roleText(v){return v==='owner'?'Owner':v==='admin'?'Admin':'Gast'}
+function roleText(v){return v==='owner'?'Owner':v==='admin'?'Admin':'Mitglied'}
 function summary(log){const a=log.before_data||{},b=log.after_data||{};
  if(log.entity_type==='auth'&&log.action==='login')return{title:'Login',sub:'Bei SeasonCrew angemeldet'};
  if(log.entity_type==='paypal'){const d=b;const act=log.action==='share_opened'?'Zahlungsaufforderung geteilt':'PayPal-Nachricht kopiert';return{title:act,sub:[d.person,d.ticket,d.match_label,d.amount!=null?money(d.amount):''].filter(Boolean).join(' · ')}}

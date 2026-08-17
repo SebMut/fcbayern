@@ -87,7 +87,7 @@
     const wrap=document.createElement('label');
     wrap.id='roleViewSwitcher';
     wrap.className='roleViewSwitcher';
-    wrap.innerHTML=`<span>UI-Testansicht als</span><select id="roleViewSelect" aria-label="Rolle für UI-Testansicht" title="Nur Darstellung: Supabase-Rechte bleiben Superadmin"><option value="superadmin">Superadmin</option><option value="owner">Owner</option><option value="admin">Admin</option><option value="guest">Gast</option></select>`;
+    wrap.innerHTML=`<span>UI-Testansicht als</span><select id="roleViewSelect" aria-label="Rolle für UI-Testansicht" title="Nur Darstellung: Supabase-Rechte bleiben Superadmin"><option value="superadmin">Superadmin</option><option value="owner">Owner</option><option value="admin">Admin</option><option value="guest">Mitglied</option></select>`;
     const badge=document.getElementById('superadminBadge');
     badge?.insertAdjacentElement('afterend',wrap);
     if(!wrap.parentNode)actions.insertAdjacentElement('afterbegin',wrap);

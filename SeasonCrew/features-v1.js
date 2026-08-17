@@ -12,7 +12,7 @@
   }
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
-  function roleLabel(role){return role==='owner'?'Owner':role==='admin'?'Admin':'Gast'}
+  function roleLabel(role){return role==='owner'?'Owner':role==='admin'?'Admin':'Mitglied'}
   function groupId(){return $('groupSelect')?.value||''}
   function currentRole(){const view=window.SeasonCrewRoleView?.get(state?.profile?.is_superadmin);if(view)return view;return state?.members.find(m=>m.user_id===session?.user?.id)?.role||null}
   function isManager(){return ['superadmin','owner'].includes(currentRole())}
@@ -104,7 +104,7 @@
       if(manager&&m.role!=='owner'){
         const actions=document.createElement('div');actions.className='memberManageActions';
         const normalized=m.role==='admin'?'admin':'guest';
-        actions.innerHTML=`<select class="memberRoleSelect" aria-label="Rolle von ${esc(m.username)}"><option value="guest" ${normalized==='guest'?'selected':''}>Gast</option><option value="admin" ${normalized==='admin'?'selected':''}>Admin</option></select><button class="memberAction" type="button" data-save-member-role>Rolle speichern</button><button class="memberAction ownerAction" type="button" data-make-owner>Owner machen</button>${m.user_id!==uid?'<button class="memberAction danger" type="button" data-remove-member>Entfernen</button>':''}`;
+        actions.innerHTML=`<select class="memberRoleSelect" aria-label="Rolle von ${esc(m.username)}"><option value="guest" ${normalized==='guest'?'selected':''}>Mitglied</option><option value="admin" ${normalized==='admin'?'selected':''}>Admin</option></select><button class="memberAction" type="button" data-save-member-role>Rolle speichern</button><button class="memberAction ownerAction" type="button" data-make-owner>Owner machen</button>${m.user_id!==uid?'<button class="memberAction danger" type="button" data-remove-member>Entfernen</button>':''}`;
         row.appendChild(actions);
         actions.querySelector('[data-save-member-role]').addEventListener('click',()=>changeRole(m.user_id,actions.querySelector('.memberRoleSelect').value,m.username));
         actions.querySelector('[data-make-owner]').addEventListener('click',()=>transferOwner(m.user_id,m.username));
@@ -134,7 +134,7 @@
 
   async function changeRole(userId,role,name){
     if(!isManager())return;
-    const label=role==='admin'?'Admin':'Gast';if(!confirm(`@${name} wirklich zu ${label} machen?`))return;
+    const label=role==='admin'?'Admin':'Mitglied';if(!confirm(`@${name} wirklich zu ${label} machen?`))return;
     const {error}=await client().rpc('sc_manage_member_role',{p_group:state.gid,p_user:userId,p_role:role});
     if(error){toast(error.message);return}toast(`@${name} ist jetzt ${label}`);scheduleLoad(80);
   }

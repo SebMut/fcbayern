@@ -109,7 +109,7 @@
   }
 
   function paymentGroups(){
-    const map=new Map();for(const a of state.allocs){const key=a.attendee_user_id||`name:${String(a.attendee_name||'Gast').toLowerCase()}`;if(!map.has(key))map.set(key,{name:a.attendee_user_id?memberName(a.attendee_user_id):(a.attendee_name||'Gast'),items:[],total:0,paid:0,open:0});const p=map.get(key),amount=Number(a.amount||state.group.default_price||0);p.items.push(a);p.total+=amount;if(a.paid)p.paid+=amount;else p.open+=amount}return [...map.values()].sort((a,b)=>b.open-a.open||a.name.localeCompare(b.name,'de'))
+    const map=new Map();for(const a of state.allocs){const key=a.attendee_user_id||`name:${String(a.attendee_name||'Ticket-Gast').toLowerCase()}`;if(!map.has(key))map.set(key,{name:a.attendee_user_id?memberName(a.attendee_user_id):(a.attendee_name||'Ticket-Gast'),items:[],total:0,paid:0,open:0});const p=map.get(key),amount=Number(a.amount||state.group.default_price||0);p.items.push(a);p.total+=amount;if(a.paid)p.paid+=amount;else p.open+=amount}return [...map.values()].sort((a,b)=>b.open-a.open||a.name.localeCompare(b.name,'de'))
   }
   function renderPayments(){
     const body=$('paymentsBody');if(!body||!state)return;
