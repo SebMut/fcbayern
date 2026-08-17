@@ -32,10 +32,10 @@ jobs:
       - name: Install Chromium
         working-directory: SeasonCrew
         run: npx playwright install --with-deps chromium
-      - name: Rebuild app bundle
+      - name: Build deployable site
         working-directory: SeasonCrew
-        run: npm run build
-      - name: Verify shared client architecture
+        run: npm run build:site
+      - name: Verify shared client architecture and production artifact
         run: |
           node --check SeasonCrew/app.bundle.js
           node --check SeasonCrew/seasoncrew-core.js
@@ -44,6 +44,16 @@ jobs:
           node --check SeasonCrew/pricing-runtime-v2.js
           node --check SeasonCrew/wish-actions-v2.js
           node --check SeasonCrew/club-fixtures-v1.js
+          test -f SeasonCrew/dist/index.html
+          test -f SeasonCrew/dist/app.bundle.js
+          test -f SeasonCrew/dist/demo.html
+          test -f SeasonCrew/dist/history.html
+          test -f SeasonCrew/dist/_headers
+          test ! -e SeasonCrew/dist/app.js
+          test ! -e SeasonCrew/dist/package.json
+          test ! -e SeasonCrew/dist/package-lock.json
+          test ! -e SeasonCrew/dist/playwright.config.js
+          test ! -e SeasonCrew/dist/test-accounts.html
           test ! -e SeasonCrew/auth-fallback-v6.js
           test ! -e SeasonCrew/auth-fallback-v5.js
           test ! -e SeasonCrew/auth-fallback.js
@@ -52,6 +62,10 @@ jobs:
           test ! -e SeasonCrew/app-compat-loader.js
           grep -q 'club-fixtures-v1.js' SeasonCrew/index.html
           grep -q 'sc_fixtures' SeasonCrew/app.js
+          if find SeasonCrew/dist -type f \( -name '*.py' -o -path '*/tests/*' \) | grep -q .; then
+            echo 'Development files leaked into production dist.'
+            exit 1
+          fi
           if grep -R --include='*.js' -n "createClient(" SeasonCrew | grep -v 'SeasonCrew/seasoncrew-core.js'; then
             echo 'A second Supabase client implementation exists.'
             exit 1
