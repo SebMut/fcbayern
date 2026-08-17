@@ -1,0 +1,66 @@
+name: SeasonCrew runtime config rollout
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-runtime-config-rollout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Load runtime config before shared core
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('SeasonCrew/index.html')
+          s=p.read_text()
+          marker='<script src="seasoncrew-core.js?v=20260817-core1"></script>'
+          config='<script src="seasoncrew-config.js?v=20260817-prod1"></script>'
+          if config not in s:
+              if marker not in s:
+                  raise SystemExit('seasoncrew core script marker missing')
+              s=s.replace(marker,config+'\n  '+marker,1)
+          p.write_text(s)
+          PY
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Build Safari bundle
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Verify runtime configuration architecture
+        run: |
+          node --check SeasonCrew/seasoncrew-config.js
+          node --check SeasonCrew/seasoncrew-core.js
+          node --check SeasonCrew/app.bundle.js
+          grep -q 'seasoncrew-config.js?v=20260817-prod1' SeasonCrew/index.html
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('SeasonCrew/index.html').read_text()
+          if s.index('seasoncrew-config.js') > s.index('seasoncrew-core.js'):
+              raise SystemExit('runtime config must load before core')
+          PY
+      - name: Commit tested runtime loader
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html SeasonCrew/app.bundle.js
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Load SeasonCrew runtime configuration"
+          git pull --rebase origin main
+          git push origin main
