@@ -594,134 +594,141 @@
     profile = data || { id: user.id, username: user.email?.split("@")[0] || "fan", is_superadmin: false };
     els.superadminBadge.classList.toggle("hidden", !profile.is_superadmin);
   }
-  async function loadOwnRequests() {
-    const { data, error } = await sb.from("sc_join_requests").select("id,group_id,status,requested_at,assigned_role").eq("user_id", user.id).order("requested_at", { ascending: false });
-    ownPendingRequests = error ? [] : (data || []).filter((x) => x.status === "pending");
-    renderPendingNotice();
-  }
-  function renderPendingNotice(extra = "") {
-    if (!els.pendingNotice) return;
-    const text = extra || (ownPendingRequests.length ? `Deine Beitrittsanfrage wartet auf die Freigabe eines Gruppen-Admins. Danach wirst du als Mitglied oder Admin aufgenommen.` : "");
-    els.pendingNotice.textContent = text;
-    els.pendingNotice.classList.toggle("hidden", !text);
-  }
   async function loadGroups(preferId = null) {
-    const { data: ms, error: memberError } = await sb.from("sc_group_members").select("group_id,role,joined_at").eq("user_id", user.id).order("joined_at");
-    if (memberError) {
-      console.error(memberError);
-      showToast("Gruppen konnten nicht geladen werden");
+    const { data: ms, error } = await sb.from("sc_group_members").select("group_id,user_id,role,joined_at").eq("user_id", user.id).order("joined_at");
+    if (error) {
+      console.error(error);
       return;
     }
     memberships = new Map((ms || []).map((m) => [m.group_id, m.role]));
-    let gs = [];
-    if (profile?.is_superadmin) {
-      const { data, error } = await sb.from("sc_groups").select("*").order("created_at");
-      if (error) {
-        console.error(error);
-        return;
-      }
-      gs = data || [];
-    } else {
-      const ids = [...memberships.keys()];
-      if (ids.length) {
-        const { data, error } = await sb.from("sc_groups").select("*").in("id", ids).order("created_at");
-        if (error) {
-          console.error(error);
-          return;
-        }
-        gs = data || [];
-      }
+    const ids = [...memberships.keys()];
+    groups = [];
+    if (ids.length) {
+      const { data, error: gerr } = await sb.from("sc_groups").select("id,name,club_key,club_name,season,paypal_me,default_price,created_at,updated_at").in("id", ids).order("created_at");
+      if (gerr) console.error(gerr);
+      groups = data || [];
     }
-    groups = gs;
     renderGroupSelector();
-    await loadOwnRequests();
     if (!groups.length) {
+      await cleanupChannels();
       currentGroup = null;
-      els.workspace.classList.add("hidden");
       els.noGroups.classList.remove("hidden");
+      els.workspace.classList.add("hidden");
+      renderPendingNotice();
       return;
     }
-    const saved = preferId || localStorage.getItem("seasoncrew-group");
-    currentGroup = groups.find((g) => g.id === saved) || groups[0];
-    els.groupSelect.value = currentGroup.id;
-    localStorage.setItem("seasoncrew-group", currentGroup.id);
     els.noGroups.classList.add("hidden");
     els.workspace.classList.remove("hidden");
-    await loadCurrentGroup();
+    const saved = localStorage.getItem("seasoncrew-group"), target = preferId || saved || groups[0].id;
+    els.groupSelect.value = groups.some((g) => g.id === target) ? target : groups[0].id;
+    await selectGroup(els.groupSelect.value);
   }
   function renderGroupSelector() {
-    els.groupSelect.innerHTML = groups.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join("");
+    els.groupSelect.innerHTML = groups.map((g) => `<option value="${g.id}">${esc(g.name)} \xB7 ${roleLabel(memberships.get(g.id))}</option>`).join("");
   }
-  els.groupSelect.addEventListener("change", async () => {
-    currentGroup = groups.find((g) => g.id === els.groupSelect.value);
+  async function selectGroup(id) {
+    currentGroup = groups.find((g) => g.id === id) || null;
     if (!currentGroup) return;
-    localStorage.setItem("seasoncrew-group", currentGroup.id);
-    await loadCurrentGroup();
-  });
-  async function loadCurrentGroup() {
+    localStorage.setItem("seasoncrew-group", id);
+    filter = "all";
+    els.searchInput.value = "";
+    document.querySelectorAll("[data-filter]").forEach((b) => b.classList.toggle("active", b.dataset.filter === "all"));
     await cleanupChannels();
-    const gid = currentGroup.id;
+    await Promise.all([loadGroupData(), loadAdminData(), loadOverrides()]);
+    render();
+    await setupRealtime();
+    await setupPresence();
+  }
+  async function loadGroupData() {
     const [{ data: ts, error: te }, { data: as, error: ae }, { data: ns, error: ne }, { data: ms, error: me }] = await Promise.all([
-      sb.from("sc_tickets").select("*").eq("group_id", gid).eq("active", true).order("sort_order").order("created_at"),
-      sb.rpc("sc_get_allocations", { p_group: gid }),
-      sb.from("sc_fixture_notes").select("*").eq("group_id", gid),
-      sb.from("sc_group_members").select("group_id,user_id,role,joined_at").eq("group_id", gid).order("joined_at")
+      sb.from("sc_tickets").select("id,group_id,label,block,row_label,seat,sort_order,active").eq("group_id", currentGroup.id).eq("active", true).order("sort_order").order("created_at"),
+      sb.rpc("sc_get_allocations", { p_group: currentGroup.id }),
+      sb.from("sc_fixture_notes").select("group_id,fixture_id,note,updated_by,updated_at").eq("group_id", currentGroup.id),
+      sb.from("sc_group_members").select("group_id,user_id,role,joined_at").eq("group_id", currentGroup.id).order("joined_at")
     ]);
-    if (te || ae || ne || me) {
-      console.error(te || ae || ne || me);
-      showToast("Crew-Daten konnten nicht geladen werden");
-      return;
-    }
+    if (te || ae || ne || me) console.error(te || ae || ne || me);
     tickets = ts || [];
     allocations = as || [];
     notes = ns || [];
     members = ms || [];
-    await Promise.all([loadFixtures(), enrichMembers()]);
-    if (isAdmin()) await loadAdminData();
-    else {
-      activeInvite = null;
-      pendingRequests = [];
-    }
-    render();
-    setupPresence();
-    setupRealtime();
+    await enrichMembers();
   }
   async function enrichMembers() {
     const ids = members.map((m) => m.user_id);
     if (!ids.length) return;
     const { data } = await sb.from("sc_profiles").select("id,username").in("id", ids);
-    const map = new Map((data || []).map((p) => [p.id, p]));
-    members = members.map((m) => ({ ...m, ...map.get(m.user_id) || { username: "mitglied" } }));
+    const map = new Map((data || []).map((p) => [p.id, p.username]));
+    members = members.map((m) => ({ ...m, username: map.get(m.user_id) || "Mitglied" }));
   }
   async function loadAdminData() {
-    const gid = currentGroup.id, now = (/* @__PURE__ */ new Date()).toISOString();
-    const [{ data: invites }, { data: reqs }] = await Promise.all([
-      sb.from("sc_group_invites").select("id,token,expires_at,created_at,active").eq("group_id", gid).eq("active", true).gt("expires_at", now).order("created_at", { ascending: false }).limit(1),
-      sb.from("sc_join_requests").select("id,user_id,status,requested_at").eq("group_id", gid).eq("status", "pending").order("requested_at")
+    pendingRequests = [];
+    activeInvite = null;
+    if (!isAdmin()) return;
+    const [{ data: rs, error: re }, { data: inv, error: ie }] = await Promise.all([
+      sb.rpc("sc_admin_join_requests", { p_group: currentGroup.id }),
+      sb.from("sc_invites").select("id,group_id,token,created_by,expires_at,revoked_at,created_at").eq("group_id", currentGroup.id).is("revoked_at", null).gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("created_at", { ascending: false }).limit(1).maybeSingle()
     ]);
-    activeInvite = invites?.[0] || null;
-    pendingRequests = reqs || [];
-    const ids = pendingRequests.map((r) => r.user_id);
-    if (ids.length) {
-      const { data: ps } = await sb.from("sc_profiles").select("id,username").in("id", ids);
-      const pm = new Map((ps || []).map((p) => [p.id, p]));
-      pendingRequests = pendingRequests.map((r) => ({ ...r, ...pm.get(r.user_id) || { username: "bewerber" } }));
-    }
+    if (re) console.error(re);
+    if (ie) console.error(ie);
+    pendingRequests = rs || [];
+    activeInvite = inv || null;
   }
-  async function loadFixtures() {
-    fixtures = BASE_M.map((x) => ({ ...x }));
-    const { data, error } = await sb.from("match_overrides").select("id,start_date,end_date,kickoff_time,opponent,home,possible,active").eq("season", currentGroup.season);
-    if (!error && data) {
-      const map = new Map(data.map((x) => [x.id, x]));
-      fixtures = fixtures.map((base) => {
-        const x = map.get(base.id);
-        if (x?.active === false) return null;
-        if (!x) return base;
-        return { ...base, s: x.start_date || base.s, e: x.end_date || x.start_date || base.e, t: x.kickoff_time ? String(x.kickoff_time).slice(0, 5) : x.start_date ? "" : base.t, o: x.opponent || base.o, h: x.home ?? base.h, pos: x.possible ?? base.pos };
-      }).filter(Boolean);
+  async function loadOverrides() {
+    const { data, error } = await sb.from("match_overrides").select("*").eq("season", currentGroup.season).eq("active", true);
+    if (error) console.error(error);
+    const ov = new Map((data || []).map((x) => [x.id, x]));
+    fixtures = BASE_M.map((m) => {
+      const x = ov.get(m.id);
+      return x ? { ...m, o: x.opponent || m.o, s: x.date_start || m.s, e: x.date_end || m.e, t: x.time_text ?? m.t, h: x.is_home ?? m.h, p: x.phase_label || m.p, n: x.always_show ?? m.n } : m;
+    });
+  }
+  async function loadOwnRequests() {
+    if (!user) {
+      ownPendingRequests = [];
+      return [];
     }
-    const { data: sync } = await sb.from("fixture_sync_runs").select("finished_at,status").eq("status", "success").not("finished_at", "is", null).order("finished_at", { ascending: false }).limit(1).maybeSingle();
-    els.syncInfo.textContent = sync?.finished_at ? `Letzter Spielplan-Sync: ${new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Berlin" }).format(new Date(sync.finished_at))}` : "Spielplan-Sync: noch kein Lauf";
+    const { data, error } = await sb.from("sc_join_requests").select("id,group_id,status,requested_at,decided_at").eq("user_id", user.id).eq("status", "pending").order("requested_at", { ascending: false });
+    if (error) {
+      console.warn("Eigene Beitrittsanfragen konnten nicht geladen werden", error);
+      ownPendingRequests = [];
+      return [];
+    }
+    ownPendingRequests = data || [];
+    return ownPendingRequests;
+  }
+  function renderPendingNotice(message = "") {
+    const box = els.pendingNotice;
+    if (!box) return;
+    if (!message && ownPendingRequests.length) message = ownPendingRequests.length === 1 ? "Deine Beitrittsanfrage wartet noch auf die Freigabe durch einen Admin." : `${ownPendingRequests.length} Beitrittsanfragen warten noch auf Freigabe.`;
+    box.textContent = message;
+    box.classList.toggle("hidden", !message);
+  }
+  async function processPendingInvite() {
+    const token = pendingInviteToken();
+    if (!token) return;
+    if (!user) {
+      localStorage.setItem("seasoncrew-pending-invite", token);
+      return;
+    }
+    const { data, error } = await sb.rpc("sc_request_join", { p_token: token });
+    if (error) {
+      localStorage.setItem("seasoncrew-pending-invite", token);
+      showToast(error.message);
+      return;
+    }
+    localStorage.removeItem("seasoncrew-pending-invite");
+    const url = new URL(location.href);
+    if (url.searchParams.has("invite")) {
+      url.searchParams.delete("invite");
+      history.replaceState({}, "", url);
+    }
+    if (data?.status === "member") {
+      showToast("Du bist bereits Mitglied dieser Crew.");
+      return;
+    }
+    await loadOwnRequests();
+    renderPendingNotice(`Anfrage f\xFCr \u201E${data?.group_name || "Crew"}\u201C gesendet. Ein Admin muss dich noch freigeben.`);
+    showToast("Beitrittsanfrage gesendet");
   }
   function filteredFixtures() {
     const q = els.searchInput.value.trim().toLowerCase(), amap = allocationMap();
@@ -1064,7 +1071,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
       console.warn("QR-Code konnte nicht geladen werden", e);
     }
     box.className = "inviteBox";
-    box.innerHTML = `<div class="inviteGrid">${qr ? `<img class="inviteQr" src="${qr}" alt="QR-Code f\xFCr Einladung">` : ""}<div class="inviteMeta"><small>Aktive Einladung</small><strong>${esc(currentGroup.name)}</strong><div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><code>${esc(activeInvite.token)}</code><button type="button" data-copy-invite-code>Code kopieren</button></div></div><small class="inviteLinkLabel">Einladungslink</small><span class="inviteLink">${esc(link)}</span><div class="inviteActions"><button type="button" data-copy-invite>Link kopieren</button><button type="button" data-share-invite>Teilen</button></div><div class="inviteExpiry">G\xFCltig bis ${esc(expires)} \xB7 danach automatisch ung\xFCltig</div></div></div>`;
+    box.innerHTML = `<div class="inviteGrid">${qr ? `<img class="inviteQr" src="${qr}" alt="QR-Code f\xFCr Einladung">` : ""}<div class="inviteMeta"><small>Aktive Einladung</small><strong>${esc(currentGroup.name)}</strong><div class="inviteCodeBlock"><small>Einladungscode</small><div class="inviteCodeRow"><small>Einladungscode</small><div class="inviteCodeRow"><code>${esc(activeInvite.token)}</code><button type="button" data-copy-invite-code>Code kopieren</button></div></div><small class="inviteLinkLabel">Einladungslink</small><span class="inviteLink">${esc(link)}</span><div class="inviteActions"><button type="button" data-copy-invite>Link kopieren</button><button type="button" data-share-invite>Teilen</button></div><div class="inviteExpiry">G\xFCltig bis ${esc(expires)} \xB7 danach automatisch ung\xFCltig</div></div></div>`;
     box.querySelector("[data-copy-invite-code]")?.addEventListener("click", async () => {
       await navigator.clipboard.writeText(activeInvite.token);
       showToast("Einladungscode kopiert");
@@ -1263,80 +1270,31 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
     const msg = `Anfrage f\xFCr \u201E${data?.group_name || "Crew"}\u201C gesendet. Ein Admin muss dich noch als Mitglied oder Admin freigeben.`;
     renderPendingNotice(msg);
     showToast("Beitrittsanfrage gesendet");
-    const u = new URL(location.href);
-    u.searchParams.delete("invite");
-    history.replaceState({}, "", u);
   }
-  async function processPendingInvite() {
-    const urlToken = extractInviteToken(new URL(location.href).searchParams.get("invite"));
-    if (urlToken) localStorage.setItem("seasoncrew-pending-invite", urlToken);
-    const storedToken = extractInviteToken(localStorage.getItem("seasoncrew-pending-invite"));
-    const metadataToken = extractInviteToken(user?.user_metadata?.invite_token);
-    const token = urlToken || storedToken || metadataToken;
-    if (!token) return;
-    const { data, error } = await sb.rpc("sc_request_join", { p_token: token });
-    if (error) {
-      localStorage.removeItem("seasoncrew-pending-invite");
-      if (metadataToken) await sb.auth.updateUser({ data: { invite_token: null } });
-      showToast(error.message);
-      return;
-    }
-    localStorage.removeItem("seasoncrew-pending-invite");
-    if (metadataToken) await sb.auth.updateUser({ data: { invite_token: null } });
-    await loadOwnRequests();
-    if (data?.status === "member") {
-      await loadGroups(data.group_id);
-      showToast("Du bist bereits Mitglied dieser Crew.");
-    } else {
-      renderPendingNotice(`Anfrage f\xFCr \u201E${data?.group_name || "Crew"}\u201C gesendet. Warte jetzt auf die Freigabe eines Admins.`);
-      showToast("Einladung angenommen \u2013 Freigabe steht aus");
-    }
-    const u = new URL(location.href);
-    u.searchParams.delete("invite");
-    history.replaceState({}, "", u);
-  }
-  $("filterGroup").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-filter]");
-    if (!b) return;
-    filter = b.dataset.filter;
-    document.querySelectorAll("[data-filter]").forEach((x) => x.classList.toggle("active", x === b));
-    renderGames();
-  });
-  els.searchInput.addEventListener("input", renderGames);
-  $("nextMatchBtn").addEventListener("click", () => {
-    const list = filteredFixtures(), today = todayBerlin(), next = list.find((m) => (m.e || m.s) >= today) || list.at(-1);
-    if (!next) return;
-    const el = $(`game-${next.id}`);
-    if (!el) return;
-    const y = window.scrollY + el.getBoundingClientRect().top - document.querySelector(".topbar").offsetHeight - 18;
-    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
-  });
-  async function setupPresence() {
-    if (!currentGroup) return;
+  function setupPresence() {
     presenceChannel = sb.channel(`seasoncrew-presence-${currentGroup.id}`, { config: { presence: { key: user.id } } });
     presenceChannel.on("presence", { event: "sync" }, () => {
-      const state = presenceChannel.presenceState();
-      const names = [...new Set(Object.values(state).flat().map((x) => x.name).filter(Boolean))];
-      els.onlineBadge.innerHTML = `<i></i><span>Online: ${names.length ? names.map(esc).join(", ") : "\u2013"}</span>`;
-    }).subscribe(async (status) => {
-      if (status === "SUBSCRIBED") await presenceChannel.track({ name: profile.username, group_id: currentGroup.id, at: (/* @__PURE__ */ new Date()).toISOString() });
+      const state = presenceChannel.presenceState(), n = Object.keys(state).length;
+      els.onlineBadge.innerHTML = `<i></i><span>Online: ${n}</span>`;
+    });
+    presenceChannel.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") await presenceChannel.track({ username: profile.username, at: (/* @__PURE__ */ new Date()).toISOString() });
     });
   }
-  function setupRealtime() {
+  async function setupRealtime() {
     if (!currentGroup) return;
-    const gid = currentGroup.id;
-    realtimeChannel = sb.channel(`seasoncrew-data-${gid}`).on("postgres_changes", { event: "*", schema: "public", table: "sc_allocations", select: ["group_id", "fixture_id", "ticket_id", "attendee_name", "attendee_user_id", "updated_by", "updated_at"], filter: `group_id=eq.${gid}` }, queueReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_fixture_notes", filter: `group_id=eq.${gid}` }, queueReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_tickets", filter: `group_id=eq.${gid}` }, queueReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_group_members", filter: `group_id=eq.${gid}` }, queueReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_join_requests", filter: `group_id=eq.${gid}` }, queueReload).on("postgres_changes", { event: "UPDATE", schema: "public", table: "sc_groups", filter: `id=eq.${gid}` }, queueReload).subscribe();
+    realtimeChannel = sb.channel(`seasoncrew-data-${currentGroup.id}`).on("postgres_changes", { event: "*", schema: "public", table: "sc_allocations", select: ["group_id", "fixture_id", "ticket_id", "attendee_name", "attendee_user_id", "updated_by", "updated_at"], filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_fixture_notes", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_join_requests", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_group_members", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).subscribe();
   }
-  function queueReload() {
+  function scheduleReload() {
     clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(() => loadCurrentGroup(), 450);
+    reloadTimer = setTimeout(async () => {
+      if (!currentGroup) return;
+      await Promise.all([loadGroupData(), loadAdminData()]);
+      render();
+    }, 250);
   }
   async function cleanupChannels() {
     if (presenceChannel) {
-      try {
-        await presenceChannel.untrack();
-      } catch {
-      }
       await sb.removeChannel(presenceChannel);
       presenceChannel = null;
     }
@@ -1345,6 +1303,18 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
       realtimeChannel = null;
     }
   }
+  els.groupSelect.addEventListener("change", () => selectGroup(els.groupSelect.value));
+  els.searchInput.addEventListener("input", renderGames);
+  document.querySelectorAll("[data-filter]").forEach((b) => b.addEventListener("click", () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach((x) => x.classList.toggle("active", x === b));
+    renderGames();
+  }));
+  $("nextMatchBtn").addEventListener("click", () => {
+    const today = todayBerlin(), next = filteredFixtures().find((m) => (m.e || m.s) >= today) || filteredFixtures()[0];
+    if (next) document.getElementById(`game-${next.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  window.addEventListener("seasoncrew:role-view-change", () => render());
   async function boot() {
     const invite = extractInviteToken(new URL(location.href).searchParams.get("invite"));
     if (invite) localStorage.setItem("seasoncrew-pending-invite", invite);
