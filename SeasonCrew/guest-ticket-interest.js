@@ -26,6 +26,8 @@
 
   function decorate(){
     const guest=isGuest();
+    const hint=$('guestReadonlyHint');
+    if(guest&&hint)hint.textContent='Lesen · Notizen · Ticketwünsche';
     document.querySelectorAll('[data-assign-fixture]').forEach(card=>{
       if(!guest){
         card.removeAttribute('data-guest-ticket-interest');
