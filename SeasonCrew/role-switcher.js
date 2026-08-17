@@ -84,6 +84,15 @@
     }
   }
 
+  function ensureLiveUiSync(){
+    if(document.querySelector('script[data-seasoncrew-live-sync]'))return;
+    const script=document.createElement('script');
+    script.src='live-ui-sync.js?v=20260817-1';
+    script.defer=true;
+    script.dataset.seasoncrewLiveSync='1';
+    document.body.appendChild(script);
+  }
+
   window.SeasonCrewRoleView={
     key:KEY,
     get(isSuperadmin){
@@ -93,7 +102,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings()});
+  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings();ensureLiveUiSync()});
   window.addEventListener('seasoncrew:rendered',ensure);
   setTimeout(ensure,700);
 })();
