@@ -4,7 +4,7 @@
 
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
-  let sb=null,decorateTimer=null,observer=null;
+  let sb=null,decorateTimer=null;
   const $=id=>document.getElementById(id);
 
   function client(){
@@ -59,18 +59,6 @@
     decorateTimer=setTimeout(()=>requestAnimationFrame(decorate),delay);
   }
 
-  function observeWishChanges(){
-    const games=$('games');if(!games||observer)return;
-    observer=new MutationObserver(records=>{
-      const relevant=records.some(record=>[...record.addedNodes].some(node=>{
-        if(!(node instanceof Element))return false;
-        return node.matches?.('.ticketWishBar,.wishPeople,.wishPersonChip,[data-wish-assign-user]')||node.querySelector?.('.ticketWishBar,.wishPeople,.wishPersonChip,[data-wish-assign-user]');
-      }));
-      if(relevant)scheduleDecorate(0);
-    });
-    observer.observe(games,{childList:true,subtree:true});
-  }
-
   async function rejectWish(fixtureId,userId,name,button){
     const gid=$('groupSelect')?.value,c=client();if(!gid||!c)return;
     if(!confirm(`Interesse von @${name} für dieses Spiel ablehnen?`))return;
@@ -78,14 +66,11 @@
     const {error}=await c.from('sc_ticket_wishes').delete().eq('group_id',gid).eq('fixture_id',fixtureId).eq('user_id',userId);
     if(error){button.disabled=false;toast('Interesse konnte nicht abgelehnt werden');console.error(error);return}
     toast(`Interesse von @${name} abgelehnt`);
-    const select=$('groupSelect');
-    if(select?.value)select.dispatchEvent(new Event('change',{bubbles:true}));
   }
 
   window.addEventListener('seasoncrew:games-rendered',()=>scheduleDecorate(0));
   window.addEventListener('seasoncrew:rendered',()=>scheduleDecorate(0));
 
-  function init(){observeWishChanges();scheduleDecorate(50)}
-  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  setTimeout(()=>{observeWishChanges();scheduleDecorate(0)},900);
+  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>scheduleDecorate(100),{once:true});
+  else scheduleDecorate(0);
 })();
