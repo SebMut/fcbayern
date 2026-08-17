@@ -43,7 +43,7 @@
     if(!document.querySelector('link[data-seasoncrew-prices]')){
       const link=document.createElement('link');
       link.rel='stylesheet';
-      link.href='price-management.css?v=20260817-tabs2';
+      link.href='price-management.css?v=20260817-tabs3';
       link.dataset.seasoncrewPrices='1';
       document.head.appendChild(link);
     }
