@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply audit hardening
+      - name: Apply server-side privacy frontend patch
         run: python3 SeasonCrew/guest_payment_privacy_patch.py
       - name: Validate active JavaScript
         run: |
@@ -37,6 +37,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SeasonCrew/app.js SeasonCrew/auth-fallback-v6.js SeasonCrew/role-switcher.js SeasonCrew/product-v2.js SeasonCrew/history.js SeasonCrew/history.html SeasonCrew/ui-v2.js SeasonCrew/crew-delete.js SeasonCrew/index.html
-          git diff --cached --quiet || git commit -m 'Harden SeasonCrew after security audit'
+          git add SeasonCrew/app.js SeasonCrew/features-v1.js SeasonCrew/product-v2.js SeasonCrew/pricing-runtime-v2.js SeasonCrew/ui-v2.js SeasonCrew/crew-delete.js SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m 'Move SeasonCrew payment privacy to server-side reader'
           git push
