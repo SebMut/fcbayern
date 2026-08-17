@@ -43,13 +43,13 @@
     if(!document.querySelector('link[data-seasoncrew-prices]')){
       const link=document.createElement('link');
       link.rel='stylesheet';
-      link.href='price-management.css?v=20260817-1';
+      link.href='price-management.css?v=20260817-tabs1';
       link.dataset.seasoncrewPrices='1';
       document.head.appendChild(link);
     }
     if(!document.querySelector('script[data-seasoncrew-prices]')){
       const script=document.createElement('script');
-      script.src='price-management.js?v=20260817-1';
+      script.src='price-management.js?v=20260817-tabs1';
       script.defer=true;
       script.dataset.seasoncrewPrices='1';
       document.body.appendChild(script);
