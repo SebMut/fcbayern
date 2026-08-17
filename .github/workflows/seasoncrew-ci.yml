@@ -81,7 +81,7 @@ jobs:
             echo 'Development files leaked into production dist.'
             exit 1
           fi
-          if grep -R --include='*.js' -n "createClient(" SeasonCrew | grep -v 'SeasonCrew/seasoncrew-core.js'; then
+          if grep -R --exclude-dir=dist --include='*.js' -n "createClient(" SeasonCrew | grep -v 'SeasonCrew/seasoncrew-core.js'; then
             echo 'A second Supabase client implementation exists.'
             exit 1
           fi
