@@ -1,16 +1,18 @@
--- FC Bayern Spieltagssync
+-- SeasonCrew Spieltagssync über OpenLigaDB
 -- Echte Syncs in Europe/Berlin:
 -- 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00.
 --
 -- Supabase-Datenbanken laufen standardmäßig in UTC.
 -- Deshalb ruft pg_cron die Edge Function JEDE volle Stunde auf.
 -- Die Edge Function prüft Europe/Berlin und führt nur bei Stunde % 3 = 0
--- einen echten Sync aus. So bleibt der Rhythmus bei Sommer-/Winterzeit korrekt.
+-- einen echten OpenLigaDB-Abruf aus. So bleibt der Rhythmus bei Sommer-/Winterzeit korrekt.
+-- Pro echtem Lauf werden derzeit maximal drei OpenLigaDB-Endpunkte abgefragt
+-- (Bundesliga, DFB-Pokal, Champions League).
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- Alten Job entfernen, falls vorhanden.
+-- Alte Jobnamen und den aktuellen Job entfernen, falls vorhanden.
 do $$
 declare
   jid bigint;
@@ -20,7 +22,8 @@ begin
     from cron.job
     where jobname in (
       'fcb-nightly-fixture-sync',
-      'fcb-3hour-fixture-sync'
+      'fcb-3hour-fixture-sync',
+      'seasoncrew-openligadb-fixture-sync'
     )
   loop
     perform cron.unschedule(jid);
@@ -31,9 +34,11 @@ end $$;
 -- Vault-Secrets:
 --   fcb_project_url
 --   fcb_cron_secret_key
+-- Die historischen Secret-Namen bleiben vorerst erhalten, obwohl SeasonCrew
+-- inzwischen vereinsneutral aufgebaut wird.
 
 select cron.schedule(
-  'fcb-3hour-fixture-sync',
+  'seasoncrew-openligadb-fixture-sync',
 
   -- Technischer Aufruf stündlich.
   -- Die Edge Function lässt nur 00/03/06/09/12/15/18/21 Uhr Berlin durch.
@@ -70,7 +75,7 @@ select cron.schedule(
 -- Kontrolle:
 select jobid, jobname, schedule, active
 from cron.job
-where jobname = 'fcb-3hour-fixture-sync';
+where jobname = 'seasoncrew-openligadb-fixture-sync';
 
 -- Letzte technischen Cron-Aufrufe:
 select jobid, status, return_message, start_time, end_time
