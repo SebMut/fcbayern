@@ -39,7 +39,7 @@ function gameDate(m){
   if(m.s===m.e||!m.e)return [`${String(a.getDate()).padStart(2,'0')}.${String(a.getMonth()+1).padStart(2,'0')}.${String(a.getFullYear()).slice(2)}`,m.t?`${m.t} Uhr`:'' ];
   return [`${a.getDate()}.–${b.getDate()}. ${MON[a.getMonth()]}`,String(a.getFullYear())];
 }
-function competitionName(c,m=null){if(m?.manual)return c==='league'?'Liga':c==='cup'?'Pokal':c==='intl'?'International':'Sonstiges';return c==='bl'?'Bundesliga':c==='dfb'?'DFB-Pokal':c==='cl'?'Champions League':'Sonstiges'}
+function competitionName(c,m=null){if(m?.competition_name)return m.competition_name;if(m?.manual)return c==='league'?'Liga':c==='cup'?'Pokal':c==='intl'?'International':'Sonstiges';return c==='bl'?'Bundesliga':c==='dfb'?'DFB-Pokal':c==='cl'?'Champions League':'Sonstiges'}
 function clubLogo(name){const domain=D[name];return domain?`<img class="clubLogo" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128" alt="">`:`<span class="clubLogo"></span>`}
 function relevantFixture(m){if(m.c==='bl')return m.h===true;if(m.n)return true;return m.h===true||m.pos===true}
 function ticketLabel(t){return t.label||[t.block,t.row_label,t.seat].filter(Boolean).join('/')||'Karte'}
@@ -209,9 +209,9 @@ async function loadAdminData(){
 }
 
 async function loadOverrides(){
-  const {data:groupRows,error:groupError}=await sb.from('sc_fixtures').select('group_id,fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,price_override,active,source').eq('group_id',currentGroup.id).eq('active',true).order('date_start');
+  const {data:groupRows,error:groupError}=await sb.from('sc_fixtures').select('group_id,fixture_id,competition_key,competition_name,label,date_start,date_end,time_text,opponent,venue,is_home,phase_label,possible,always_show,price_override,active,source').eq('group_id',currentGroup.id).eq('active',true).order('date_start');
   if(groupError)console.error(groupError);manualFixtures=groupRows||[];
-  const manual=manualFixtures.map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.phase_label||'',manual:true,price_override:f.price_override}));
+  const manual=manualFixtures.map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.venue||f.phase_label||'',competition_name:f.competition_name||'',venue:f.venue||'',manual:true,price_override:f.price_override}));
   if(currentGroup.club_key!=='fcbayern'){fixtures=manual;return}
   const {data,error}=await sb.from('match_overrides').select('id,start_date,end_date,kickoff_time,opponent,home,possible,active').eq('season',currentGroup.season);if(error)console.error(error);
   const ov=new Map((data||[]).map(x=>[x.id,x]));const legacy=BASE_M.map(m=>{const x=ov.get(m.id);if(x?.active===false)return null;return x?{...m,o:x.opponent||m.o,s:x.start_date||m.s,e:x.end_date||x.start_date||m.e,t:x.kickoff_time?String(x.kickoff_time).slice(0,5):m.t,h:x.home??m.h,pos:x.possible??m.pos}:m}).filter(Boolean);

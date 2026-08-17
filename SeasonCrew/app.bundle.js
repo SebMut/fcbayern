@@ -360,6 +360,7 @@
     return [`${a.getDate()}.\u2013${b.getDate()}. ${MON[a.getMonth()]}`, String(a.getFullYear())];
   }
   function competitionName(c, m = null) {
+    if (m?.competition_name) return m.competition_name;
     if (m?.manual) return c === "league" ? "Liga" : c === "cup" ? "Pokal" : c === "intl" ? "International" : "Sonstiges";
     return c === "bl" ? "Bundesliga" : c === "dfb" ? "DFB-Pokal" : c === "cl" ? "Champions League" : "Sonstiges";
   }
@@ -676,10 +677,10 @@
     activeInvite = inv || null;
   }
   async function loadOverrides() {
-    const { data: groupRows, error: groupError } = await sb.from("sc_fixtures").select("group_id,fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,price_override,active,source").eq("group_id", currentGroup.id).eq("active", true).order("date_start");
+    const { data: groupRows, error: groupError } = await sb.from("sc_fixtures").select("group_id,fixture_id,competition_key,competition_name,label,date_start,date_end,time_text,opponent,venue,is_home,phase_label,possible,always_show,price_override,active,source").eq("group_id", currentGroup.id).eq("active", true).order("date_start");
     if (groupError) console.error(groupError);
     manualFixtures = groupRows || [];
-    const manual = manualFixtures.map((f) => ({ id: f.fixture_id, c: f.competition_key || "other", l: f.label, s: f.date_start, e: f.date_end || f.date_start, t: f.time_text ? String(f.time_text).slice(0, 5) : "", o: f.opponent, h: f.is_home !== false, pos: !!f.possible, n: f.always_show !== false, p: f.phase_label || "", manual: true, price_override: f.price_override }));
+    const manual = manualFixtures.map((f) => ({ id: f.fixture_id, c: f.competition_key || "other", l: f.label, s: f.date_start, e: f.date_end || f.date_start, t: f.time_text ? String(f.time_text).slice(0, 5) : "", o: f.opponent, h: f.is_home !== false, pos: !!f.possible, n: f.always_show !== false, p: f.venue || f.phase_label || "", competition_name: f.competition_name || "", venue: f.venue || "", manual: true, price_override: f.price_override }));
     if (currentGroup.club_key !== "fcbayern") {
       fixtures = manual;
       return;

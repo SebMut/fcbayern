@@ -18,8 +18,8 @@
 
   async function loadFixtures(group){
     try{
-      const c=client(),{data:custom,error:ce}=await c.from('sc_fixtures').select('fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,active').eq('group_id',group.id).eq('active',true).order('date_start');if(ce)throw ce;
-      const manual=(custom||[]).map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.phase_label||'',manual:true}));
+      const c=client(),{data:custom,error:ce}=await c.from('sc_fixtures').select('fixture_id,competition_key,competition_name,label,date_start,date_end,time_text,opponent,venue,is_home,phase_label,possible,always_show,active').eq('group_id',group.id).eq('active',true).order('date_start');if(ce)throw ce;
+      const manual=(custom||[]).map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.venue||f.phase_label||'',competition_name:f.competition_name||'',venue:f.venue||'',manual:true}));
       let list=manual;
       if(group.club_key==='fcbayern'){
         const mod=await import('./schedule.js');let legacy=(mod.BASE_M||[]).map(x=>({...x}));

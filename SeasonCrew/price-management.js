@@ -242,9 +242,9 @@
     section.classList.remove('hidden');setStatus('Preise werden geladen …');
     try{
       const sb=await ensureClient();
-      const [{data,error}]=await Promise.all([sb.from('sc_groups').select('id,default_price,price_rules').eq('id',gid).single(),loadFixtures()]);
+      const [{data,error}]=await Promise.all([sb.from('sc_groups').select('id,club_key,default_price,price_rules').eq('id',gid).single(),loadFixtures()]);
       if(error)throw error;
-      groupData=data;fillFixtureSelect();fillValues();setStatus('');
+      groupData=data;section.classList.toggle('genericClubPrices',groupData.club_key!=='fcbayern');fillFixtureSelect();fillValues();setStatus(groupData.club_key!=='fcbayern'?'Für diesen Verein gilt der Standardpreis; individuelle Spielpreise legst du unter Eigene Heimspiele fest.':'');
     }catch(error){console.error(error);setStatus('Preisverwaltung konnte nicht geladen werden: '+(error?.message||'Unbekannter Fehler'))}
   }
 
