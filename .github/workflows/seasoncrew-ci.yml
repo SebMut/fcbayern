@@ -1,0 +1,59 @@
+name: SeasonCrew CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'SeasonCrew/**'
+  pull_request:
+    paths:
+      - 'SeasonCrew/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Install Chromium
+        working-directory: SeasonCrew
+        run: npx playwright install --with-deps chromium
+      - name: Rebuild app bundle
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Verify shared client architecture
+        run: |
+          node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/seasoncrew-core.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/wish-actions-v2.js
+          test ! -e SeasonCrew/auth-fallback-v6.js
+          test ! -e SeasonCrew/auth-fallback-v5.js
+          test ! -e SeasonCrew/auth-fallback.js
+          test ! -e SeasonCrew/pricing-runtime.js
+          test ! -e SeasonCrew/supabase-esm-shim.js
+          test ! -e SeasonCrew/app-compat-loader.js
+          if grep -R --include='*.js' -n "createClient(" SeasonCrew | grep -v 'SeasonCrew/seasoncrew-core.js'; then
+            echo 'A second Supabase client implementation exists.'
+            exit 1
+          fi
+          if grep -n 'auth-fallback-v' SeasonCrew/index.html; then
+            echo 'Legacy auth fallback script reference exists.'
+            exit 1
+          fi
+      - name: Browser regression tests
+        working-directory: SeasonCrew
+        run: npm run test:e2e
