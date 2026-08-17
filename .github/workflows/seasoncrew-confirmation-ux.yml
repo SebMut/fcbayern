@@ -1,0 +1,85 @@
+name: SeasonCrew confirmation UX
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-confirmation-ux.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Patch signup confirmation copy and regression test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('SeasonCrew/app.js')
+          s=app.read_text()
+          old="setStatus(els.authStatus,'Account angelegt. Bitte logge dich jetzt ein.',true);"
+          new="setStatus(els.authStatus,'Account angelegt. Bitte bestätige jetzt deine E-Mail über den Link in deinem Postfach. Danach wirst du zu SeasonCrew zurückgeleitet.',true);"
+          if old not in s:
+              raise SystemExit('signup status marker missing')
+          app.write_text(s.replace(old,new,1))
+
+          test=Path('SeasonCrew/tests/e2e/auth.spec.js')
+          t=test.read_text()
+          old_stub="body:`window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),updateUser:async()=>({data:{user:{}},error:null})}})}`"
+          new_stub="body:`window.supabase={createClient:()=>({auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({data:{},error:null}),updateUser:async()=>({data:{user:{}},error:null}),signUp:async()=>({data:{session:null,user:{id:'test-user'}},error:null})},rpc:async(name)=>({data:name==='sc_username_available'?true:null,error:null})})}`"
+          if old_stub not in t:
+              raise SystemExit('auth stub marker missing')
+          t=t.replace(old_stub,new_stub,1)
+          t += """
+
+test('signup without a session asks the user to confirm the email address',async({page})=>{
+  await stubPublicServices(page);
+  await page.goto('/SeasonCrew/index.html',{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'Account erstellen'}).first().click();
+  await page.locator('#signupUsername').fill('TestUser27');
+  await page.locator('#signupEmail').fill('new@example.de');
+  await page.locator('#signupPassword').fill('VerySafe123!');
+  await page.locator('#signupForm button[type="submit"]').click();
+  await expect(page.locator('#loginForm')).toBeVisible();
+  await expect(page.locator('#authStatus')).toContainText('Bitte bestätige jetzt deine E-Mail');
+  await expect(page.locator('#authStatus')).toContainText('Danach wirst du zu SeasonCrew zurückgeleitet');
+});
+"""
+          test.write_text(t)
+          PY
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Install Chromium
+        working-directory: SeasonCrew
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        working-directory: SeasonCrew
+        run: npm run build
+      - name: Verify JavaScript
+        run: |
+          node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/app.js
+      - name: Browser regression tests
+        working-directory: SeasonCrew
+        run: npm run test:e2e
+      - name: Commit tested UX fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/app.bundle.js SeasonCrew/tests/e2e/auth.spec.js
+          git diff --cached --check
+          git commit -m "Clarify email confirmation after signup"
+          git pull --rebase origin main
+          git push origin main
