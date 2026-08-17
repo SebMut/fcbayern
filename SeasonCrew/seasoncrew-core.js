@@ -1,5 +1,6 @@
 (()=>{
   if(window.SeasonCrewCore)return;
+  // Provider-neutral runtime core. Environment values come from seasoncrew-config.js.
   const runtime=window.SeasonCrewConfig||null;
   const status=document.getElementById('authStatus');
   if(!runtime?.supabaseUrl||!runtime?.publishableKey){
