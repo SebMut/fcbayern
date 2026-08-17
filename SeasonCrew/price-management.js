@@ -86,7 +86,7 @@
     const form=$('settingsForm'),priceSection=ensureSection();
     if(!form||!priceSection)return null;
     let tabs=$('settingsTabs');
-    if(tabs){syncTabAccess();return tabs}
+    if(tabs)return tabs;
 
     const grid=form.querySelector('.settingsGrid');
     if(!grid)return null;
