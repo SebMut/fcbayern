@@ -39,6 +39,23 @@
     return true;
   }
 
+  function ensurePriceManagement(){
+    if(!document.querySelector('link[data-seasoncrew-prices]')){
+      const link=document.createElement('link');
+      link.rel='stylesheet';
+      link.href='price-management.css?v=20260817-1';
+      link.dataset.seasoncrewPrices='1';
+      document.head.appendChild(link);
+    }
+    if(!document.querySelector('script[data-seasoncrew-prices]')){
+      const script=document.createElement('script');
+      script.src='price-management.js?v=20260817-1';
+      script.defer=true;
+      script.dataset.seasoncrewPrices='1';
+      document.body.appendChild(script);
+    }
+  }
+
   window.SeasonCrewRoleView={
     key:KEY,
     get(isSuperadmin){
@@ -48,7 +65,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',ensure);
+  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement()});
   window.addEventListener('seasoncrew:rendered',ensure);
   setTimeout(ensure,700);
 })();
