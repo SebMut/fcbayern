@@ -44,14 +44,11 @@ jobs:
       - name: Browser regression tests
         working-directory: SeasonCrew
         run: npm run test:e2e
-      - name: Align persistent bundle workflow and cache version
+      - name: Refresh bundle cache version
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          wf=Path('.github/workflows/seasoncrew-bundle.yml')
-          s=wf.read_text().replace('esbuild@0.25.9','esbuild@0.28.1')
-          wf.write_text(s)
           p=Path('SeasonCrew/index.html')
           s=p.read_text()
           s=re.sub(r'app\.bundle\.js\?v=[^\"]+','app.bundle.js?v=deps-refresh-1',s)
@@ -61,7 +58,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SeasonCrew/package.json SeasonCrew/package-lock.json SeasonCrew/app.bundle.js SeasonCrew/index.html .github/workflows/seasoncrew-bundle.yml
+          git add SeasonCrew/package.json SeasonCrew/package-lock.json SeasonCrew/app.bundle.js SeasonCrew/index.html
           git diff --cached --check
           git commit -m "Update SeasonCrew test and build dependencies"
           git pull --rebase origin main
