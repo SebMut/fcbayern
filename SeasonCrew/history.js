@@ -3,13 +3,13 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const sb=createClient('https://kmhadzujovvxvpgblgkk.supabase.co','sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y',{auth:{persistSession:true,autoRefreshToken:true}});
 const $=id=>document.getElementById(id);const sel=$('historyGroup'),type=$('historyType'),search=$('historySearch'),content=$('historyContent');
 let user=null,profile=null,groups=[],current=null,logs=[],tickets=new Map(),fixtures=new Map(BASE_M.map(m=>[m.id,m]));
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
 function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
 function fmt(ts){return new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Berlin'}).format(new Date(ts))}
 function fixtureName(id){const m=fixtures.get(id);return m?`${m.l} · ${m.o}`:id||'Saison'}
 function ticketName(id,before={},after={}){return tickets.get(id)?.label||after.label||before.label||'Dauerkarte'}
-function actionLabel(log){if(log.entity_type==='allocations')return'Belegung';if(log.entity_type==='fixture_notes')return'Notiz';if(log.entity_type==='tickets')return'Dauerkarte';if(log.entity_type==='paypal')return'PayPal';if(log.entity_type==='invite')return'Einladung';if(log.entity_type==='membership_request')return'Bewerbung';return log.entity_type}
-function roleText(v){return v==='admin'?'Admin':'Gast'}
+function actionLabel(log){if(log.entity_type==='allocations')return'Belegung';if(log.entity_type==='fixture_notes')return'Notiz';if(log.entity_type==='tickets')return'Dauerkarte';if(log.entity_type==='paypal')return'PayPal';if(log.entity_type==='invite')return'Einladung';if(log.entity_type==='membership_request')return'Bewerbung';if(log.entity_type==='ticket_wish')return'Ticketwunsch';if(log.entity_type==='member')return'Mitglied';if(log.entity_type==='crew')return'Crew';if(log.entity_type==='season')return'Saison';return log.entity_type}
+function roleText(v){return v==='owner'?'Owner':v==='admin'?'Admin':'Gast'}
 function summary(log){const a=log.before_data||{},b=log.after_data||{};
  if(log.entity_type==='paypal'){const d=b;const act=log.action==='share_opened'?'Zahlungsaufforderung geteilt':'PayPal-Nachricht kopiert';return{title:act,sub:[d.person,d.ticket,d.match_label,d.amount!=null?money(d.amount):''].filter(Boolean).join(' · ')}}
  if(log.entity_type==='invite'){return{title:'Neue Einladung erstellt',sub:b.expires_at?`Gültig bis ${fmt(b.expires_at)}`:'Einladungslink erzeugt'}}
@@ -18,6 +18,19 @@ function summary(log){const a=log.before_data||{},b=log.after_data||{};
    if(log.action==='join_approved')return{title:`@${b.username||b.name||'Bewerber'} freigegeben`,sub:`Rolle: ${roleText(b.role)}`};
    if(log.action==='join_rejected')return{title:`@${b.username||b.name||'Bewerber'} abgelehnt`,sub:'Beitrittsanfrage wurde abgelehnt'};
  }
+ if(log.entity_type==='ticket_wish'){
+   const fixture=b.fixture_id||a.fixture_id||log.entity_id;
+   if(log.action==='wish_added')return{title:'Ticketwunsch hinzugefügt',sub:fixtureName(fixture)};
+   if(log.action==='wish_removed')return{title:'Ticketwunsch entfernt',sub:fixtureName(fixture)};
+ }
+ if(log.entity_type==='member'){
+   const name=b.username||a.username||'Mitglied';
+   if(log.action==='role_changed')return{title:`@${name} · Rolle geändert`,sub:`${roleText(a.role)} → ${roleText(b.role)}`};
+   if(log.action==='member_removed')return{title:`@${name} entfernt`,sub:`Bisherige Rolle: ${roleText(a.role)}`};
+   if(log.action==='left_crew')return{title:'Crew verlassen',sub:`Bisherige Rolle: ${roleText(a.role)}`};
+ }
+ if(log.entity_type==='crew'&&log.action==='owner_transferred')return{title:'Owner-Rolle übertragen',sub:`${a.owner_name||'Bisheriger Owner'} → ${b.owner_name||'Neuer Owner'}`};
+ if(log.entity_type==='season'&&log.action==='season_started')return{title:'Neue Saison gestartet',sub:`${String(a.season||'').replace('-','/')} → ${String(b.season||'').replace('-','/')}`};
  if(log.entity_type==='allocations'){
    const fixture=b.fixture_id||a.fixture_id||String(log.entity_id||'').split(':')[0],ticket=b.ticket_id||a.ticket_id||String(log.entity_id||'').split(':')[1],name=ticketName(ticket,a,b);
    if(log.action==='created')return{title:`${name} vergeben`,sub:`${b.attendee_name||'Name offen'} · ${fixtureName(fixture)}`};
