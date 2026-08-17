@@ -25,20 +25,14 @@
     const n=Number(raw.replace(/\s/g,'').replace(',','.'));
     return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;
   }
-  function formatMoney(value){
-    return Number(value??0).toFixed(2).replace('.',',');
-  }
-  function getPath(obj,path){
-    return path.split('.').reduce((acc,key)=>acc&&acc[key]!==undefined?acc[key]:undefined,obj);
-  }
+  function formatMoney(value){return Number(value??0).toFixed(2).replace('.',',')}
+  function getPath(obj,path){return path.split('.').reduce((acc,key)=>acc&&acc[key]!==undefined?acc[key]:undefined,obj)}
   function setPath(obj,path,value){
     const parts=path.split('.');let cur=obj;
     parts.slice(0,-1).forEach(key=>{if(!cur[key]||typeof cur[key]!=='object'||Array.isArray(cur[key]))cur[key]={};cur=cur[key]});
     if(value===null||value===undefined)delete cur[parts.at(-1)];else cur[parts.at(-1)]=value;
   }
-  function cloneRules(rules){
-    try{return structuredClone(rules||{})}catch{return JSON.parse(JSON.stringify(rules||{}))}
-  }
+  function cloneRules(rules){try{return structuredClone(rules||{})}catch{return JSON.parse(JSON.stringify(rules||{}))}}
   function currentGroupId(){return $('groupSelect')?.value||''}
   function canManage(){return ['Owner','Admin','Superadmin'].includes(($('memberRole')?.textContent||'').trim())}
   function setStatus(text,ok=false){const el=$('priceManagementStatus');if(!el)return;el.textContent=text||'';el.classList.toggle('ok',!!ok)}
@@ -104,18 +98,13 @@
     return fixtures;
   }
 
-  function fixtureLabel(id){
-    const m=fixtures.find(x=>x.id===id);
-    return m?`${m.l} · ${m.o}`:id;
-  }
-
+  function fixtureLabel(id){const m=fixtures.find(x=>x.id===id);return m?`${m.l} · ${m.o}`:id}
   function fillFixtureSelect(){
     const select=$('priceFixtureOverride');if(!select)return;
     const current=select.value;
     select.innerHTML='<option value="">Spiel auswählen …</option>'+fixtures.map(m=>`<option value="${m.id}">${m.l} · ${m.o}</option>`).join('');
     if(fixtures.some(m=>m.id===current))select.value=current;
   }
-
   function fillValues(){
     if(!groupData)return;
     const rules=groupData.price_rules||{};
@@ -127,7 +116,6 @@
     if($('settingsPrice'))$('settingsPrice').value=formatMoney(groupData.default_price||0);
     syncOverrideInput();
   }
-
   function syncOverrideInput(){
     const id=$('priceFixtureOverride')?.value||'',input=$('priceFixtureOverrideAmount'),hint=$('priceOverrideHint');
     if(!input||!hint)return;
@@ -156,10 +144,14 @@
     const bl=parseMoney($('priceBl').value);
     if(bl===null){setStatus('Bitte einen gültigen Bundesliga-Preis eingeben.');return}
     const rules=cloneRules(groupData.price_rules);
+    let invalidRule=false;
     document.querySelectorAll('[data-price-path]').forEach(label=>{
       const input=label.querySelector('input'),raw=input.value.trim(),value=parseMoney(raw);
-      if(!raw)setPath(rules,label.dataset.pricePath,null);else if(value!==null)setPath(rules,label.dataset.pricePath,value);
+      if(!raw)setPath(rules,label.dataset.pricePath,null);
+      else if(value===null)invalidRule=true;
+      else setPath(rules,label.dataset.pricePath,value);
     });
+    if(invalidRule){setStatus('Bitte nur gültige Preise oder leere Felder verwenden.');return}
     const fixtureId=$('priceFixtureOverride').value;
     if(fixtureId){
       rules.overrides=rules.overrides&&typeof rules.overrides==='object'?rules.overrides:{};
@@ -178,7 +170,7 @@
   }
 
   function scheduleRefresh(){setTimeout(refresh,80)}
-  window.addEventListener('DOMContentLoaded',()=>{
+  function init(){
     ensureSection();
     $('settingsBtn')?.addEventListener('click',scheduleRefresh);
     $('groupMenuBtn')?.addEventListener('click',scheduleRefresh);
@@ -186,5 +178,7 @@
     const dialog=$('settingsDialog');
     if(dialog)new MutationObserver(()=>{if(dialog.open)scheduleRefresh()}).observe(dialog,{attributes:true,attributeFilter:['open']});
     window.addEventListener('seasoncrew:rendered',()=>{if($('settingsDialog')?.open)scheduleRefresh()});
-  });
+    if(dialog?.open)scheduleRefresh();
+  }
+  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
