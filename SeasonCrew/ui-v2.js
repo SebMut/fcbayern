@@ -140,9 +140,42 @@
     }
   }
 
-  function sync(){syncProfileButton();syncGuestUi()}
+  function syncDialogControls(root=document){
+    root.querySelectorAll?.('dialog .closeButton').forEach(button=>{
+      button.type='button';
+      button.setAttribute('formnovalidate','');
+    });
+  }
+
+  function closeDialog(dialog){
+    if(dialog?.open)dialog.close('cancel');
+  }
+
+  function sync(){syncProfileButton();syncGuestUi();syncDialogControls()}
 
   document.addEventListener('click',e=>{
+    const closeButton=e.target.closest?.('dialog .closeButton');
+    if(closeButton){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closeDialog(closeButton.closest('dialog'));
+      return;
+    }
+
+    const dialog=e.target instanceof Element?e.target.closest('dialog'):null;
+    if(dialog?.open){
+      const card=dialog.querySelector(':scope > .dialogCard, :scope > form.dialogCard');
+      if(card){
+        const rect=card.getBoundingClientRect();
+        const outside=e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom;
+        if(e.target===dialog||outside){
+          e.preventDefault();
+          closeDialog(dialog);
+          return;
+        }
+      }
+    }
+
     if(!guestRole())return;
     const blocked=e.target.closest('[data-assign-fixture],[data-release-fixture],[data-paypal-fixture]');
     if(blocked){e.preventDefault();e.stopImmediatePropagation()}
@@ -156,8 +189,12 @@
     if(e.target.matches('[data-attendee-fixture],[data-note-fixture]')){e.preventDefault();e.stopImmediatePropagation()}
   },true);
 
+  const dialogObserver=new MutationObserver(records=>{
+    records.forEach(record=>record.addedNodes.forEach(node=>{if(node instanceof Element)syncDialogControls(node)}));
+  });
+
   window.addEventListener('seasoncrew:games-rendered',()=>requestAnimationFrame(syncGuestUi));
   window.addEventListener('seasoncrew:rendered',()=>requestAnimationFrame(sync));
-  window.addEventListener('DOMContentLoaded',sync);
+  window.addEventListener('DOMContentLoaded',()=>{sync();dialogObserver.observe(document.body,{childList:true,subtree:true})});
   setTimeout(sync,350);
 })();
