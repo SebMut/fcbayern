@@ -1,0 +1,62 @@
+name: SeasonCrew performance pass
+
+on:
+  push:
+    paths:
+      - '.github/workflows/seasoncrew-performance-pass.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add targeted render events
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('SeasonCrew/app.js')
+          s=p.read_text(encoding='utf-8')
+          old="  bindGameEvents();\n}"
+          new="  bindGameEvents();\n  window.dispatchEvent(new CustomEvent('seasoncrew:games-rendered'));\n}"
+          if old not in s:
+              raise SystemExit('renderGames anchor missing')
+          s=s.replace(old,new,1)
+          old="  renderInviteAdmin();\n}\n\nasync function renderInviteAdmin()"
+          new="  renderInviteAdmin();\n  window.dispatchEvent(new CustomEvent('seasoncrew:settings-rendered'));\n}\n\nasync function renderInviteAdmin()"
+          if old not in s:
+              raise SystemExit('renderSettings anchor missing')
+          s=s.replace(old,new,1)
+          old="  renderStats();renderGames();renderSettings();\n}"
+          new="  renderStats();renderGames();renderSettings();\n  window.dispatchEvent(new CustomEvent('seasoncrew:rendered'));\n}"
+          if old not in s:
+              raise SystemExit('render anchor missing')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Bump performance caches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('SeasonCrew/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('role-switcher.js?v=1','role-switcher.js?v=2')
+          s=s.replace("app.js?v=20260817-roleview1","app.js?v=20260817-perf1")
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Syntax check
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/role-switcher.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/product-v2.js
+      - name: Commit optimized frontend
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m "Optimize SeasonCrew Chrome performance"
+          git push
