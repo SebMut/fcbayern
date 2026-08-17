@@ -1,5 +1,6 @@
 name: SeasonCrew browser bundle
 
+# Rebuild marker: invite-mainflow-20260817
 on:
   push:
     branches: [main]
