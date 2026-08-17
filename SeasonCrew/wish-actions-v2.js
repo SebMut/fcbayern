@@ -4,7 +4,7 @@
 
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
-  let sb=null;
+  let sb=null,decorateTimer=null,observer=null;
   const $=id=>document.getElementById(id);
 
   function client(){
@@ -54,6 +54,23 @@
     });
   }
 
+  function scheduleDecorate(delay=0){
+    clearTimeout(decorateTimer);
+    decorateTimer=setTimeout(()=>requestAnimationFrame(decorate),delay);
+  }
+
+  function observeWishChanges(){
+    const games=$('games');if(!games||observer)return;
+    observer=new MutationObserver(records=>{
+      const relevant=records.some(record=>[...record.addedNodes].some(node=>{
+        if(!(node instanceof Element))return false;
+        return node.matches?.('.ticketWishBar,.wishPeople,.wishPersonChip,[data-wish-assign-user]')||node.querySelector?.('.ticketWishBar,.wishPeople,.wishPersonChip,[data-wish-assign-user]');
+      }));
+      if(relevant)scheduleDecorate(0);
+    });
+    observer.observe(games,{childList:true,subtree:true});
+  }
+
   async function rejectWish(fixtureId,userId,name,button){
     const gid=$('groupSelect')?.value,c=client();if(!gid||!c)return;
     if(!confirm(`Interesse von @${name} für dieses Spiel ablehnen?`))return;
@@ -65,8 +82,10 @@
     if(select?.value)select.dispatchEvent(new Event('change',{bubbles:true}));
   }
 
-  window.addEventListener('seasoncrew:games-rendered',()=>requestAnimationFrame(decorate));
-  window.addEventListener('seasoncrew:rendered',()=>requestAnimationFrame(decorate));
-  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>setTimeout(decorate,700),{once:true});else setTimeout(decorate,100);
-  setTimeout(decorate,1200);
+  window.addEventListener('seasoncrew:games-rendered',()=>scheduleDecorate(0));
+  window.addEventListener('seasoncrew:rendered',()=>scheduleDecorate(0));
+
+  function init(){observeWishChanges();scheduleDecorate(50)}
+  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  setTimeout(()=>{observeWishChanges();scheduleDecorate(0)},900);
 })();
