@@ -27,3 +27,12 @@ if ci.exists():
     text = text.replace("if grep -R -n 'auth-fallback' SeasonCrew/index.html .github/workflows/seasoncrew-bundle.yml; then\n            echo 'Legacy auth fallback reference exists.'\n            exit 1\n          fi",
                         "if grep -n 'auth-fallback-v' SeasonCrew/index.html; then\n            echo 'Legacy auth fallback script reference exists.'\n            exit 1\n          fi")
     ci.write_text(text, encoding='utf-8')
+
+# Playwright's semantic disabled matcher can behave inconsistently for OPTION nodes.
+# Check the actual HTML disabled attribute, which is what the browser select uses.
+demo_test = Path('SeasonCrew/tests/e2e/demo.spec.js')
+if demo_test.exists():
+    text = demo_test.read_text(encoding='utf-8')
+    text = text.replace("await expect(page.locator('#assignMember option[value=\"lea\"]')).toBeDisabled();",
+                        "await expect(page.locator('#assignMember option[value=\"lea\"]')).toHaveAttribute('disabled','');")
+    demo_test.write_text(text, encoding='utf-8')
