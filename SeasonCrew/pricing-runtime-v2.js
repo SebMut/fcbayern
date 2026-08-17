@@ -108,10 +108,16 @@
 
   async function refreshUnpaidStats(){
     const c=sb(),gid=groupId();if(!c||!gid||!pricing)return;
-    const {data,error}=await c.from('sc_allocations').select('fixture_id,paid').eq('group_id',gid);
+    const [{data,error},{data:{session}}]=await Promise.all([
+      c.from('sc_allocations').select('fixture_id,paid,attendee_user_id,attendee_name').eq('group_id',gid),
+      c.auth.getSession()
+    ]);
     if(error)return;
-    const unpaid=(data||[]).filter(x=>!x.paid);
+    const guest=String($('memberRole')?.textContent||'').trim()==='Gast',uid=session?.user?.id||'',username=String($('helloUser')?.textContent||'').replace(/^Hallo\s+/i,'').trim().toLowerCase();
+    const visible=guest?(data||[]).filter(row=>row.attendee_user_id===uid||(!row.attendee_user_id&&String(row.attendee_name||'').trim().toLowerCase()===username)):(data||[]);
+    const unpaid=visible.filter(x=>!x.paid);
     const total=unpaid.reduce((sum,row)=>sum+(opponentKnown(row.fixture_id)?(effectivePrice(row.fixture_id)??0):0),0);
+    const paymentLabel=$('statUnpaid')?.parentElement?.querySelector('small');if(paymentLabel)paymentLabel.textContent=guest?'Deine offenen Zahlungen':'Zahlungen offen';
     if($('statUnpaid'))$('statUnpaid').textContent=money(total);
     if($('statUnpaidCount'))$('statUnpaidCount').textContent=`${unpaid.length} Ticket${unpaid.length===1?'':'s'}`;
   }

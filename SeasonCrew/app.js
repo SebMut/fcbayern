@@ -198,8 +198,11 @@ function render(){
 
 function renderStats(){
   const relevant=fixtures.filter(relevantFixture),ids=new Set(relevant.map(m=>m.id)),relevantAlloc=allocations.filter(a=>ids.has(a.fixture_id));
-  const unpaid=relevantAlloc.filter(a=>!a.paid),open=Math.max(0,relevant.length*tickets.length-relevantAlloc.length);
+  const adminView=isAdmin(),username=String(profile?.username||'').trim().toLowerCase();
+  const paymentAlloc=adminView?relevantAlloc:relevantAlloc.filter(a=>a.attendee_user_id===user?.id||(!a.attendee_user_id&&String(a.attendee_name||'').trim().toLowerCase()===username));
+  const unpaid=paymentAlloc.filter(a=>!a.paid),open=Math.max(0,relevant.length*tickets.length-relevantAlloc.length);
   $('statFixtures').textContent=relevant.length;$('statTickets').textContent=tickets.length;$('statAssigned').textContent=relevantAlloc.length;$('statOpen').textContent=open;
+  const paymentLabel=$('statUnpaid')?.parentElement?.querySelector('small');if(paymentLabel)paymentLabel.textContent=adminView?'Zahlungen offen':'Deine offenen Zahlungen';
   $('statUnpaid').textContent=money(unpaid.reduce((s,a)=>s+Number(a.amount||currentGroup.default_price||0),0));$('statUnpaidCount').textContent=`${unpaid.length} Ticket${unpaid.length===1?'':'s'}`;
 }
 

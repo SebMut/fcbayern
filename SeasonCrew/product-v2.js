@@ -91,7 +91,8 @@
   function openMyTickets(){renderMyTickets();$('myTicketsDialog')?.showModal()}
   function renderMyTickets(){
     const body=$('myTicketsBody');if(!body||!state||!session)return;const uid=session.user.id;
-    const mine=state.allocs.filter(a=>a.attendee_user_id===uid).sort((a,b)=>(fixture(a.fixture_id)?.s||'9999').localeCompare(fixture(b.fixture_id)?.s||'9999'));
+    const ownName=String(state.profile?.username||'').trim().toLowerCase();
+    const mine=state.allocs.filter(a=>a.attendee_user_id===uid||(!a.attendee_user_id&&String(a.attendee_name||'').trim().toLowerCase()===ownName)).sort((a,b)=>(fixture(a.fixture_id)?.s||'9999').localeCompare(fixture(b.fixture_id)?.s||'9999'));
     const wishes=state.wishes.filter(w=>w.user_id===uid).sort((a,b)=>(fixture(a.fixture_id)?.s||'9999').localeCompare(fixture(b.fixture_id)?.s||'9999'));
     const open=mine.filter(a=>!a.paid),openSum=open.reduce((s,a)=>s+Number(a.amount||state.group.default_price||0),0),future=mine.filter(a=>upcoming(fixture(a.fixture_id))),past=mine.filter(a=>!upcoming(fixture(a.fixture_id)));
     const card=a=>{const f=fixture(a.fixture_id);return `<div class="myTicketCard ${a.paid?'paid':'unpaid'}"><div><small>${esc(f?.l||'Spiel')}</small><b>FC Bayern – ${esc(f?.o||a.fixture_id)}</b><span>${esc(dateLabel(f))} · ${esc(ticketLabel(a.ticket_id))}</span></div><div class="myTicketPay"><strong>${money(a.amount||state.group.default_price||0)}</strong><span>${a.paid?'bezahlt':'offen'}</span></div></div>`};
@@ -111,7 +112,15 @@
     const map=new Map();for(const a of state.allocs){const key=a.attendee_user_id||`name:${String(a.attendee_name||'Gast').toLowerCase()}`;if(!map.has(key))map.set(key,{name:a.attendee_user_id?memberName(a.attendee_user_id):(a.attendee_name||'Gast'),items:[],total:0,paid:0,open:0});const p=map.get(key),amount=Number(a.amount||state.group.default_price||0);p.items.push(a);p.total+=amount;if(a.paid)p.paid+=amount;else p.open+=amount}return [...map.values()].sort((a,b)=>b.open-a.open||a.name.localeCompare(b.name,'de'))
   }
   function renderPayments(){
-    const body=$('paymentsBody');if(!body||!state)return;const groups=paymentGroups(),totalOpen=groups.reduce((s,p)=>s+p.open,0),paypal=cleanPaypal(state.group.paypal_me);
+    const body=$('paymentsBody');if(!body||!state)return;
+    if(!admin()){
+      const uid=session?.user?.id||'',ownName=String(state.profile?.username||'').trim().toLowerCase();
+      const mine=state.allocs.filter(a=>a.attendee_user_id===uid||(!a.attendee_user_id&&String(a.attendee_name||'').trim().toLowerCase()===ownName));
+      const unpaid=mine.filter(a=>!a.paid),openSum=unpaid.reduce((sum,a)=>sum+Number(a.amount||state.group.default_price||0),0);
+      body.innerHTML=`<div class="paymentsSummary"><div><small>Dein offener Betrag</small><strong>${money(openSum)}</strong></div><div><small>Deine offenen Tickets</small><strong>${unpaid.length}</strong></div></div><div class="paymentPeople">${unpaid.length?unpaid.map(a=>{const f=fixture(a.fixture_id);return `<div class="paymentPersonRow"><div><b>${esc(f?.o||a.fixture_id)}</b><small>${esc(dateLabel(f))} · ${esc(ticketLabel(a.ticket_id))}</small></div><div class="paymentPersonAmount open"><strong>${money(a.amount||state.group.default_price||0)}</strong><span>offen</span></div></div>`}).join(''):'<div class="productEmpty">Du hast aktuell keine offenen Zahlungen.</div>'}</div>`;
+      return;
+    }
+    const groups=paymentGroups(),totalOpen=groups.reduce((s,p)=>s+p.open,0),paypal=cleanPaypal(state.group.paypal_me);
     body.innerHTML=`<div class="paymentsSummary"><div><small>Offener Gesamtbetrag</small><strong>${money(totalOpen)}</strong></div><div><small>Personen mit offenem Betrag</small><strong>${groups.filter(p=>p.open>0).length}</strong></div></div><div class="paymentPeople">${groups.length?groups.map((p,i)=>`<div class="paymentPersonRow"><div><b>@${esc(p.name)}</b><small>${p.items.length} Ticket${p.items.length===1?'':'s'} · ${money(p.paid)} bezahlt</small></div><div class="paymentPersonAmount ${p.open?'open':''}"><strong>${money(p.open)}</strong><span>offen</span></div>${p.open?`<button type="button" class="memberAction" data-copy-debt="${i}">Erinnerung kopieren</button>`:''}</div>`).join(''):'<div class="productEmpty">Noch keine Ticketverteilungen.</div>'}</div>`;
     body.querySelectorAll('[data-copy-debt]').forEach(b=>b.addEventListener('click',async()=>{const p=groups[Number(b.dataset.copyDebt)],openItems=p.items.filter(x=>!x.paid);const lines=openItems.map(a=>{const f=fixture(a.fixture_id);return `• ${f?.o||a.fixture_id} · ${dateLabel(f)} · ${money(a.amount||state.group.default_price||0)}`});const link=paypal?`https://paypal.me/${paypal}/${p.open.toFixed(2)}`:'';const text=`Hi ${p.name},\n\nbei SeasonCrew sind noch ${money(p.open)} offen:\n${lines.join('\n')}${link?`\n\nPayPal: ${link}`:''}`;await navigator.clipboard.writeText(text);toast(`Erinnerung für ${p.name} kopiert`) }));
   }
