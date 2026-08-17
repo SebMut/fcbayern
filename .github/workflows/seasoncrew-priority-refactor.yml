@@ -1,0 +1,51 @@
+name: SeasonCrew priority refactor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-priority-refactor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply priority refactor
+        run: python SeasonCrew/priority_refactor_patch.py
+      - name: Build browser bundle
+        run: |
+          cp SeasonCrew/app.js /tmp/app-source.js
+          python -c "from pathlib import Path; p=Path('SeasonCrew/app.js'); s=p.read_text(); old=\"import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';\"; new=\"const createClient = (...args) => window.supabase.createClient(...args);\"; assert old in s; p.write_text(s.replace(old,new,1))"
+          npx --yes esbuild@0.25.9 SeasonCrew/app.js --bundle --format=iife --target=safari15 --external:https://cdn.jsdelivr.net/* --outfile=SeasonCrew/app.bundle.js
+          mv /tmp/app-source.js SeasonCrew/app.js
+      - name: Validate JavaScript and key behavior
+        run: |
+          node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/demo.js
+          node --check SeasonCrew/ui-v2.js
+          node --check SeasonCrew/crew-delete.js
+          grep -q "sc_save_allocation" SeasonCrew/app.js
+          grep -q "Zuweisung ändern" SeasonCrew/app.js
+          grep -q "paymentPrivate" SeasonCrew/app.js
+          grep -q "sc_get_fixture_prices" SeasonCrew/pricing-runtime-v2.js
+          grep -q "Preis noch nicht bekannt" SeasonCrew/product-v2.js
+          if grep -q "data-attendee-fixture" SeasonCrew/app.js; then echo 'Legacy attendee editor still rendered'; exit 1; fi
+      - name: Commit refactor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew
+          git commit -m "Refactor assignments pricing and payment privacy"
+          git push
