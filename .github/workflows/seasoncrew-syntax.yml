@@ -14,9 +14,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check SeasonCrew JavaScript syntax
+      - name: Check active SeasonCrew JavaScript syntax
         run: |
+          set -euo pipefail
           node --check SeasonCrew/app.js
-          node --check SeasonCrew/auth-fallback-v5.js
+          node --check SeasonCrew/auth-fallback-v6.js
           node --check SeasonCrew/app-compat-loader.js
+          node --check SeasonCrew/ui-v2.js
+          node --check SeasonCrew/crew-delete.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/wish-actions-v2.js
+          node --check SeasonCrew/role-switcher.js
+          node --check SeasonCrew/history.js
+          node --check SeasonCrew/price-management.js
+          node --check SeasonCrew/settings-tab-groups.js
+          node --check SeasonCrew/dialog-behavior.js
+          node --check SeasonCrew/live-ui-sync.js
+          node --check SeasonCrew/price-observer-fix.js
+          node --check SeasonCrew/supabase-esm-shim.js
           node --check SeasonCrew/schedule.js
