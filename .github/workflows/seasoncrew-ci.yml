@@ -38,6 +38,7 @@ jobs:
       - name: Verify shared client architecture and production artifact
         run: |
           node --check SeasonCrew/app.bundle.js
+          node --check SeasonCrew/seasoncrew-config.js
           node --check SeasonCrew/seasoncrew-core.js
           node --check SeasonCrew/product-v2.js
           node --check SeasonCrew/features-v1.js
@@ -62,6 +63,20 @@ jobs:
           test ! -e SeasonCrew/app-compat-loader.js
           grep -q 'club-fixtures-v1.js' SeasonCrew/index.html
           grep -q 'sc_fixtures' SeasonCrew/app.js
+          grep -q 'seasoncrew-config.js' SeasonCrew/index.html
+          grep -q 'seasoncrew-config.js' SeasonCrew/dist/index.html
+          grep -q 'window.SeasonCrewConfig' SeasonCrew/seasoncrew-core.js
+          if grep -q 'supabase.co' SeasonCrew/seasoncrew-core.js; then
+            echo 'Environment-specific Supabase URL must stay in seasoncrew-config.js.'
+            exit 1
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('SeasonCrew/index.html','SeasonCrew/dist/index.html'):
+              s=Path(name).read_text()
+              if s.index('seasoncrew-config.js') > s.index('seasoncrew-core.js'):
+                  raise SystemExit(f'Runtime config loads after core in {name}')
+          PY
           if find SeasonCrew/dist -type f \( -name '*.py' -o -path '*/tests/*' \) | grep -q .; then
             echo 'Development files leaked into production dist.'
             exit 1
