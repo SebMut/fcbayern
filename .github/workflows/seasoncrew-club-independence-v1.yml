@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/seasoncrew-club-independence-v1.yml'
-      - 'SeasonCrew/club_independence_patch.py'
+      - 'SeasonCrew/club_independence_post.py'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,8 @@ jobs:
           node-version: '22'
       - name: Apply club-independent UI layer
         run: python SeasonCrew/club_independence_patch.py
+      - name: Complete generic fixture fields and tests
+        run: python SeasonCrew/club_independence_post.py
       - name: Install dependencies
         working-directory: SeasonCrew
         run: npm ci
@@ -39,6 +41,8 @@ jobs:
           node --check SeasonCrew/club-fixtures-v1.js
           grep -q "sc_fixtures" SeasonCrew/app.js
           grep -q "club_name" SeasonCrew/product-v2.js
+          grep -q "competition_name" SeasonCrew/club-fixtures-v1.js
+          grep -q "fixtureVenue" SeasonCrew/club-fixtures-v1.js
           grep -q "club-fixtures-v1.js" SeasonCrew/index.html
           if grep -q '<b>FC Bayern –' SeasonCrew/product-v2.js; then
             echo 'Hardcoded FC Bayern remains in personal ticket rendering'
@@ -52,5 +56,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A SeasonCrew
+          git restore --staged SeasonCrew/club_independence_patch.py SeasonCrew/club_independence_post.py || true
           git commit -m "Add group-specific fixtures and custom clubs"
           git push
