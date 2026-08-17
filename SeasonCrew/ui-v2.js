@@ -14,7 +14,7 @@
     const script=document.createElement('script');script.src='./crew-delete.js?v=5';script.defer=true;script.dataset.seasoncrewCrewDelete='1';document.head.appendChild(script);
   }
 
-  const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Gast';
+  const guestRole=()=>String($('memberRole')?.textContent||'').trim()==='Mitglied';
   const username=()=>String($('helloUser')?.textContent||'').replace(/^Hallo\s+/i,'').trim()||'Profil';
   const role=()=>String($('memberRole')?.textContent||'Profil').trim()||'Profil';
   const berlinDate=()=>new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());

@@ -690,7 +690,7 @@
     const label = ticketLabel(t);
     if (!a) return `<div class="ticketCard unassigned" data-assign-fixture="${m.id}" data-ticket-id="${t.id}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${[t.block && `Block ${esc(t.block)}`, t.row_label && `Reihe ${esc(t.row_label)}`, t.seat && `Sitz ${esc(t.seat)}`].filter(Boolean).join(" \xB7 ")}</small></div><span>+</span></div><div style="padding:8px 10px;color:#8994a3;font-size:9px">Karte vergeben</div></div>`;
     const state = a.paid ? "paid" : "unpaid";
-    return `<div class="ticketCard assigned ${state}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${a.paid ? "bezahlt" : "Zahlung offen"}</small></div><button class="releaseBtn" type="button" data-release-fixture="${m.id}" data-ticket-id="${t.id}" title="Karte freigeben">\xD7</button></div><input class="attendeeInput" data-attendee-fixture="${m.id}" data-ticket-id="${t.id}" value="${esc(a.attendee_name || "")}" placeholder="Name"><div class="ticketActions"><button type="button" data-paypal-fixture="${m.id}" data-ticket-id="${t.id}">PayPal</button><label class="paidToggle"><input type="checkbox" data-paid-fixture="${m.id}" data-ticket-id="${t.id}" ${a.paid ? "checked" : ""}> bezahlt</label></div></div>`;
+    return `<div class="ticketCard assigned ${state}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${a.paid ? "bezahlt" : "Zahlung offen"}</small></div></div><input class="attendeeInput" data-attendee-fixture="${m.id}" data-ticket-id="${t.id}" value="${esc(a.attendee_name || "")}" placeholder="Name"><div class="ticketActions"><button class="releaseAssignmentBtn" type="button" data-release-fixture="${m.id}" data-ticket-id="${t.id}" title="Zuweisung aufheben">Zuweisung aufheben</button><button type="button" data-paypal-fixture="${m.id}" data-ticket-id="${t.id}">PayPal</button><label class="paidToggle"><input type="checkbox" data-paid-fixture="${m.id}" data-ticket-id="${t.id}" ${a.paid ? "checked" : ""}> bezahlt</label></div></div>`;
   }
   function bindGameEvents() {
     document.querySelectorAll("[data-assign-fixture]").forEach((el) => el.addEventListener("click", () => openAssignTicket(el.dataset.assignFixture, el.dataset.ticketId)));
@@ -783,7 +783,7 @@
   async function releaseTicket(fixtureId, ticketId) {
     const { error } = await sb.from("sc_allocations").delete().eq("group_id", currentGroup.id).eq("fixture_id", fixtureId).eq("ticket_id", ticketId);
     if (error) {
-      showToast("Karte konnte nicht freigegeben werden");
+      showToast("Zuweisung konnte nicht aufgehoben werden");
       return;
     }
     allocations = allocations.filter((a) => allocationKey(a.fixture_id, a.ticket_id) !== allocationKey(fixtureId, ticketId));
