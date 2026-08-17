@@ -208,29 +208,5 @@
   <script src="pricing-runtime-v2.js?v=20260817-private2"></script>
   <script src="wish-actions-v2.js?v=20260817-2"></script>
   <script src="auth-fallback-v6.js?v=20260817-audit1"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm": "./supabase-esm-shim.js?v=2"
-      }
-    }
-  </script>
-  <script type="module">
-    import('./app.js?v=20260817-private4')
-      .then(() => {
-        window.seasonCrewModuleLoaded = true;
-        window.seasonCrewModuleFailed = false;
-      })
-      .catch(error => {
-        window.seasonCrewModuleFailed = true;
-        console.error('SeasonCrew module start failed', error);
-        const status = document.getElementById('authStatus');
-        if (status) {
-          const where = error?.stack ? String(error.stack).split('\n')[0] : '';
-          status.textContent = 'App-Start fehlgeschlagen: ' + (error?.message || String(error)) + (where && !where.includes(error?.message || '') ? ' · ' + where : '');
-        }
-        window.dispatchEvent(new Event('seasoncrew-module-failed'));
-      });
-  </script>
 </body>
 </html>
