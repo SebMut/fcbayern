@@ -51,14 +51,29 @@
     if(!ticket)return '';
     return [ticket.block&&`Block ${ticket.block}`,ticket.row_label&&`Reihe ${ticket.row_label}`,ticket.seat&&`Sitz ${ticket.seat}`].filter(Boolean).join(' · ');
   }
+  function compactSeatText(ticket){
+    if(!ticket)return '';
+    return [ticket.block,ticket.row_label,ticket.seat].filter(Boolean).join('/');
+  }
 
   function decorateTicket(card){
     const id=ticketIdFromCard(card),ticket=ticketMap.get(id),text=seatText(ticket);
     if(!text)return;
     const copy=card.querySelector('.ticketHead > div');if(!copy)return;
+    const title=copy.querySelector('b');
     let badge=copy.querySelector('.ticketSeatBadge');
-    if(!badge){badge=document.createElement('span');badge.className='ticketSeatBadge';const title=copy.querySelector('b');title?.insertAdjacentElement('afterend',badge)}
+    if(!badge){badge=document.createElement('span');badge.className='ticketSeatBadge';if(title)title.insertAdjacentElement('afterend',badge);else copy.prepend(badge)}
     badge.textContent=text;
+
+    // Alte automatisch erzeugte Kurzbezeichnung (z. B. 236/2/16) entfernen,
+    // wenn sie nur dieselben Block-/Reihe-/Sitzdaten doppelt wiedergibt.
+    const compact=compactSeatText(ticket);
+    if(title){
+      const shown=title.textContent.trim();
+      const stored=String(ticket.label||'').trim();
+      if(shown===compact||(stored===compact&&shown===stored))title.remove();
+    }
+
     const legacy=[...copy.querySelectorAll(':scope > small')].find(el=>/^Block\s/i.test(el.textContent.trim()));
     legacy?.remove();
   }
