@@ -16,7 +16,7 @@
     ['cl.final','Champions League · Finale']
   ];
 
-  let client=null,groupData=null,fixtures=[];
+  let client=null,groupData=null,fixtures=[],activeTab='profile';
   const $=id=>document.getElementById(id);
 
   function parseMoney(value){
@@ -82,6 +82,70 @@
     return section;
   }
 
+  function ensureTabs(){
+    const form=$('settingsForm'),priceSection=ensureSection();
+    if(!form||!priceSection)return null;
+    let tabs=$('settingsTabs');
+    if(tabs){syncTabAccess();return tabs}
+
+    const grid=form.querySelector('.settingsGrid');
+    if(!grid)return null;
+    const profileSection=[...grid.children].find(el=>el.id!=='adminSettings')||grid.firstElementChild;
+    const adminSection=$('adminSettings');
+    const inviteSection=$('inviteAdminSettings');
+    const ticketSection=$('ticketSettings');
+    const membersSection=form.querySelector('.membersSettings');
+
+    tabs=document.createElement('div');
+    tabs.id='settingsTabs';
+    tabs.className='settingsTabs';
+    tabs.setAttribute('role','tablist');
+    tabs.innerHTML=`
+      <button type="button" data-settings-tab="profile" role="tab">Profil</button>
+      <button type="button" data-settings-tab="crew" role="tab">Crew</button>
+      <button type="button" data-settings-tab="prices" role="tab">Preise</button>`;
+
+    const profilePanel=document.createElement('div');
+    profilePanel.id='settingsTabProfile';profilePanel.className='settingsTabPanel';profilePanel.dataset.settingsPanel='profile';
+    const crewPanel=document.createElement('div');
+    crewPanel.id='settingsTabCrew';crewPanel.className='settingsTabPanel settingsCrewPanel';crewPanel.dataset.settingsPanel='crew';
+    const pricePanel=document.createElement('div');
+    pricePanel.id='settingsTabPrices';pricePanel.className='settingsTabPanel';pricePanel.dataset.settingsPanel='prices';
+
+    if(profileSection)profilePanel.appendChild(profileSection);
+    [adminSection,inviteSection,ticketSection,membersSection].filter(Boolean).forEach(el=>crewPanel.appendChild(el));
+    pricePanel.appendChild(priceSection);
+    grid.replaceWith(tabs,profilePanel,crewPanel,pricePanel);
+
+    tabs.querySelectorAll('[data-settings-tab]').forEach(button=>button.addEventListener('click',()=>setActiveTab(button.dataset.settingsTab)));
+    syncTabAccess();
+    setActiveTab(activeTab);
+    return tabs;
+  }
+
+  function syncTabAccess(){
+    const manage=canManage();
+    document.querySelectorAll('[data-settings-tab="crew"],[data-settings-tab="prices"]').forEach(button=>button.classList.toggle('hidden',!manage));
+    if(!manage&&activeTab!=='profile')setActiveTab('profile');
+  }
+
+  function setActiveTab(name){
+    ensureTabs();
+    const manage=canManage();
+    if((name==='crew'||name==='prices')&&!manage)name='profile';
+    if(!['profile','crew','prices'].includes(name))name='profile';
+    activeTab=name;
+    document.querySelectorAll('[data-settings-tab]').forEach(button=>{
+      const selected=button.dataset.settingsTab===name;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-selected',selected?'true':'false');
+    });
+    document.querySelectorAll('[data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==name);
+    const subtitle=document.querySelector('#settingsDialog .dialogHead small');
+    if(subtitle)subtitle.textContent=name==='profile'?'Profil':name==='crew'?'Crew-Einstellungen':'Preisverwaltung';
+    if(name==='prices')scheduleRefresh();
+  }
+
   async function ensureClient(){
     if(client)return client;
     if(!window.supabase?.createClient)throw new Error('Supabase ist noch nicht geladen.');
@@ -127,6 +191,7 @@
 
   async function refresh(){
     const section=ensureSection();if(!section)return;
+    ensureTabs();syncTabAccess();
     const gid=currentGroupId();
     if(!gid||!canManage()){section.classList.add('hidden');return}
     section.classList.remove('hidden');setStatus('Preise werden geladen …');
@@ -171,14 +236,15 @@
 
   function scheduleRefresh(){setTimeout(refresh,80)}
   function init(){
-    ensureSection();
-    $('settingsBtn')?.addEventListener('click',scheduleRefresh);
-    $('groupMenuBtn')?.addEventListener('click',scheduleRefresh);
-    $('groupSelect')?.addEventListener('change',()=>{groupData=null;scheduleRefresh()});
+    ensureSection();ensureTabs();
+    $('settingsBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab('profile'),0));
+    $('groupMenuBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab(canManage()?'crew':'profile'),0));
+    $('heroInviteBtn')?.addEventListener('click',()=>setTimeout(()=>setActiveTab(canManage()?'crew':'profile'),0));
+    $('groupSelect')?.addEventListener('change',()=>{groupData=null;syncTabAccess();scheduleRefresh()});
     const dialog=$('settingsDialog');
-    if(dialog)new MutationObserver(()=>{if(dialog.open)scheduleRefresh()}).observe(dialog,{attributes:true,attributeFilter:['open']});
-    window.addEventListener('seasoncrew:rendered',()=>{if($('settingsDialog')?.open)scheduleRefresh()});
-    if(dialog?.open)scheduleRefresh();
+    if(dialog)new MutationObserver(()=>{if(dialog.open){ensureTabs();syncTabAccess();if(activeTab==='prices')scheduleRefresh()}}).observe(dialog,{attributes:true,attributeFilter:['open']});
+    window.addEventListener('seasoncrew:rendered',()=>{syncTabAccess();if($('settingsDialog')?.open&&activeTab==='prices')scheduleRefresh()});
+    if(dialog?.open){setActiveTab('profile');scheduleRefresh()}
   }
   if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
