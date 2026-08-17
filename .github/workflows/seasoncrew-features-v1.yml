@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'SeasonCrew/features-v1.js'
+      - 'SeasonCrew/product-v2.js'
       - 'SeasonCrew/crew-delete.js'
       - '.github/workflows/seasoncrew-features-v1.yml'
   workflow_dispatch:
@@ -19,4 +20,5 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/product-v2.js
           node --check SeasonCrew/crew-delete.js
