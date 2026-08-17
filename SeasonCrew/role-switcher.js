@@ -1,6 +1,7 @@
 (()=>{
   const KEY='seasoncrew-superadmin-role-view';
   const VALUES=new Set(['superadmin','owner','admin','guest']);
+  let settingsEnhancementsLoaded=false;
 
   function actualSuperadmin(){
     const badge=document.getElementById('superadminBadge');
@@ -84,13 +85,20 @@
     }
   }
 
-  function ensureLiveUiSync(){
-    if(document.querySelector('script[data-seasoncrew-live-sync]'))return;
-    const script=document.createElement('script');
-    script.src='live-ui-sync.js?v=20260817-1';
-    script.defer=true;
-    script.dataset.seasoncrewLiveSync='1';
-    document.body.appendChild(script);
+  function ensureSettingsEnhancements(){
+    if(settingsEnhancementsLoaded)return;
+    settingsEnhancementsLoaded=true;
+    ensurePriceManagement();
+    ensureGroupedSettings();
+  }
+
+  function bindLazySettings(){
+    ['settingsBtn','groupMenuBtn','heroInviteBtn'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el||el.dataset.performanceLazyBound)return;
+      el.dataset.performanceLazyBound='1';
+      el.addEventListener('click',ensureSettingsEnhancements,{once:true,capture:true});
+    });
   }
 
   window.SeasonCrewRoleView={
@@ -102,7 +110,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{ensure();ensurePriceManagement();ensureGroupedSettings();ensureLiveUiSync()});
-  window.addEventListener('seasoncrew:rendered',ensure);
-  setTimeout(ensure,700);
+  window.addEventListener('DOMContentLoaded',()=>{ensure();bindLazySettings()});
+  window.addEventListener('seasoncrew:rendered',()=>{ensure();bindLazySettings()});
+  setTimeout(()=>{ensure();bindLazySettings()},700);
 })();
