@@ -1,4 +1,4 @@
-name: SeasonCrew guest payment privacy
+name: SeasonCrew audit hardening
 
 on:
   push:
@@ -13,12 +13,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply guest payment privacy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply audit hardening
         run: python3 SeasonCrew/guest_payment_privacy_patch.py
+      - name: Validate active JavaScript
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/auth-fallback-v6.js
+          node --check SeasonCrew/app-compat-loader.js
+          node --check SeasonCrew/ui-v2.js
+          node --check SeasonCrew/crew-delete.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/wish-actions-v2.js
+          node --check SeasonCrew/role-switcher.js
+          node --check SeasonCrew/history.js
+          node --check SeasonCrew/price-management.js
+          node --check SeasonCrew/settings-tab-groups.js
       - name: Commit changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SeasonCrew/app.js SeasonCrew/pricing-runtime-v2.js SeasonCrew/product-v2.js SeasonCrew/index.html SeasonCrew/crew-delete.js
-          git diff --cached --quiet || git commit -m 'Limit guest payment totals to own tickets'
+          git add SeasonCrew/app.js SeasonCrew/auth-fallback-v6.js SeasonCrew/role-switcher.js SeasonCrew/product-v2.js SeasonCrew/history.js SeasonCrew/history.html SeasonCrew/ui-v2.js SeasonCrew/crew-delete.js SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m 'Harden SeasonCrew after security audit'
           git push
