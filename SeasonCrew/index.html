@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="role-switcher.css?v=1">
   <link rel="stylesheet" href="pricing-runtime-v2.css?v=20260817-2">
   <link rel="stylesheet" href="brand-v2.css?v=20260817-paidgreen2">
+  <link rel="stylesheet" href="assignment-dialog.css?v=20260817-assign1">
   <style>#authScreen.hidden{display:none!important}</style>
 </head>
 <body class="auth-locked">
@@ -49,7 +50,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build roles-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build assign-dialog-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -188,6 +189,19 @@
     </form>
   </dialog>
 
+  <dialog id="assignTicketDialog" class="dialog assignTicketDialog">
+    <form class="dialogCard small" id="assignTicketForm">
+      <div class="dialogHead"><div><small>Karte vergeben</small><h3 id="assignTicketTitle">Ticket auswählen</h3></div><button id="assignTicketCancel" type="button" class="closeButton" aria-label="Schließen">×</button></div>
+      <div class="assignTicketMeta" id="assignTicketMeta"></div>
+      <label>Crew-Mitglied<select id="assignTicketMember"><option value="">Crew-Mitglied wählen …</option></select></label>
+      <div class="assignTicketOr"><span>oder</span></div>
+      <label>Ticket-Gast<input id="assignTicketGuest" autocomplete="off" maxlength="80" placeholder="z. B. Max Mustermann"></label>
+      <small class="fieldHint">Für Personen ohne SeasonCrew-Account.</small>
+      <div class="dialogStatus" id="assignTicketStatus"></div>
+      <div class="dialogActions"><button class="secondaryButton" id="assignTicketCancelBottom" type="button">Abbrechen</button><button class="primaryButton" id="assignTicketSave" type="submit">Karte vergeben</button></div>
+    </form>
+  </dialog>
+
   <dialog id="paymentDialog" class="dialog">
     <form method="dialog" class="dialogCard small" id="paymentForm">
       <div class="dialogHead"><div><small>PayPal.Me</small><h3>Zahlung anfordern</h3></div><button type="button" value="cancel" class="closeButton" aria-label="Schließen">×</button></div>
@@ -221,7 +235,7 @@
     document.body.appendChild(script);
   };
 </script>
-<script src="app.bundle.js?v=20260817-member1"
+<script src="app.bundle.js?v=20260817-assign1"
   onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
   onerror="window.seasonCrewLoadFallback()"></script>
 <script type="module" src="club-kits.js?v=2598c19"></script>

@@ -259,6 +259,7 @@
   var presenceChannel = null;
   var realtimeChannel = null;
   var paymentContext = null;
+  var assignmentContext = null;
   var reloadTimer = null;
   var els = {
     authScreen: $("authScreen"),
@@ -692,7 +693,7 @@
     return `<div class="ticketCard assigned ${state}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${a.paid ? "bezahlt" : "Zahlung offen"}</small></div><button class="releaseBtn" type="button" data-release-fixture="${m.id}" data-ticket-id="${t.id}" title="Karte freigeben">\xD7</button></div><input class="attendeeInput" data-attendee-fixture="${m.id}" data-ticket-id="${t.id}" value="${esc(a.attendee_name || "")}" placeholder="Name"><div class="ticketActions"><button type="button" data-paypal-fixture="${m.id}" data-ticket-id="${t.id}">PayPal</button><label class="paidToggle"><input type="checkbox" data-paid-fixture="${m.id}" data-ticket-id="${t.id}" ${a.paid ? "checked" : ""}> bezahlt</label></div></div>`;
   }
   function bindGameEvents() {
-    document.querySelectorAll("[data-assign-fixture]").forEach((el) => el.addEventListener("click", () => assignTicket(el.dataset.assignFixture, el.dataset.ticketId)));
+    document.querySelectorAll("[data-assign-fixture]").forEach((el) => el.addEventListener("click", () => openAssignTicket(el.dataset.assignFixture, el.dataset.ticketId)));
     document.querySelectorAll("[data-release-fixture]").forEach((el) => el.addEventListener("click", (e) => {
       e.stopPropagation();
       releaseTicket(el.dataset.releaseFixture, el.dataset.ticketId);
@@ -719,18 +720,66 @@
     }
     return (data || []).find((a) => a.fixture_id === fixtureId && a.ticket_id === ticketId) || null;
   }
-  async function assignTicket(fixtureId, ticketId) {
-    const row = { group_id: currentGroup.id, fixture_id: fixtureId, ticket_id: ticketId, attendee_name: profile?.username || "", attendee_user_id: user.id, paid: false, amount: Number(currentGroup.default_price) || 50, updated_by: user.id };
+  function openAssignTicket(fixtureId, ticketId) {
+    if (!isAdmin()) return;
+    const m = fixtureById(fixtureId), t = ticketById(ticketId);
+    if (!m || !t) return;
+    assignmentContext = { fixtureId, ticketId };
+    $("assignTicketTitle").textContent = `${ticketLabel(t)} \xB7 ${m.o}`;
+    $("assignTicketMeta").textContent = `${gameDate(m)[0]}${gameDate(m)[1] ? ` \xB7 ${gameDate(m)[1]}` : ""} \xB7 ${[t.block && `Block ${t.block}`, t.row_label && `Reihe ${t.row_label}`, t.seat && `Sitz ${t.seat}`].filter(Boolean).join(" \xB7 ")}`;
+    $("assignTicketMember").innerHTML = '<option value="">Crew-Mitglied w\xE4hlen \u2026</option>' + members.map((x) => `<option value="${x.user_id}">${esc(x.username || "Mitglied")} \xB7 ${roleLabel(x.role)}</option>`).join("");
+    $("assignTicketMember").value = "";
+    $("assignTicketGuest").value = "";
+    setStatus($("assignTicketStatus"), "");
+    $("assignTicketDialog").showModal();
+  }
+  async function assignTicket(fixtureId, ticketId, attendeeUserId, attendeeName) {
+    if (!isAdmin()) return false;
+    const row = { group_id: currentGroup.id, fixture_id: fixtureId, ticket_id: ticketId, attendee_name: String(attendeeName || "").trim(), attendee_user_id: attendeeUserId || null, paid: false, amount: Number(currentGroup.default_price) || 50, updated_by: user.id };
     const { error } = await sb.from("sc_allocations").insert(row);
     if (error) {
       showToast("Karte konnte nicht vergeben werden");
       console.error(error);
-      return;
+      return false;
     }
     const saved = await readAllocation(fixtureId, ticketId);
     replaceAllocation(saved || row);
     render();
+    return true;
   }
+  $("assignTicketMember").addEventListener("change", () => {
+    if ($("assignTicketMember").value) $("assignTicketGuest").value = "";
+  });
+  $("assignTicketGuest").addEventListener("input", () => {
+    if ($("assignTicketGuest").value.trim()) $("assignTicketMember").value = "";
+  });
+  function closeAssignTicketDialog() {
+    $("assignTicketDialog").close();
+    assignmentContext = null;
+    setStatus($("assignTicketStatus"), "");
+  }
+  $("assignTicketCancel").addEventListener("click", closeAssignTicketDialog);
+  $("assignTicketCancelBottom").addEventListener("click", closeAssignTicketDialog);
+  $("assignTicketForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!assignmentContext || !isAdmin()) return;
+    const memberId = $("assignTicketMember").value, guest = $("assignTicketGuest").value.trim();
+    const chosen = memberId ? members.find((x) => x.user_id === memberId) : null;
+    if (!chosen && !guest) {
+      setStatus($("assignTicketStatus"), "Bitte ein Crew-Mitglied ausw\xE4hlen oder einen Ticket-Gast eintragen.");
+      return;
+    }
+    const saveBtn = $("assignTicketSave");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Wird vergeben \u2026";
+    const ok = await assignTicket(assignmentContext.fixtureId, assignmentContext.ticketId, guest ? null : chosen.user_id, guest || chosen.username);
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Karte vergeben";
+    if (!ok) return;
+    $("assignTicketDialog").close();
+    assignmentContext = null;
+    showToast("Karte vergeben");
+  });
   async function releaseTicket(fixtureId, ticketId) {
     const { error } = await sb.from("sc_allocations").delete().eq("group_id", currentGroup.id).eq("fixture_id", fixtureId).eq("ticket_id", ticketId);
     if (error) {

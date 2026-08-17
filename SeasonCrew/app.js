@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id);
 
 let session=null,user=null,profile=null,groups=[],memberships=new Map(),currentGroup=null,tickets=[],allocations=[],notes=[],fixtures=[],members=[],filter='all';
 let activeInvite=null,pendingRequests=[],ownPendingRequests=[];
-let presenceChannel=null,realtimeChannel=null,paymentContext=null,reloadTimer=null;
+let presenceChannel=null,realtimeChannel=null,paymentContext=null,assignmentContext=null,reloadTimer=null;
 
 const els={
   authScreen:$('authScreen'),authStatus:$('authStatus'),loginForm:$('loginForm'),signupForm:$('signupForm'),
@@ -258,7 +258,7 @@ function renderTicket(m,t,a){
 }
 
 function bindGameEvents(){
-  document.querySelectorAll('[data-assign-fixture]').forEach(el=>el.addEventListener('click',()=>assignTicket(el.dataset.assignFixture,el.dataset.ticketId)));
+  document.querySelectorAll('[data-assign-fixture]').forEach(el=>el.addEventListener('click',()=>openAssignTicket(el.dataset.assignFixture,el.dataset.ticketId)));
   document.querySelectorAll('[data-release-fixture]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();releaseTicket(el.dataset.releaseFixture,el.dataset.ticketId)}));
   document.querySelectorAll('[data-attendee-fixture]').forEach(input=>{input.addEventListener('click',e=>e.stopPropagation());input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur()}});input.addEventListener('change',()=>saveAttendee(input.dataset.attendeeFixture,input.dataset.ticketId,input.value))});
   document.querySelectorAll('[data-paid-fixture]').forEach(input=>input.addEventListener('change',()=>savePaid(input.dataset.paidFixture,input.dataset.ticketId,input.checked)));
@@ -271,12 +271,39 @@ async function readAllocation(fixtureId,ticketId){
   if(error){console.warn('Allocation refresh',error);return null}
   return (data||[]).find(a=>a.fixture_id===fixtureId&&a.ticket_id===ticketId)||null;
 }
-async function assignTicket(fixtureId,ticketId){
-  const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:profile?.username||'',attendee_user_id:user.id,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
-  const {error}=await sb.from('sc_allocations').insert(row);
-  if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return}
-  const saved=await readAllocation(fixtureId,ticketId);replaceAllocation(saved||row);render();
+function openAssignTicket(fixtureId,ticketId){
+  if(!isAdmin())return;
+  const m=fixtureById(fixtureId),t=ticketById(ticketId);if(!m||!t)return;
+  assignmentContext={fixtureId,ticketId};
+  $('assignTicketTitle').textContent=`${ticketLabel(t)} · ${m.o}`;
+  $('assignTicketMeta').textContent=`${gameDate(m)[0]}${gameDate(m)[1]?` · ${gameDate(m)[1]}`:''} · ${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}`;
+  $('assignTicketMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+members.map(x=>`<option value="${x.user_id}">${esc(x.username||'Mitglied')} · ${roleLabel(x.role)}</option>`).join('');
+  $('assignTicketMember').value='';$('assignTicketGuest').value='';setStatus($('assignTicketStatus'),'');
+  $('assignTicketDialog').showModal();
 }
+async function assignTicket(fixtureId,ticketId,attendeeUserId,attendeeName){
+  if(!isAdmin())return false;
+  const row={group_id:currentGroup.id,fixture_id:fixtureId,ticket_id:ticketId,attendee_name:String(attendeeName||'').trim(),attendee_user_id:attendeeUserId||null,paid:false,amount:Number(currentGroup.default_price)||50,updated_by:user.id};
+  const {error}=await sb.from('sc_allocations').insert(row);
+  if(error){showToast('Karte konnte nicht vergeben werden');console.error(error);return false}
+  const saved=await readAllocation(fixtureId,ticketId);replaceAllocation(saved||row);render();return true;
+}
+$('assignTicketMember').addEventListener('change',()=>{if($('assignTicketMember').value)$('assignTicketGuest').value=''});
+$('assignTicketGuest').addEventListener('input',()=>{if($('assignTicketGuest').value.trim())$('assignTicketMember').value=''});
+function closeAssignTicketDialog(){$('assignTicketDialog').close();assignmentContext=null;setStatus($('assignTicketStatus'),'')}
+$('assignTicketCancel').addEventListener('click',closeAssignTicketDialog);
+$('assignTicketCancelBottom').addEventListener('click',closeAssignTicketDialog);
+$('assignTicketForm').addEventListener('submit',async e=>{
+  e.preventDefault();if(!assignmentContext||!isAdmin())return;
+  const memberId=$('assignTicketMember').value,guest=$('assignTicketGuest').value.trim();
+  const chosen=memberId?members.find(x=>x.user_id===memberId):null;
+  if(!chosen&&!guest){setStatus($('assignTicketStatus'),'Bitte ein Crew-Mitglied auswählen oder einen Ticket-Gast eintragen.');return}
+  const saveBtn=$('assignTicketSave');saveBtn.disabled=true;saveBtn.textContent='Wird vergeben …';
+  const ok=await assignTicket(assignmentContext.fixtureId,assignmentContext.ticketId,guest?null:chosen.user_id,guest||chosen.username);
+  saveBtn.disabled=false;saveBtn.textContent='Karte vergeben';
+  if(!ok)return;
+  $('assignTicketDialog').close();assignmentContext=null;showToast('Karte vergeben');
+});
 async function releaseTicket(fixtureId,ticketId){
   const {error}=await sb.from('sc_allocations').delete().eq('group_id',currentGroup.id).eq('fixture_id',fixtureId).eq('ticket_id',ticketId);if(error){showToast('Karte konnte nicht freigegeben werden');return}
   allocations=allocations.filter(a=>allocationKey(a.fixture_id,a.ticket_id)!==allocationKey(fixtureId,ticketId));render();
