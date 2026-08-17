@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/seasoncrew-priority-refactor.yml'
       - 'SeasonCrew/priority_refactor_fix.py'
+      - 'SeasonCrew/priority_refactor_post.py'
   workflow_dispatch:
 
 permissions:
@@ -21,10 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fix patch matcher
+      - name: Prepare patch
         run: python SeasonCrew/priority_refactor_fix.py
       - name: Apply priority refactor
         run: python SeasonCrew/priority_refactor_patch.py
+      - name: Remove legacy PayPal allocation write
+        run: python SeasonCrew/priority_refactor_post.py
       - name: Build browser bundle
         run: |
           cp SeasonCrew/app.js /tmp/app-source.js
@@ -45,6 +48,7 @@ jobs:
           grep -q "sc_get_fixture_prices" SeasonCrew/pricing-runtime-v2.js
           grep -q "Preis noch nicht bekannt" SeasonCrew/product-v2.js
           if grep -q "data-attendee-fixture" SeasonCrew/app.js; then echo 'Legacy attendee editor still rendered'; exit 1; fi
+          if grep -q "sc_allocations').update({amount" SeasonCrew/app.js; then echo 'Legacy manual amount write remains'; exit 1; fi
       - name: Commit refactor
         run: |
           git config user.name "github-actions[bot]"
