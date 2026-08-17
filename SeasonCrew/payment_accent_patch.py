@@ -85,13 +85,22 @@ paid_block = '''/* paid-success-v1:start */
   color:#fff!important;
   box-shadow:0 8px 20px rgba(47,138,98,.18)!important;
 }
-.ticketCard.paid .ticketHead b,
-.ticketCard.paid .ticketHead small,
+.ticketCard.assigned.paid .ticketHead b,
+.ticketCard.assigned.paid .ticketHead small,
+.ticketCard.assigned.paid .ticketSeatBadge,
 .ticketCard.paid .ticketActions,
+.ticketCard.paid .ticketActions button,
 .ticketCard.paid .paidToggle{
   color:#fff!important;
 }
-.ticketCard.paid .ticketHead small,
+.ticketCard.assigned.paid .ticketHead small{
+  display:flex!important;
+  width:max-content!important;
+  margin-top:10px!important;
+  background:rgba(255,255,255,.14)!important;
+  border-color:rgba(255,255,255,.34)!important;
+  color:#fff!important;
+}
 .ticketCard.paid .ticketSeatBadge{
   background:rgba(255,255,255,.14)!important;
   border-color:rgba(255,255,255,.34)!important;
@@ -137,6 +146,6 @@ css_path.write_text(css.rstrip() + '\n\n' + payment_block + '\n\n' + paid_block 
 
 index_path = Path('SeasonCrew/index.html')
 html = index_path.read_text(encoding='utf-8')
-html = re.sub(r'brand-v2\.css\?v=[^"\']+', 'brand-v2.css?v=20260817-paidgreen1', html)
-html = re.sub(r'Pilot V1 · Build [^·<]+ · Multi-User', 'Pilot V1 · Build calm-saas-2c · Multi-User', html)
+html = re.sub(r'brand-v2\.css\?v=[^"\']+', 'brand-v2.css?v=20260817-paidgreen2', html)
+html = re.sub(r'Pilot V1 · Build [^·<]+ · Multi-User', 'Pilot V1 · Build calm-saas-2d · Multi-User', html)
 index_path.write_text(html, encoding='utf-8')
