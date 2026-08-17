@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "esbuild app.js --bundle --format=iife --target=safari15 --outfile=app.bundle.js",
+    "build:site": "npm run build && node scripts/build-site.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
