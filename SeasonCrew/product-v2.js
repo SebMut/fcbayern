@@ -1,11 +1,11 @@
 (()=>{
-  const URL='https://kmhadzujovvxvpgblgkk.supabase.co';
+  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
   let sb=null,session=null,state=null,channel=null,timer=null,loading=false,fixtureMap=new Map();
   const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
-  function client(){if(sb)return sb;if(!window.supabase?.createClient)return null;sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return sb}
+  function client(){if(sb)return sb;if(!window.supabase?.createClient)return null;sb=window.supabase.createClient(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return sb}
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
@@ -124,7 +124,7 @@
     section.querySelectorAll('[data-download-archive]').forEach(b=>b.addEventListener('click',()=>downloadArchive(b.dataset.downloadArchive)));
   }
   async function startSeason(){const value=String($('newSeasonValue')?.value||'').trim();if(!/^20\d{2}-\d{2}$/.test(value)){toast('Saison bitte z. B. als 2027-28 eingeben');return}if(!confirm(`Saison ${state.group.season.replace('-','/')} archivieren und ${value.replace('-','/')} starten? Verteilungen, Zahlstatus, Notizen und Wünsche werden für die neue Saison geleert.`))return;const {error}=await client().rpc('sc_rollover_season',{p_group:gid(),p_new_season:value});if(error){toast(error.message);return}toast('Neue Saison gestartet');setTimeout(()=>location.reload(),500)}
-  function downloadArchive(id){const a=state.archives.find(x=>x.id===id);if(!a)return;const blob=new Blob([JSON.stringify(a.snapshot,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`SeasonCrew_${state.group.name.replace(/[^A-Za-z0-9_-]+/g,'_')}_${a.season}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+  function downloadArchive(id){const a=state.archives.find(x=>x.id===id);if(!a)return;const blob=new Blob([JSON.stringify(a.snapshot,null,2)],{type:'application/json'}),url=globalThis.URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`SeasonCrew_${state.group.name.replace(/[^A-Za-z0-9_-]+/g,'_')}_${a.season}.json`;link.click();setTimeout(()=>globalThis.URL.revokeObjectURL(url),1000)}
 
   function schedule(delay=180){clearTimeout(timer);timer=setTimeout(load,delay)}
   async function setupRealtime(group){

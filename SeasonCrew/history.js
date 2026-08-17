@@ -3,7 +3,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const sb=createClient('https://kmhadzujovvxvpgblgkk.supabase.co','sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y',{auth:{persistSession:true,autoRefreshToken:true}});
 const $=id=>document.getElementById(id);const sel=$('historyGroup'),type=$('historyType'),search=$('historySearch'),content=$('historyContent');
 let user=null,profile=null,groups=[],current=null,logs=[],tickets=new Map(),fixtures=new Map(BASE_M.map(m=>[m.id,m]));
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
 function fmt(ts){return new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short',timeZone:'Europe/Berlin'}).format(new Date(ts))}
 function fixtureName(id){const m=fixtures.get(id);return m?`${m.l} · ${m.o}`:id||'Saison'}
