@@ -1,43 +1,51 @@
 # SeasonCrew V1
 
-Pilot-App für die Multi-User-/Multi-Group-Version der bisherigen Jahreskartenverwaltung.
+Multi-User-/Multi-Crew-App zur gemeinsamen Verwaltung von Dauerkarten und Heimspielen.
 
 ## Aktueller Stand
 
 - eigener E-Mail-/Passwort-Account pro Nutzer
+- E-Mail-Bestätigung und Passwort-Reset über Supabase Auth
 - mehrere Crews pro Account
 - Owner/Admin/Member-Rollen
-- Beitritt per Crew-Code
+- Beitritt per Einladungslink oder Crew-Code mit Admin-Freigabe
+- frei wählbarer Verein / Club pro Crew
+- gruppenspezifischer Spielplan für eigene Heimspiele
+- Wettbewerb, Gegner, Spielort, Datum, Uhrzeit und optionaler Einzelpreis je Spiel
 - mehrere Dauerkarten je Crew
 - Block / Reihe / Sitz
 - Kartenbelegung pro Heimspiel
-- frei editierbarer Besuchername
-- Bezahlstatus und Standardpreis
+- registrierte Nutzer oder Gäste als Besucher
+- Bezahlstatus, Standardpreis und spielbezogener Preis
 - PayPal.Me-Zahlungsaufforderung mit Spielkontext
 - Notizen pro Spiel
 - gruppengetrennte History
 - Realtime-Updates und Presence
-- Supabase Row Level Security
-- Spielplandaten über OpenLigaDB
-- automatischer Sync alle 3 Stunden (Europe/Berlin)
+- Supabase Row Level Security und rollenbasierte RPCs
 
-## Spielplandaten
+## Vereins- und Spielplanlogik
 
-SeasonCrew bezieht Spielplandaten über die öffentliche JSON-API von OpenLigaDB. Die von OpenLigaDB bereitgestellten Daten stehen unter der Open Database License (ODbL) 1.0.
+SeasonCrew ist nicht mehr fest an den FC Bayern gebunden. Neue Crews können einen eigenen Verein angeben und ihren Heimspielplan selbst verwalten.
 
-Der Sync verwendet derzeit:
+Für bestehende FC-Bayern-Crews bleibt der bisherige Saisonspielplan als Legacy-/Pilot-Provider erhalten. Zusätzliche oder abweichende Termine können gruppenspezifisch ergänzt werden. Für andere Vereine basiert der Spielplan vollständig auf den Daten der jeweiligen Crew.
 
-- `bl1` für die 1. Bundesliga
-- `dfb` für den DFB-Pokal
-- `ucl` für die UEFA Champions League, sofern für die Saison Daten verfügbar sind
-
-Noch nicht final terminierte Bundesliga-Spiele werden nicht blind als exakter Samstag-15:30-Termin übernommen. Bis 21 Tage vor dem bei OpenLigaDB hinterlegten Termin bleiben die vorhandenen Spieltagsfenster bestehen; danach wird der OpenLigaDB-Termin als exakt übernommen.
+Die vorhandene OpenLigaDB-Anbindung für den FC-Bayern-Pilot verwendet die öffentliche JSON-API. Die dort bereitgestellten Daten stehen unter der Open Database License (ODbL) 1.0.
 
 Quelle: https://www.openligadb.de/
 Lizenz: Open Database License (ODbL) 1.0
 
-## Pilot-Einschränkung
+## Runtime-Konfiguration
 
-Die Datenstruktur der Crews ist bereits mandantenfähig; weitere Vereine und Sportarten können später über zusätzliche Fixture-Provider ergänzt werden.
+Umgebungsabhängige Browser-Konfiguration liegt in `seasoncrew-config.js`. `seasoncrew-core.js` enthält keine fest verdrahtete Supabase-Projekt-URL mehr und liest URL, Publishable Key und Umgebungsname aus `window.SeasonCrewConfig`.
+
+Dadurch kann eine spätere Entwicklungs-/Preview-Umgebung auf ein separates Supabase-Projekt oder einen Supabase-Branch zeigen, ohne die App-Logik zu ändern.
+
+## Production Build
+
+`npm run build:site` erzeugt `SeasonCrew/dist/` als bereinigtes statisches Produktionsartefakt. Entwicklungsdateien wie `app.js`, `package*.json`, Playwright-Konfiguration, Tests und Hilfsskripte werden nicht in `dist/` übernommen.
+
+Der vorbereitete Workflow `.github/workflows/pages-production.yml` baut zusätzlich ein Repository-weites Pages-Artefakt: bestehende öffentliche Seiten bleiben erhalten, während der öffentliche `SeasonCrew/`-Ordner durch den Inhalt aus `SeasonCrew/dist/` ersetzt wird.
+
+## Rückfallbasis
 
 Die bisherigen Ordner `FcBayern_Ober` und `FcBayern_Tom` bleiben unverändert und dienen weiterhin als Rückfall-/Vergleichsbasis.
