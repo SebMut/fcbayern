@@ -50,7 +50,7 @@
         <button class="primaryButton" type="submit">Account erstellen</button>
       </form>
       <div class="authStatus" id="authStatus" aria-live="polite"></div>
-      <small class="authFoot">Pilot V1 · Build interest-1 · Multi-User · Freigabe-Workflow</small>
+      <small class="authFoot">Pilot V1 · Build seat-1 · Multi-User · Freigabe-Workflow</small>
     </div>
   </section>
 
@@ -193,6 +193,7 @@
     <form class="dialogCard small" id="assignTicketForm">
       <div class="dialogHead"><div><small>Karte vergeben</small><h3 id="assignTicketTitle">Ticket auswählen</h3></div><button id="assignTicketCancel" type="button" class="closeButton" aria-label="Schließen">×</button></div>
       <div class="assignTicketMeta" id="assignTicketMeta"></div>
+      <label>Sitzplatz / Dauerkarte<select id="assignTicketSeat"></select></label>
       <label>Crew-Mitglied<select id="assignTicketMember"><option value="">Crew-Mitglied wählen …</option></select></label>
       <div class="assignTicketOr"><span>oder</span></div>
       <label>Ticket-Gast<input id="assignTicketGuest" autocomplete="off" maxlength="80" placeholder="z. B. Max Mustermann"></label>
@@ -235,7 +236,7 @@
     document.body.appendChild(script);
   };
 </script>
-<script src="app.bundle.js?v=20260817-interest1"
+<script src="app.bundle.js?v=20260817-seat1"
   onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
   onerror="window.seasonCrewLoadFallback()"></script>
 <script type="module" src="club-kits.js?v=2598c19"></script>

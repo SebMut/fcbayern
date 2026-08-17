@@ -271,15 +271,18 @@ async function readAllocation(fixtureId,ticketId){
   if(error){console.warn('Allocation refresh',error);return null}
   return (data||[]).find(a=>a.fixture_id===fixtureId&&a.ticket_id===ticketId)||null;
 }
-function openAssignTicket(fixtureId,ticketId,preselectUserId=''){
-  if(!isAdmin())return;
-  const m=fixtureById(fixtureId),t=ticketById(ticketId);if(!m||!t)return;
-  assignmentContext={fixtureId,ticketId};
+function updateAssignTicketSeatMeta(){
+  if(!assignmentContext)return;const m=fixtureById(assignmentContext.fixtureId),t=ticketById(assignmentContext.ticketId);if(!m||!t)return;
   $('assignTicketTitle').textContent=`${ticketLabel(t)} · ${m.o}`;
   $('assignTicketMeta').textContent=`${gameDate(m)[0]}${gameDate(m)[1]?` · ${gameDate(m)[1]}`:''} · ${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}`;
+}
+function openAssignTicket(fixtureId,ticketId,preselectUserId=''){
+  if(!isAdmin())return;const m=fixtureById(fixtureId),t=ticketById(ticketId);if(!m||!t)return;assignmentContext={fixtureId,ticketId};
+  const availableTickets=tickets.filter(x=>x.id===ticketId||!allocationByIds(fixtureId,x.id));
+  $('assignTicketSeat').innerHTML=availableTickets.map(x=>`<option value="${x.id}">${esc(ticketLabel(x))} · ${esc([x.block&&`Block ${x.block}`,x.row_label&&`Reihe ${x.row_label}`,x.seat&&`Sitz ${x.seat}`].filter(Boolean).join(' · '))}</option>`).join('');
+  $('assignTicketSeat').value=ticketId;updateAssignTicketSeatMeta();
   $('assignTicketMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+members.map(x=>`<option value="${x.user_id}">${esc(x.username||'Mitglied')} · ${roleLabel(x.role)}</option>`).join('');
-  $('assignTicketMember').value=preselectUserId&&members.some(x=>x.user_id===preselectUserId)?preselectUserId:'';$('assignTicketGuest').value='';setStatus($('assignTicketStatus'),'');
-  $('assignTicketDialog').showModal();
+  $('assignTicketMember').value=preselectUserId&&members.some(x=>x.user_id===preselectUserId)?preselectUserId:'';$('assignTicketGuest').value='';setStatus($('assignTicketStatus'),'');$('assignTicketDialog').showModal();
 }
 window.SeasonCrewAssignment={open:(fixtureId,ticketId,userId='')=>openAssignTicket(fixtureId,ticketId,userId)};
 async function assignTicket(fixtureId,ticketId,attendeeUserId,attendeeName){
@@ -294,6 +297,7 @@ async function assignTicket(fixtureId,ticketId,attendeeUserId,attendeeName){
   }
   const saved=await readAllocation(fixtureId,ticketId);replaceAllocation(saved||row);render();return true;
 }
+$('assignTicketSeat').addEventListener('change',()=>{if(!assignmentContext)return;assignmentContext.ticketId=$('assignTicketSeat').value;updateAssignTicketSeatMeta()});
 $('assignTicketMember').addEventListener('change',()=>{if($('assignTicketMember').value)$('assignTicketGuest').value=''});
 $('assignTicketGuest').addEventListener('input',()=>{if($('assignTicketGuest').value.trim())$('assignTicketMember').value=''});
 function closeAssignTicketDialog(){$('assignTicketDialog').close();assignmentContext=null;setStatus($('assignTicketStatus'),'')}

@@ -130,10 +130,12 @@
     return `<div class="ticketCard ${a.paid?'paid':'unpaid'} ${own?'ownTicket':''}"><div class="ticketHead"><div><b>${esc(t.label)}</b><small>${a.paid?'bezahlt':'Zahlung offen'}</small></div></div><div class="ticketMeta">${meta}</div><div class="ticketPerson">${esc(a.name)} · ${money(a.amount)}</div><div class="ticketActions">${isAdmin()?`<button class="releaseAction" data-action="release" data-match="${m.id}" data-ticket="${t.id}" type="button">Zuweisung aufheben</button>`:''}${canPaypal?`<button class="paypalBtn" data-action="paypal" data-match="${m.id}" data-ticket="${t.id}" type="button">PayPal</button>`:''}${isAdmin()?`<label><input type="checkbox" data-action="paid-toggle" data-match="${m.id}" data-ticket="${t.id}" ${a.paid?'checked':''}> bezahlt</label>`:''}</div></div>`;
   }
 
+  function updateDemoAssignSeat(){if(!assignContext)return;const m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(m&&t)$('assignTitle').textContent=`${t.label} · ${m.opponent}`;}
   function openAssign(matchId,ticketId){
     if(!isAdmin()){toast('In der Mitgliedsansicht können freie Karten nicht vergeben werden.');return}
-    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;
-    $('assignTitle').textContent=`${t.label} · ${m.opponent}`;$('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
+    assignContext={matchId,ticketId};const m=match(matchId),t=ticket(ticketId);if(!m||!t)return;const available=state.tickets.filter(x=>x.id===ticketId||!alloc(matchId,x.id));
+    $('assignSeat').innerHTML=available.map(x=>`<option value="${x.id}">${esc(x.label)} · Block ${esc(x.block)} · Reihe ${esc(x.row)} · Sitz ${esc(x.seat)}</option>`).join('');$('assignSeat').value=ticketId;updateDemoAssignSeat();
+    $('assignMember').innerHTML='<option value="">Crew-Mitglied wählen …</option>'+state.members.map(x=>`<option value="${x.id}">${esc(x.name)} · ${esc(x.role)}</option>`).join('');$('assignMember').value='';$('assignGuest').value='';openModal('assignDialog');
   }
   function releaseTicket(matchId,ticketId){if(!isAdmin())return;const a=alloc(matchId,ticketId);if(!a)return;state.allocations=state.allocations.filter(x=>!(x.matchId===matchId&&x.ticketId===ticketId));addHistory(`${ticket(ticketId).label} gegen ${match(matchId).opponent} von ${a.name}: Zuweisung aufgehoben`);render();toast('Zuweisung aufgehoben')}
   function setPaid(matchId,ticketId,paid){if(!isAdmin())return;const a=alloc(matchId,ticketId);if(!a)return;a.paid=paid;addHistory(`${a.name}: ${ticket(ticketId).label} gegen ${match(matchId).opponent} ${paid?'als bezahlt markiert':'wieder auf offen gesetzt'}`);render();toast(paid?'Zahlung erledigt':'Zahlung wieder offen')}
@@ -190,11 +192,12 @@
   document.addEventListener('input',event=>{if(event.target.id==='searchInput')renderGames()});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('.ticketCard.unassigned[data-action="assign"]')){event.preventDefault();openAssign(event.target.dataset.match,event.target.dataset.ticket)}});
 
+  $('assignSeat')?.addEventListener('change',()=>{if(!assignContext)return;assignContext.ticketId=$('assignSeat').value;updateDemoAssignSeat()});
   $('filters')?.addEventListener('click',event=>{const btn=event.target.closest('[data-filter]');if(!btn)return;event.preventDefault();state.filter=btn.dataset.filter||'all';save();renderGames();document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x.dataset.filter===state.filter))});
   $('assignForm')?.addEventListener('submit',event=>{
     event.preventDefault();if(event.submitter?.value==='cancel'){closeModal('assignDialog');assignContext=null;return}if(!assignContext)return;
     const memberId=$('assignMember').value,guest=$('assignGuest').value.trim();if(!memberId&&!guest){toast('Bitte Person oder Ticket-Gast wählen');return}
-    const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(assignContext.ticketId);if(!m||!t)return;const name=guest||(p?.name||'Gast');
+    const selectedTicketId=$('assignSeat')?.value||assignContext.ticketId;assignContext.ticketId=selectedTicketId;const p=memberId?member(memberId):null,m=match(assignContext.matchId),t=ticket(selectedTicketId);if(!m||!t)return;const name=guest||(p?.name||'Mitglied');
     state.allocations.push({matchId:m.id,ticketId:t.id,memberId:guest?null:p?.id||null,name,paid:false,amount:m.price});addHistory(`${t.label} gegen ${m.opponent} an ${name} vergeben`);closeModal('assignDialog');assignContext=null;render();toast('Karte vergeben');
   });
 

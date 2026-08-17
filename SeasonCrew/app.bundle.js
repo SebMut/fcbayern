@@ -720,13 +720,22 @@
     }
     return (data || []).find((a) => a.fixture_id === fixtureId && a.ticket_id === ticketId) || null;
   }
+  function updateAssignTicketSeatMeta() {
+    if (!assignmentContext) return;
+    const m = fixtureById(assignmentContext.fixtureId), t = ticketById(assignmentContext.ticketId);
+    if (!m || !t) return;
+    $("assignTicketTitle").textContent = `${ticketLabel(t)} \xB7 ${m.o}`;
+    $("assignTicketMeta").textContent = `${gameDate(m)[0]}${gameDate(m)[1] ? ` \xB7 ${gameDate(m)[1]}` : ""} \xB7 ${[t.block && `Block ${t.block}`, t.row_label && `Reihe ${t.row_label}`, t.seat && `Sitz ${t.seat}`].filter(Boolean).join(" \xB7 ")}`;
+  }
   function openAssignTicket(fixtureId, ticketId, preselectUserId = "") {
     if (!isAdmin()) return;
     const m = fixtureById(fixtureId), t = ticketById(ticketId);
     if (!m || !t) return;
     assignmentContext = { fixtureId, ticketId };
-    $("assignTicketTitle").textContent = `${ticketLabel(t)} \xB7 ${m.o}`;
-    $("assignTicketMeta").textContent = `${gameDate(m)[0]}${gameDate(m)[1] ? ` \xB7 ${gameDate(m)[1]}` : ""} \xB7 ${[t.block && `Block ${t.block}`, t.row_label && `Reihe ${t.row_label}`, t.seat && `Sitz ${t.seat}`].filter(Boolean).join(" \xB7 ")}`;
+    const availableTickets = tickets.filter((x) => x.id === ticketId || !allocationByIds(fixtureId, x.id));
+    $("assignTicketSeat").innerHTML = availableTickets.map((x) => `<option value="${x.id}">${esc(ticketLabel(x))} \xB7 ${esc([x.block && `Block ${x.block}`, x.row_label && `Reihe ${x.row_label}`, x.seat && `Sitz ${x.seat}`].filter(Boolean).join(" \xB7 "))}</option>`).join("");
+    $("assignTicketSeat").value = ticketId;
+    updateAssignTicketSeatMeta();
     $("assignTicketMember").innerHTML = '<option value="">Crew-Mitglied w\xE4hlen \u2026</option>' + members.map((x) => `<option value="${x.user_id}">${esc(x.username || "Mitglied")} \xB7 ${roleLabel(x.role)}</option>`).join("");
     $("assignTicketMember").value = preselectUserId && members.some((x) => x.user_id === preselectUserId) ? preselectUserId : "";
     $("assignTicketGuest").value = "";
@@ -753,6 +762,11 @@
     render();
     return true;
   }
+  $("assignTicketSeat").addEventListener("change", () => {
+    if (!assignmentContext) return;
+    assignmentContext.ticketId = $("assignTicketSeat").value;
+    updateAssignTicketSeatMeta();
+  });
   $("assignTicketMember").addEventListener("change", () => {
     if ($("assignTicketMember").value) $("assignTicketGuest").value = "";
   });
