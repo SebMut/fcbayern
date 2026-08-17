@@ -1,0 +1,33 @@
+name: SeasonCrew login and calm design fix
+
+on:
+  push:
+    paths:
+      - '.github/scripts/fix_seasoncrew_login_and_calm_design.py'
+      - '.github/workflows/seasoncrew-login-calm-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply login and calm SaaS patch
+        run: python .github/scripts/fix_seasoncrew_login_and_calm_design.py
+      - name: Check JavaScript syntax
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/auth-fallback-v6.js
+      - name: Commit patched SeasonCrew files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/brand-v2.css SeasonCrew/index.html SeasonCrew/history.html
+          git diff --cached --quiet || git commit -m "Fix SeasonCrew pilot login and calm SaaS design"
+          git push
