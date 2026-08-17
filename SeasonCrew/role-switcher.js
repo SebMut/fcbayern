@@ -30,6 +30,41 @@
   const VALUES=new Set(['superadmin','owner','admin','guest']);
   let settingsEnhancementsLoaded=false;
 
+  const VERSION_API='https://api.github.com/repos/SebMut/fcbayern/commits?path=SeasonCrew&sha=main&per_page=1';
+  let resolvedCommit='…';
+
+  function renderVersionInfo(commit=resolvedCommit){
+    resolvedCommit=commit||'…';
+    const short=resolvedCommit==='…'?'…':resolvedCommit.slice(0,7);
+    const text=`Pilot V1 · Commit ${short} · Multi-User · Freigabe-Workflow`;
+    const authFoot=document.querySelector('.authFoot');
+    if(authFoot){authFoot.textContent=text;authFoot.title=resolvedCommit==='…'?'SeasonCrew Commit wird geladen':`SeasonCrew Commit ${resolvedCommit}`}
+
+    let global=document.getElementById('seasonCrewVersionInfo');
+    if(!global){
+      global=document.createElement('small');
+      global.id='seasonCrewVersionInfo';
+      global.setAttribute('aria-label','SeasonCrew Versionsinformation');
+      global.style.cssText='position:fixed;right:10px;bottom:7px;z-index:20;font:600 10px/1.2 Manrope,system-ui,sans-serif;letter-spacing:.02em;color:rgba(116,117,130,.78);background:rgba(248,248,250,.86);padding:4px 7px;border-radius:7px;backdrop-filter:blur(8px);pointer-events:none';
+      document.body.appendChild(global);
+    }
+    global.textContent=`Commit ${short}`;
+    global.title=resolvedCommit==='…'?'SeasonCrew Commit wird geladen':`SeasonCrew Commit ${resolvedCommit}`;
+  }
+
+  async function resolveVersionInfo(){
+    renderVersionInfo('…');
+    try{
+      const response=await nativeFetch(VERSION_API,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+      if(!response.ok)throw new Error(`GitHub ${response.status}`);
+      const commits=await response.json();
+      const sha=Array.isArray(commits)?commits[0]?.sha:null;
+      if(sha){renderVersionInfo(sha);return}
+    }catch(error){console.warn('SeasonCrew version info',error)}
+    const fallback=document.querySelector('meta[name="seasoncrew-commit"]')?.content||'unbekannt';
+    renderVersionInfo(fallback);
+  }
+
   function actualSuperadmin(){
     const badge=document.getElementById('superadminBadge');
     return !!badge&&!badge.classList.contains('hidden');
@@ -129,7 +164,7 @@
   }
 
   function finishBranding(){
-    // Build marker is owned by index.html. Never overwrite it from a helper script.
+    renderVersionInfo(resolvedCommit);
   }
 
   window.SeasonCrewRoleView={
@@ -141,7 +176,7 @@
     reset(){localStorage.removeItem(KEY)}
   };
 
-  window.addEventListener('DOMContentLoaded',()=>{finishBranding();ensure();bindLazySettings()});
+  window.addEventListener('DOMContentLoaded',()=>{finishBranding();resolveVersionInfo();ensure();bindLazySettings()});
   window.addEventListener('seasoncrew:rendered',()=>{ensure();bindLazySettings()});
   setTimeout(()=>{finishBranding();ensure();bindLazySettings()},700);
 })();
