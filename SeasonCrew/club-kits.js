@@ -49,7 +49,7 @@ function canonicalName(name=''){
 }
 function getKit(name){return CLUB_KITS[canonicalName(name)]||DEFAULT_KIT}
 function isLight(hex=''){const c=hex.replace('#','');if(c.length!==6)return false;const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);return ((r*299+g*587+b*114)/1000)>210}
-function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function html(name,extraClass=''){
   const canonical=canonicalName(name),kit=getKit(canonical),light=isLight(kit.primary)?' kit-light':'';
   return `<span class="clubJersey${light}${extraClass?' '+escapeHtml(extraClass):''}" data-kit-ready="1" data-club="${escapeHtml(canonical)}" title="${escapeHtml(canonical)}" aria-label="${escapeHtml(canonical)}" role="img" style="--kit-primary:${kit.primary};--kit-secondary:${kit.secondary}"></span>`;
