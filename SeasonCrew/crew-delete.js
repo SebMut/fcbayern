@@ -3,6 +3,14 @@
   const KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   let sb=null;
   const $=id=>document.getElementById(id);
+
+  if(!document.querySelector('link[data-seasoncrew-features-v1]')){
+    const link=document.createElement('link');link.rel='stylesheet';link.href='./features-v1.css?v=1';link.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(link);
+  }
+  if(!document.querySelector('script[data-seasoncrew-features-v1]')){
+    const script=document.createElement('script');script.src='./features-v1.js?v=1';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
+  }
+
   const role=()=>String($('memberRole')?.textContent||'').trim();
   const canDelete=()=>['Owner','Superadmin'].includes(role());
   const crewName=()=>String($('groupSelect')?.selectedOptions?.[0]?.textContent||$('groupTitle')?.textContent||'').trim();
