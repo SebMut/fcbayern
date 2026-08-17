@@ -10,9 +10,9 @@
   function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
   function gid(){return $('groupSelect')?.value||''}
-  function role(){return state?.members.find(m=>m.user_id===session?.user?.id)?.role||null}
-  function admin(){return !!state?.profile?.is_superadmin||['owner','admin'].includes(role())}
-  function owner(){return !!state?.profile?.is_superadmin||role()==='owner'}
+  function role(){const view=window.SeasonCrewRoleView?.get(state?.profile?.is_superadmin);if(view)return view;return state?.members.find(m=>m.user_id===session?.user?.id)?.role||null}
+  function admin(){return ['superadmin','owner','admin'].includes(role())}
+  function owner(){return ['superadmin','owner'].includes(role())}
   function cleanPaypal(v){return String(v||'').trim().replace(/^https?:\/\/(www\.)?paypal\.me\//i,'').replace(/^paypal\.me\//i,'').replace(/^@/,'').replace(/\/$/,'')}
   function relevantFixture(m){if(m.c==='bl')return m.h===true;if(m.n)return true;return m.h===true||m.pos===true}
   function dateLabel(m){if(!m)return 'Termin offen';const d=new Date(`${m.s}T12:00:00`);return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d)+(m.t?` · ${m.t} Uhr`:'')}

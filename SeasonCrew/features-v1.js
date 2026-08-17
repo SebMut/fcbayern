@@ -14,9 +14,9 @@
   function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
   function roleLabel(role){return role==='owner'?'Owner':role==='admin'?'Admin':'Gast'}
   function groupId(){return $('groupSelect')?.value||''}
-  function currentRole(){return state?.members.find(m=>m.user_id===session?.user?.id)?.role||null}
-  function isManager(){return !!state?.profile?.is_superadmin||currentRole()==='owner'}
-  function canAllocate(){return !!state?.profile?.is_superadmin||['owner','admin'].includes(currentRole())}
+  function currentRole(){const view=window.SeasonCrewRoleView?.get(state?.profile?.is_superadmin);if(view)return view;return state?.members.find(m=>m.user_id===session?.user?.id)?.role||null}
+  function isManager(){return ['superadmin','owner'].includes(currentRole())}
+  function canAllocate(){return ['superadmin','owner','admin'].includes(currentRole())}
 
   async function load(){
     const c=client(),gid=groupId();

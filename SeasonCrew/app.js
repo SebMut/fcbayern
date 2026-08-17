@@ -20,8 +20,10 @@ const els={
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function money(v){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
 function parseMoney(v){const n=Number(String(v??'').trim().replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null}
-function roleLabel(r){return r==='owner'?'Owner':r==='admin'?'Admin':'Gast'}
-function isAdmin(){if(profile?.is_superadmin)return true;const r=memberships.get(currentGroup?.id);return r==='owner'||r==='admin'}
+function roleLabel(r){return r==='superadmin'?'Superadmin':r==='owner'?'Owner':r==='admin'?'Admin':'Gast'}
+function roleView(){return window.SeasonCrewRoleView?.get(profile?.is_superadmin)||null}
+function effectiveRole(){return roleView()||memberships.get(currentGroup?.id)||'guest'}
+function isAdmin(){return ['superadmin','owner','admin'].includes(effectiveRole())}
 function showToast(text){els.toast.textContent=text;els.toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>els.toast.classList.remove('show'),2600)}
 function setStatus(el,text,ok=false){if(!el)return;el.textContent=text||'';el.classList.toggle('ok',!!ok)}
 function cleanPaypal(v){return String(v||'').trim().replace(/^https?:\/\/(www\.)?paypal\.me\//i,'').replace(/^paypal\.me\//i,'').replace(/^@/,'').replace(/\/$/,'')}
@@ -184,7 +186,7 @@ function render(){
   if(!currentGroup)return;
   els.helloUser.textContent=`Hallo ${profile?.username||'Fan'}`;
   els.seasonPill.textContent=`Saison ${currentGroup.season.replace('-', ' / ')}`;
-  els.groupTitle.textContent=currentGroup.name;els.clubName.textContent=currentGroup.club_name;els.memberRole.textContent=profile?.is_superadmin?'Superadmin':roleLabel(memberships.get(currentGroup.id));
+  els.groupTitle.textContent=currentGroup.name;els.clubName.textContent=currentGroup.club_name;els.memberRole.textContent=roleLabel(effectiveRole());
   els.heroInviteBtn.classList.toggle('hidden',!isAdmin());
   renderStats();renderGames();renderSettings();
 }
