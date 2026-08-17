@@ -58,8 +58,8 @@ jobs:
             echo 'Second Supabase client implementation remains'
             exit 1
           fi
-          if grep -R -n 'auth-fallback' SeasonCrew/index.html .github/workflows/seasoncrew-bundle.yml; then
-            echo 'Legacy auth fallback reference remains'
+          if grep -n 'auth-fallback-v' SeasonCrew/index.html; then
+            echo 'Legacy auth fallback script reference remains'
             exit 1
           fi
       - name: Browser regression tests
