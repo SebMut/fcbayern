@@ -2,6 +2,14 @@ from pathlib import Path
 p=Path('SeasonCrew/priority_refactor_patch.py')
 s=p.read_text(encoding='utf-8')
 
+# Treat replacement code as literal text. re.sub's normal replacement parser would
+# otherwise turn JavaScript escape sequences such as \n into real newlines.
+old_helper='out, n = re.subn(pattern, replacement, text, count=1, flags=flags)'
+new_helper='out, n = re.subn(pattern, lambda _m: replacement, text, count=1, flags=flags)'
+if old_helper not in s:
+    raise SystemExit('sub_once helper marker not found')
+s=s.replace(old_helper,new_helper,1)
+
 # The legacy payment preview is a one-line JS function. Replace the patch block
 # with an exact string replacement so it cannot consume later handlers/functions.
 start=s.find('s = sub_once(s, r"function updatePaymentPreview')
