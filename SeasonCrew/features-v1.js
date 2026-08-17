@@ -58,13 +58,18 @@
       if(!bar){bar=document.createElement('div');bar.className='ticketWishBar';bar.dataset.fixtureId=fixtureId;grid.insertAdjacentElement('afterend',bar)}
       const list=wishesFor(fixtureId),mine=list.some(w=>w.user_id===session.user.id),assigned=ownAllocation(fixtureId),free=freeTickets(fixtureId),allocator=canAllocate();
       const names=list.map(w=>({id:w.user_id,name:memberName(w.user_id)}));
-      const chips=names.length?names.map(x=>allocator&&free.length?`<button class="wishPersonChip actionable" type="button" data-wish-assign-user="${esc(x.id)}" title="${esc(x.name)} auf die nächste freie Karte setzen"><span>@${esc(x.name)}</span><b>＋</b></button>`:`<span class="wishPersonChip"><span>@${esc(x.name)}</span></span>`).join(''):'<span class="wishEmpty">Noch niemand hat Interesse angemeldet.</span>';
+      const chips=names.length?names.map(x=>{
+        if(!allocator)return `<span class="wishPersonChip"><span>@${esc(x.name)}</span></span>`;
+        const plus=free.length?`<button class="wishPersonChip actionable" type="button" data-wish-assign-user="${esc(x.id)}" title="${esc(x.name)} auf die nächste freie Karte setzen"><span>@${esc(x.name)}</span><b>＋</b></button>`:`<span class="wishPersonChip"><span>@${esc(x.name)}</span></span>`;
+        return `<span class="wishActionPair">${plus}<button class="wishRejectBtn" type="button" data-wish-reject-user="${esc(x.id)}" title="Interesse von @${esc(x.name)} entfernen" aria-label="Interesse von ${esc(x.name)} entfernen">−</button></span>`;
+      }).join(''):'<span class="wishEmpty">Noch niemand hat Interesse angemeldet.</span>';
       const button=assigned
         ? `<button class="wishToggle assigned" type="button" disabled>✓ Dir ist eine Karte zugeteilt</button>`
-        : `<button class="wishToggle ${mine?'active':''}" type="button" data-toggle-wish="${esc(fixtureId)}">${mine?'✓ Interesse gemerkt':'🎟 Interesse'}</button>`;
+        : `<button class="wishToggle ${mine?'active':''}" type="button" data-toggle-wish="${esc(fixtureId)}">${mine?'− Interesse zurücknehmen':'🎟 Interesse'}</button>`;
       bar.innerHTML=`<div class="wishTop"><div><small>Ticketwünsche</small><strong>${names.length} ${names.length===1?'Interessent':'Interessenten'}</strong></div>${button}</div><div class="wishPeople">${chips}</div>${allocator&&names.length&&free.length?`<small class="wishHint">＋ setzt die Person auf die nächste freie Dauerkarte (${free.length} frei).</small>`:''}`;
       bar.querySelector('[data-toggle-wish]')?.addEventListener('click',()=>toggleWish(fixtureId,mine));
       bar.querySelectorAll('[data-wish-assign-user]').forEach(btn=>btn.addEventListener('click',()=>quickAssign(fixtureId,btn.dataset.wishAssignUser)));
+      bar.querySelectorAll('[data-wish-reject-user]').forEach(btn=>btn.addEventListener('click',()=>rejectWish(fixtureId,btn.dataset.wishRejectUser,memberName(btn.dataset.wishRejectUser))));
     });
   }
 
@@ -84,12 +89,20 @@
     if(!canAllocate()||!state)return;
     const ticket=freeTickets(fixtureId)[0];if(!ticket){toast('Keine freie Dauerkarte mehr');return}
     const name=memberName(userId);
-    if(!confirm(`@${name} auf ${ticket.label||'die nächste freie Karte'} setzen?`))return;
-    const c=client();
-    const {error}=await c.from('sc_allocations').insert({group_id:state.gid,fixture_id:fixtureId,ticket_id:ticket.id,attendee_name:name,attendee_user_id:userId,paid:false,amount:Number(state.group.default_price)||50,updated_by:session.user.id});
-    if(error){toast('Karte konnte nicht zugeteilt werden');console.error(error);return}
-    await c.from('sc_ticket_wishes').delete().eq('group_id',state.gid).eq('fixture_id',fixtureId).eq('user_id',userId);
-    toast(`@${name} wurde ${ticket.label||'eine Karte'} zugeteilt`);scheduleLoad(80);
+    if(window.SeasonCrewAssignment?.open){
+      window.SeasonCrewAssignment.open(fixtureId,ticket.id,userId);
+      return;
+    }
+    toast(`Kartenvergabe für @${name} ist noch nicht bereit. Bitte freie Karte direkt öffnen.`);
+  }
+
+  async function rejectWish(fixtureId,userId,name){
+    if(!canAllocate()||!state)return;
+    if(!confirm(`Interesse von @${name} für dieses Spiel entfernen?`))return;
+    const {error}=await client().from('sc_ticket_wishes').delete().eq('group_id',state.gid).eq('fixture_id',fixtureId).eq('user_id',userId);
+    if(error){toast('Interesse konnte nicht entfernt werden');console.error(error);return}
+    state.wishes=state.wishes.filter(w=>!(w.fixture_id===fixtureId&&w.user_id===userId));
+    renderWishBars();toast(`Interesse von @${name} entfernt`);
   }
 
   function renderMemberControls(){
@@ -171,6 +184,7 @@
 
   $('groupSelect')?.addEventListener('change',()=>scheduleLoad(100));
   window.addEventListener('seasoncrew:games-rendered',()=>{if(state)requestAnimationFrame(renderWishBars)});
+  window.addEventListener('seasoncrew:ticket-wish-changed',()=>scheduleLoad(40));
   window.addEventListener('seasoncrew:settings-rendered',()=>{if(state)requestAnimationFrame(renderMemberControls)});
   window.addEventListener('DOMContentLoaded',()=>scheduleLoad(700));
   setTimeout(()=>scheduleLoad(0),1000);

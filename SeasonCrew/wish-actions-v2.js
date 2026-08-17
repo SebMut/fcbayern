@@ -47,7 +47,7 @@
         assign.parentNode.insertBefore(wrap,assign);wrap.appendChild(assign);
         const reject=document.createElement('button');
         reject.type='button';reject.className='wishRejectBtn';reject.dataset.wishRejectUser=userId;reject.dataset.fixtureId=fixtureId;
-        reject.title=`Interesse von @${name} ablehnen`;reject.setAttribute('aria-label',`Interesse von ${name} ablehnen`);reject.textContent='×';
+        reject.title=`Interesse von @${name} ablehnen`;reject.setAttribute('aria-label',`Interesse von ${name} ablehnen`);reject.textContent='−';
         reject.addEventListener('click',()=>rejectWish(fixtureId,userId,name,reject));
         wrap.appendChild(reject);
       });

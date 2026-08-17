@@ -113,7 +113,7 @@
       c.auth.getSession()
     ]);
     if(error)return;
-    const guest=String($('memberRole')?.textContent||'').trim()==='Gast',uid=session?.user?.id||'',username=String($('helloUser')?.textContent||'').replace(/^Hallo\s+/i,'').trim().toLowerCase();
+    const guest=String($('memberRole')?.textContent||'').trim()==='Mitglied',uid=session?.user?.id||'',username=String($('helloUser')?.textContent||'').replace(/^Hallo\s+/i,'').trim().toLowerCase();
     const visible=guest?(data||[]).filter(row=>row.attendee_user_id===uid||(!row.attendee_user_id&&String(row.attendee_name||'').trim().toLowerCase()===username)):(data||[]);
     const unpaid=visible.filter(x=>!x.paid);
     const total=unpaid.reduce((sum,row)=>sum+(opponentKnown(row.fixture_id)?(effectivePrice(row.fixture_id)??0):0),0);

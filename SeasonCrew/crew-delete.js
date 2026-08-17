@@ -8,7 +8,7 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./features-v1.css?v=1';link.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-features-v1]')){
-    const script=document.createElement('script');script.src='./features-v1.js?v=4';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./features-v1.js?v=5';script.defer=true;script.dataset.seasoncrewFeaturesV1='1';document.head.appendChild(script);
   }
   if(!document.querySelector('link[data-seasoncrew-product-v2]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./product-v2.css?v=3';link.dataset.seasoncrewProductV2='1';document.head.appendChild(link);

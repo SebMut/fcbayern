@@ -720,7 +720,7 @@
     }
     return (data || []).find((a) => a.fixture_id === fixtureId && a.ticket_id === ticketId) || null;
   }
-  function openAssignTicket(fixtureId, ticketId) {
+  function openAssignTicket(fixtureId, ticketId, preselectUserId = "") {
     if (!isAdmin()) return;
     const m = fixtureById(fixtureId), t = ticketById(ticketId);
     if (!m || !t) return;
@@ -728,11 +728,12 @@
     $("assignTicketTitle").textContent = `${ticketLabel(t)} \xB7 ${m.o}`;
     $("assignTicketMeta").textContent = `${gameDate(m)[0]}${gameDate(m)[1] ? ` \xB7 ${gameDate(m)[1]}` : ""} \xB7 ${[t.block && `Block ${t.block}`, t.row_label && `Reihe ${t.row_label}`, t.seat && `Sitz ${t.seat}`].filter(Boolean).join(" \xB7 ")}`;
     $("assignTicketMember").innerHTML = '<option value="">Crew-Mitglied w\xE4hlen \u2026</option>' + members.map((x) => `<option value="${x.user_id}">${esc(x.username || "Mitglied")} \xB7 ${roleLabel(x.role)}</option>`).join("");
-    $("assignTicketMember").value = "";
+    $("assignTicketMember").value = preselectUserId && members.some((x) => x.user_id === preselectUserId) ? preselectUserId : "";
     $("assignTicketGuest").value = "";
     setStatus($("assignTicketStatus"), "");
     $("assignTicketDialog").showModal();
   }
+  window.SeasonCrewAssignment = { open: (fixtureId, ticketId, userId = "") => openAssignTicket(fixtureId, ticketId, userId) };
   async function assignTicket(fixtureId, ticketId, attendeeUserId, attendeeName) {
     if (!isAdmin()) return false;
     const row = { group_id: currentGroup.id, fixture_id: fixtureId, ticket_id: ticketId, attendee_name: String(attendeeName || "").trim(), attendee_user_id: attendeeUserId || null, paid: false, amount: Number(currentGroup.default_price) || 50, updated_by: user.id };
@@ -741,6 +742,11 @@
       showToast("Karte konnte nicht vergeben werden");
       console.error(error);
       return false;
+    }
+    if (attendeeUserId) {
+      const { error: wishError } = await sb.from("sc_ticket_wishes").delete().eq("group_id", currentGroup.id).eq("fixture_id", fixtureId).eq("user_id", attendeeUserId);
+      if (wishError) console.warn("Ticketinteresse konnte nach Zuteilung nicht entfernt werden", wishError);
+      else window.dispatchEvent(new CustomEvent("seasoncrew:ticket-wish-changed", { detail: { fixtureId, userId: attendeeUserId, active: false } }));
     }
     const saved = await readAllocation(fixtureId, ticketId);
     replaceAllocation(saved || row);
