@@ -43,5 +43,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add SeasonCrew/package.json SeasonCrew/package-lock.json
           git commit -m "Update SeasonCrew test and build dependencies"
+          git restore SeasonCrew/app.bundle.js
           git pull --rebase origin main
           git push origin main
