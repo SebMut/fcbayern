@@ -1,4 +1,22 @@
 (()=>{
+  const PROD_AUTH_REDIRECT='https://sebmut.github.io/fcbayern/SeasonCrew/';
+  const nativeFetch=window.fetch?.bind(window);
+  if(nativeFetch&&!window.__seasonCrewAuthRedirectFix){
+    window.__seasonCrewAuthRedirectFix=true;
+    window.fetch=(input,init)=>{
+      try{
+        const raw=typeof input==='string'?input:input instanceof URL?input.href:input?.url||'';
+        if(raw.includes('kmhadzujovvxvpgblgkk.supabase.co/auth/v1/signup')){
+          const target=new URL(raw,location.href);
+          target.searchParams.set('redirect_to',PROD_AUTH_REDIRECT);
+          if(typeof input==='string'||input instanceof URL)input=target.href;
+          else if(typeof Request!=='undefined'&&input instanceof Request)input=new Request(target.href,input);
+        }
+      }catch(error){console.warn('SeasonCrew auth redirect fix',error)}
+      return nativeFetch(input,init);
+    };
+  }
+
   const KEY='seasoncrew-superadmin-role-view';
   const VALUES=new Set(['superadmin','owner','admin','guest']);
   let settingsEnhancementsLoaded=false;
