@@ -1,0 +1,44 @@
+name: SeasonCrew guest ticket interest
+
+on:
+  push:
+    paths:
+      - 'SeasonCrew/guest-ticket-interest.js'
+      - 'SeasonCrew/ui-v2.css'
+      - '.github/workflows/seasoncrew-guest-ticket-interest.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check guest ticket JavaScript
+        run: node --check SeasonCrew/guest-ticket-interest.js
+      - name: Wire guest ticket interaction into SeasonCrew
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('SeasonCrew/index.html')
+          s=p.read_text()
+          s=s.replace('ui-v2.css?v=3','ui-v2.css?v=4')
+          s=s.replace('Build product-v2-2','Build product-v2-3')
+          marker='<script src="ui-v2.js?v=4"></script>'
+          addition=marker+'\n  <script src="guest-ticket-interest.js?v=1"></script>'
+          if 'guest-ticket-interest.js' not in s:
+              s=s.replace(marker,addition)
+          p.write_text(s)
+          PY
+      - name: Commit SeasonCrew wiring
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m "Enable guest ticket interest on free cards"
+          git push
