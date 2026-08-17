@@ -145,7 +145,10 @@
     try {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
-        setStatus('Login fehlgeschlagen: ' + error.message);
+        const message = /invalid login credentials/i.test(error.message || '')
+          ? 'E-Mail oder Passwort ist falsch.'
+          : (error.message || 'Login nicht möglich.');
+        setStatus('Login fehlgeschlagen: ' + message);
         return;
       }
       setStatus('Login erfolgreich. App wird geladen …', true);
@@ -241,8 +244,17 @@
         return;
       }
 
+      const identities = data?.user?.identities;
+      if (data?.user && Array.isArray(identities) && identities.length === 0) {
+        setTab('login');
+        if ($('loginEmail')) $('loginEmail').value = email;
+        setStatus('Für diese E-Mail konnte kein neuer Account angelegt werden. Möglicherweise besteht bereits ein Account – bitte versuche dich einzuloggen oder verwende eine andere E-Mail-Adresse.');
+        return;
+      }
+
       if (!data.session) {
         setTab('login');
+        if ($('loginEmail')) $('loginEmail').value = email;
         setStatus('Account erstellt. Bitte bestätige deine E-Mail-Adresse über die Nachricht, die wir dir geschickt haben. Danach kannst du dich einloggen.', true);
         return;
       }
