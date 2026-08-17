@@ -126,7 +126,8 @@
   }
 
   function renderSeasonTools(){
-    const form=$('settingsForm');if(!form||!state)return;let section=$('seasonManagement');if(!section){section=document.createElement('section');section.id='seasonManagement';section.className='seasonManagement';const members=form.querySelector('.membersSettings');(members||form).insertAdjacentElement(members?'afterend':'beforeend',section)}
+    const existing=$('seasonManagement');if(!admin()){existing?.remove();return}
+    const form=$('settingsForm');if(!form||!state)return;let section=existing;if(!section){section=document.createElement('section');section.id='seasonManagement';section.className='seasonManagement';const members=form.querySelector('.membersSettings');(members||form).insertAdjacentElement(members?'afterend':'beforeend',section)}
     const archives=state.archives.map(a=>{const snap=a.snapshot||{},allocCount=Array.isArray(snap.allocations)?snap.allocations.length:0;return `<div class="archiveRow"><div><b>Saison ${esc(a.season.replace('-','/'))}</b><small>${new Intl.DateTimeFormat('de-DE',{dateStyle:'medium'}).format(new Date(a.archived_at))} · ${allocCount} Ticketverteilungen</small></div><button type="button" class="memberAction" data-download-archive="${a.id}">JSON</button></div>`}).join('');
     section.innerHTML=`<div class="settingsSectionHead"><div><h4>Saison & Archiv</h4><p>Beim Saisonwechsel bleiben Mitglieder und Dauerkarten erhalten. Verteilungen, Zahlstatus, Notizen und Wünsche werden vorher archiviert und anschließend geleert.</p></div></div>${owner()?`<div class="newSeasonRow"><input id="newSeasonValue" value="${esc(nextSeason(state.group.season))}" placeholder="2027-28"><button type="button" class="primaryButton compact" id="startNewSeason">Neue Saison starten</button></div>`:''}<div class="archiveList">${archives||'<div class="productEmpty">Noch keine archivierte Saison.</div>'}</div>`;
     $('startNewSeason')?.addEventListener('click',startSeason);

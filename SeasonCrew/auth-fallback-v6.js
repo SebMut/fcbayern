@@ -151,6 +151,8 @@
         setStatus('Login fehlgeschlagen: ' + message);
         return;
       }
+      const { error: loginAuditError } = await sb.rpc('sc_log_login');
+      if (loginAuditError) console.warn('Login-Audit', loginAuditError);
       setStatus('Login erfolgreich. App wird geladen …', true);
       setTimeout(() => location.reload(), 250);
     } catch (error) {

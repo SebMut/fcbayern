@@ -52,7 +52,7 @@
     const wrap=document.createElement('label');
     wrap.id='roleViewSwitcher';
     wrap.className='roleViewSwitcher';
-    wrap.innerHTML=`<span>Ansicht als</span><select id="roleViewSelect" aria-label="Rolle für Testansicht"><option value="superadmin">Superadmin</option><option value="owner">Owner</option><option value="admin">Admin</option><option value="guest">Gast</option></select>`;
+    wrap.innerHTML=`<span>UI-Testansicht als</span><select id="roleViewSelect" aria-label="Rolle für UI-Testansicht" title="Nur Darstellung: Supabase-Rechte bleiben Superadmin"><option value="superadmin">Superadmin</option><option value="owner">Owner</option><option value="admin">Admin</option><option value="guest">Gast</option></select>`;
     const badge=document.getElementById('superadminBadge');
     badge?.insertAdjacentElement('afterend',wrap);
     if(!wrap.parentNode)actions.insertAdjacentElement('afterbegin',wrap);
@@ -129,8 +129,7 @@
   }
 
   function finishBranding(){
-    const foot=document.querySelector('.authFoot');
-    if(foot)foot.textContent='Pilot V1 · Build lime-cd-1 · Multi-User · Freigabe-Workflow';
+    // Build marker is owned by index.html. Never overwrite it from a helper script.
   }
 
   window.SeasonCrewRoleView={

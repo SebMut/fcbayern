@@ -62,6 +62,7 @@ els.loginForm.addEventListener('submit',async e=>{
     if(error){setStatus(els.authStatus,/invalid login credentials/i.test(error.message||'')?'E-Mail oder Passwort ist falsch.':'Login fehlgeschlagen: '+error.message);return}
     session=data.session;user=data.user;
     if(!session||!user){setStatus(els.authStatus,'Login fehlgeschlagen. Bitte erneut versuchen.');return}
+    const {error:loginAuditError}=await sb.rpc('sc_log_login');if(loginAuditError)console.warn('Login-Audit',loginAuditError);
     await enterApp();
   }catch(error){setStatus(els.authStatus,'Login fehlgeschlagen: '+(error?.message||String(error)))}
 });
@@ -223,7 +224,7 @@ function renderGame(m,amap,nmap,isNext){
 
 function renderTicket(m,t,a){
   const label=ticketLabel(t);
-  if(!a)return `<div class="ticketCard unassigned" data-assign-fixture="${m.id}" data-ticket-id="${t.id}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}</small></div><span>+</span></div><div style="padding:8px 10px;color:#8994a3;font-size:9px">Karte vergeben</div></div>`;
+  if(!a)return `<div class="ticketCard unassigned" data-assign-fixture="${m.id}" data-ticket-id="${t.id}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${[t.block&&`Block ${esc(t.block)}`,t.row_label&&`Reihe ${esc(t.row_label)}`,t.seat&&`Sitz ${esc(t.seat)}`].filter(Boolean).join(' · ')}</small></div><span>+</span></div><div style="padding:8px 10px;color:#8994a3;font-size:9px">Karte vergeben</div></div>`;
   const state=a.paid?'paid':'unpaid';
   return `<div class="ticketCard assigned ${state}"><div class="ticketHead"><div><b>${esc(label)}</b><small>${a.paid?'bezahlt':'Zahlung offen'}</small></div><button class="releaseBtn" type="button" data-release-fixture="${m.id}" data-ticket-id="${t.id}" title="Karte freigeben">×</button></div><input class="attendeeInput" data-attendee-fixture="${m.id}" data-ticket-id="${t.id}" value="${esc(a.attendee_name||'')}" placeholder="Name"><div class="ticketActions"><button type="button" data-paypal-fixture="${m.id}" data-ticket-id="${t.id}">PayPal</button><label class="paidToggle"><input type="checkbox" data-paid-fixture="${m.id}" data-ticket-id="${t.id}" ${a.paid?'checked':''}> bezahlt</label></div></div>`;
 }
@@ -283,7 +284,7 @@ function renderSettings(){
   if(!currentGroup)return;
   $('settingsTitle').textContent=currentGroup.name;$('profileUsername').value=profile?.username||'';$('profileEmail').value=user?.email||'';$('settingsGroupName').value=currentGroup.name;$('settingsPaypal').value=cleanPaypal(currentGroup.paypal_me);$('settingsPrice').value=Number(currentGroup.default_price||50).toFixed(2).replace('.',',');
   $('adminSettings').classList.toggle('hidden',!isAdmin());$('ticketSettings').classList.toggle('hidden',!isAdmin());$('inviteAdminSettings').classList.toggle('hidden',!isAdmin());
-  $('ticketList').innerHTML=tickets.map(t=>`<div class="ticketSettingRow"><div><b>${esc(ticketLabel(t))}</b><small>${[t.block&&`Block ${t.block}`,t.row_label&&`Reihe ${t.row_label}`,t.seat&&`Sitz ${t.seat}`].filter(Boolean).join(' · ')}</small></div><button class="dangerButton" type="button" data-delete-ticket="${t.id}">Löschen</button></div>`).join('')||'<div class="loadingCard">Noch keine Karten.</div>';
+  $('ticketList').innerHTML=tickets.map(t=>`<div class="ticketSettingRow"><div><b>${esc(ticketLabel(t))}</b><small>${[t.block&&`Block ${esc(t.block)}`,t.row_label&&`Reihe ${esc(t.row_label)}`,t.seat&&`Sitz ${esc(t.seat)}`].filter(Boolean).join(' · ')}</small></div><button class="dangerButton" type="button" data-delete-ticket="${t.id}">Löschen</button></div>`).join('')||'<div class="loadingCard">Noch keine Karten.</div>';
   document.querySelectorAll('[data-delete-ticket]').forEach(b=>b.onclick=()=>deleteTicket(b.dataset.deleteTicket));
   $('memberList').innerHTML=members.map(m=>`<div class="memberRow"><div class="memberIdentity"><b>@${esc(m.username||'mitglied')}</b></div><span class="roleBadge ${m.role==='owner'?'owner':m.role==='admin'?'admin':'guest'}">${roleLabel(m.role)}</span></div>`).join('');
   renderInviteAdmin();

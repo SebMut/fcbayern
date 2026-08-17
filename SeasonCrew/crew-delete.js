@@ -14,7 +14,7 @@
     const link=document.createElement('link');link.rel='stylesheet';link.href='./product-v2.css?v=3';link.dataset.seasoncrewProductV2='1';document.head.appendChild(link);
   }
   if(!document.querySelector('script[data-seasoncrew-product-v2]')){
-    const script=document.createElement('script');script.src='./product-v2.js?v=6';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
+    const script=document.createElement('script');script.src='./product-v2.js?v=7';script.defer=true;script.dataset.seasoncrewProductV2='1';document.head.appendChild(script);
   }
 
   const role=()=>String($('memberRole')?.textContent||'').trim();
