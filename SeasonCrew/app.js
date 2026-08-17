@@ -141,7 +141,7 @@ async function loadCurrentGroup(){
   const gid=currentGroup.id;
   const [{data:ts,error:te},{data:as,error:ae},{data:ns,error:ne},{data:ms,error:me}]=await Promise.all([
     sb.from('sc_tickets').select('*').eq('group_id',gid).eq('active',true).order('sort_order').order('created_at'),
-    sb.from('sc_allocations').select('*').eq('group_id',gid),
+    sb.rpc('sc_get_allocations',{p_group:gid}),
     sb.from('sc_fixture_notes').select('*').eq('group_id',gid),
     sb.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',gid).order('joined_at')
   ]);
@@ -293,8 +293,10 @@ function renderSettings(){
 
 async function renderInviteAdmin(){
   if(!isAdmin())return;
+  const canGrantAdmin=['superadmin','owner'].includes(effectiveRole());
   $('requestCount').textContent=String(pendingRequests.length);
   $('joinRequestList').innerHTML=pendingRequests.length?pendingRequests.map(r=>`<div class="joinRequestRow"><div class="joinRequestUser"><b>@${esc(r.username||'bewerber')}</b><small>Anfrage ${new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'}).format(new Date(r.requested_at))}</small></div><div class="requestActions"><button class="approveGuest" type="button" data-approve-guest="${r.id}">Als Gast</button><button class="approveAdmin" type="button" data-approve-admin="${r.id}">Als Admin</button><button class="reject" type="button" data-reject-request="${r.id}">Ablehnen</button></div></div>`).join(''):'<div class="loadingCard">Keine offenen Bewerbungen.</div>';
+  if(!canGrantAdmin)document.querySelectorAll('[data-approve-admin]').forEach(b=>b.remove());
   document.querySelectorAll('[data-approve-guest]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveGuest,true,'guest'));
   document.querySelectorAll('[data-approve-admin]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.approveAdmin,true,'admin'));
   document.querySelectorAll('[data-reject-request]').forEach(b=>b.onclick=()=>decideRequest(b.dataset.rejectRequest,false,'guest'));
@@ -392,7 +394,7 @@ async function setupPresence(){
 }
 function setupRealtime(){
   if(!currentGroup)return;const gid=currentGroup.id;realtimeChannel=sb.channel(`seasoncrew-data-${gid}`)
-   .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',filter:`group_id=eq.${gid}`},queueReload)
+   .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_fixture_notes',filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_tickets',filter:`group_id=eq.${gid}`},queueReload)
    .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${gid}`},queueReload)

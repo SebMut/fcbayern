@@ -30,7 +30,7 @@
         c.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',gid).order('joined_at'),
         c.from('sc_ticket_wishes').select('group_id,fixture_id,user_id,created_at').eq('group_id',gid),
         c.from('sc_tickets').select('id,label,block,row_label,seat,sort_order').eq('group_id',gid).eq('active',true).order('sort_order').order('created_at'),
-        c.from('sc_allocations').select('group_id,fixture_id,ticket_id,attendee_name,attendee_user_id,paid,amount').eq('group_id',gid),
+        c.rpc('sc_get_allocations',{p_group:gid}),
         c.from('sc_groups').select('id,name,default_price').eq('id',gid).maybeSingle()
       ]);
       if(me||we||te||ae||ge){console.warn('SeasonCrew features load',me||we||te||ae||ge);return}
@@ -163,7 +163,7 @@
     if(channel){try{await c.removeChannel(channel)}catch{}channel=null}
     channel=c.channel(`seasoncrew-features-${gid}`)
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_ticket_wishes',filter:`group_id=eq.${gid}`},()=>scheduleLoad(90))
-      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_tickets',filter:`group_id=eq.${gid}`},()=>scheduleLoad(120))
       .subscribe();

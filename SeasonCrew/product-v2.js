@@ -36,7 +36,7 @@
         c.from('sc_groups').select('id,name,season,paypal_me,default_price').eq('id',group).maybeSingle(),
         c.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',group).order('joined_at'),
         c.from('sc_tickets').select('id,label,block,row_label,seat,sort_order').eq('group_id',group).eq('active',true).order('sort_order').order('created_at'),
-        c.from('sc_allocations').select('group_id,fixture_id,ticket_id,attendee_name,attendee_user_id,paid,amount').eq('group_id',group),
+        c.rpc('sc_get_allocations',{p_group:group}),
         c.from('sc_ticket_wishes').select('group_id,fixture_id,user_id,created_at').eq('group_id',group),
         c.from('sc_fixture_notes').select('fixture_id,note').eq('group_id',group),
         c.from('sc_notifications').select('id,user_id,group_id,type,title,body,entity_id,read_at,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(60),
@@ -142,7 +142,7 @@
     channel=c.channel(`seasoncrew-product-${group}`)
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_notifications',filter:`user_id=eq.${session.user.id}`},()=>schedule(80))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_ticket_wishes',filter:`group_id=eq.${group}`},()=>schedule(100))
-      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',filter:`group_id=eq.${group}`},()=>schedule(100))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','paid','updated_by','updated_at'],filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_join_requests',filter:`group_id=eq.${group}`},()=>schedule(100))
       .subscribe();

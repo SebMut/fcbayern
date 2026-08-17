@@ -109,7 +109,7 @@
   async function refreshUnpaidStats(){
     const c=sb(),gid=groupId();if(!c||!gid||!pricing)return;
     const [{data,error},{data:{session}}]=await Promise.all([
-      c.from('sc_allocations').select('fixture_id,paid,attendee_user_id,attendee_name').eq('group_id',gid),
+      c.rpc('sc_get_allocations',{p_group:gid}),
       c.auth.getSession()
     ]);
     if(error)return;
