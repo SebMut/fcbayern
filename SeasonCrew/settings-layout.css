@@ -1,0 +1,182 @@
+/* Crew settings layout — dedicated responsive layer */
+#settingsDialog{padding:18px}
+#settingsDialog .settingsCard{
+  width:min(920px,calc(100vw - 32px));
+  max-height:min(90vh,920px);
+  padding:0;
+  overflow:auto;
+  border-radius:22px;
+  background:#f7f8fa!important;
+  box-shadow:0 32px 90px rgba(21,22,27,.28)!important;
+}
+#settingsDialog .dialogHead{
+  position:sticky;
+  top:0;
+  z-index:8;
+  margin:0;
+  padding:22px 24px 17px;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid #e3e4e8;
+}
+#settingsDialog .dialogHead h3{font-size:27px;margin:2px 0 0}
+#settingsDialog .dialogHead small{color:#8b8e97!important}
+#settingsDialog .closeButton{flex:0 0 auto}
+
+#settingsDialog .settingsCard>section{
+  margin:14px 18px 0;
+  padding:18px;
+  background:#fff;
+  border:1px solid #e1e2e7;
+  border-radius:16px;
+  box-shadow:0 5px 18px rgba(21,22,27,.035);
+}
+#settingsDialog .settingsCard>section:last-of-type{margin-bottom:14px}
+#settingsDialog .settingsCard>section>h4,
+#settingsDialog .settingsSectionHead h4{
+  margin:0;
+  font:700 16px/1.2 "Space Grotesk",Manrope,sans-serif;
+  color:#17181d;
+  letter-spacing:-.02em;
+}
+#settingsDialog .settingsSectionHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:13px;
+}
+#settingsDialog .settingsSectionHead p{
+  max-width:650px;
+  margin:5px 0 0;
+  font-size:10px;
+  line-height:1.55;
+  color:#777b85!important;
+}
+
+#settingsDialog .settingsGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 12px;
+  margin-top:12px;
+}
+#settingsDialog .settingsGrid label{min-width:0;margin:0}
+#settingsDialog .settingsGrid input,
+#settingsDialog .settingsGrid select{min-height:42px}
+#settingsDialog .profileSettings>.secondaryButton,
+#settingsDialog .adminSettings>.primaryButton{margin-top:12px}
+
+/* Invitation */
+#settingsDialog .inviteBox{
+  margin-top:4px;
+  padding:13px;
+  border-radius:12px;
+  background:#fafafb;
+}
+#settingsDialog .joinRequests{margin-top:16px;padding-top:16px;border-top:1px solid #ececf0}
+#settingsDialog .joinRequestRow,
+#settingsDialog .memberRow,
+#settingsDialog .ticketSettingRow{
+  border:1px solid #e4e5e9!important;
+  border-radius:12px;
+  background:#fafafb;
+  padding:11px 12px;
+  margin-top:7px;
+}
+#settingsDialog .memberRow{display:flex;gap:12px;align-items:center;justify-content:space-between}
+
+/* Season tickets */
+#settingsDialog .newTicketRow{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr)) auto;
+  gap:8px;
+  margin-top:11px;
+}
+#settingsDialog .newTicketRow input{min-width:0!important;min-height:40px;margin:0!important}
+#settingsDialog .newTicketRow button{white-space:nowrap}
+
+/* Manual fixtures */
+#settingsDialog .manualFixtureForm{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:10px!important;
+  align-items:end!important;
+  margin-top:12px;
+}
+#settingsDialog .manualFixtureField{display:grid;gap:5px;min-width:0}
+#settingsDialog .manualFixtureField>span{
+  font-size:9px;
+  font-weight:800;
+  color:#686b76;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+}
+#settingsDialog .manualFixtureField input,
+#settingsDialog .manualFixtureField select{
+  width:100%;
+  min-width:0;
+  min-height:40px;
+  margin:0!important;
+  border:1px solid #d7d8de;
+  border-radius:10px;
+  padding:9px 10px;
+  background:#fff;
+  color:#17181d;
+  outline:0;
+}
+#settingsDialog .manualFixtureField input:focus,
+#settingsDialog .manualFixtureField select:focus{
+  border-color:#e14975;
+  box-shadow:0 0 0 4px rgba(225,73,117,.13);
+}
+#settingsDialog .fixtureFieldCompetition{grid-column:span 2}
+#settingsDialog .fixtureFieldLabel{grid-column:span 4}
+#settingsDialog .fixtureFieldOpponent{grid-column:span 3}
+#settingsDialog .fixtureFieldVenue{grid-column:span 3}
+#settingsDialog .fixtureFieldDate{grid-column:span 2}
+#settingsDialog .fixtureFieldTime{grid-column:span 1}
+#settingsDialog .fixtureFieldPrice{grid-column:span 1}
+#settingsDialog #addFixtureBtn{grid-column:span 2;min-height:40px;white-space:nowrap}
+#settingsDialog .fixtureSettingMeta{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:5px!important}
+#settingsDialog .fixtureSettingMeta span{white-space:normal}
+#settingsDialog .fieldHint{display:block;margin-top:8px;color:#858993;font-size:9px;line-height:1.45}
+
+#settingsDialog #settingsStatus{
+  position:sticky;
+  bottom:0;
+  z-index:7;
+  margin:0;
+  min-height:0;
+  padding:0 24px;
+  background:rgba(247,248,250,.96);
+}
+#settingsDialog #settingsStatus:not(:empty){padding-top:10px;padding-bottom:12px;border-top:1px solid #e3e4e8}
+
+@media(max-width:780px){
+  #settingsDialog{padding:8px}
+  #settingsDialog .settingsCard{width:calc(100vw - 16px);max-height:94vh;border-radius:18px}
+  #settingsDialog .dialogHead{padding:18px 16px 14px}
+  #settingsDialog .dialogHead h3{font-size:23px}
+  #settingsDialog .settingsCard>section{margin:10px 10px 0;padding:14px;border-radius:14px}
+  #settingsDialog .settingsGrid{grid-template-columns:1fr}
+  #settingsDialog .settingsSectionHead{display:grid;grid-template-columns:1fr;gap:10px}
+  #settingsDialog .settingsSectionHead .primaryButton{width:100%}
+  #settingsDialog .newTicketRow{grid-template-columns:1fr 1fr}
+  #settingsDialog .newTicketRow #ticketSeat{grid-column:1/-1}
+  #settingsDialog .newTicketRow button{grid-column:1/-1;width:100%}
+  #settingsDialog .manualFixtureForm{grid-template-columns:1fr 1fr!important}
+  #settingsDialog .manualFixtureForm>*{grid-column:auto!important}
+  #settingsDialog .fixtureFieldLabel,
+  #settingsDialog .fixtureFieldOpponent,
+  #settingsDialog .fixtureFieldVenue,
+  #settingsDialog #addFixtureBtn{grid-column:1/-1!important}
+  #settingsDialog #settingsStatus{padding-left:16px;padding-right:16px}
+}
+
+@media(max-width:480px){
+  #settingsDialog .manualFixtureForm{grid-template-columns:1fr!important}
+  #settingsDialog .manualFixtureForm>*{grid-column:1!important}
+  #settingsDialog .newTicketRow{grid-template-columns:1fr}
+  #settingsDialog .newTicketRow>*{grid-column:1!important}
+  #settingsDialog .memberRow{align-items:flex-start;flex-direction:column}
+}
