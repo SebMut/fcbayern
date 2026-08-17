@@ -1,0 +1,286 @@
+:root{
+  --brand-charcoal:#1F2A30;
+  --brand-charcoal-2:#2A373D;
+  --brand-charcoal-3:#11191D;
+  --brand-lime:#B7FF00;
+  --brand-lime-hover:#A7EA00;
+  --brand-lime-soft:#F3FFD5;
+  --brand-lime-pale:#FAFFE9;
+  --ink:#1F2A30;
+  --ink2:#2A373D;
+  --paper:#F5F7F7;
+  --card:#fff;
+  --muted:#748087;
+  --line:#DFE5E7;
+  --accent:#B7FF00;
+  --accent2:#A7EA00;
+  --lime:#B7FF00;
+  --green:#B7FF00;
+  --greenSoft:#F3FFD5;
+  --red:#1F2A30;
+  --redSoft:#F1F3F4;
+  --blue:#1F2A30;
+  --shadow:0 18px 55px rgba(31,42,48,.08);
+}
+
+body{background:linear-gradient(180deg,#f8fafa 0,#f4f6f6 100%);color:var(--brand-charcoal)}
+::selection{background:var(--brand-lime);color:var(--brand-charcoal)}
+
+/* Approved SeasonCrew ticket mark */
+.brandMark{
+  width:54px;height:38px;border-radius:0!important;transform:none!important;display:block!important;flex:0 0 auto;
+  background:transparent url('seasoncrew-mark.svg?v=20260817-1') center/contain no-repeat!important;
+  box-shadow:none!important;
+}
+.brandMark i{display:none!important}
+.brandMark.small{width:42px;height:30px;border-radius:0!important;transform:none!important}
+
+.authBrand strong,.appBrand strong{
+  color:transparent!important;
+  background:linear-gradient(90deg,var(--brand-charcoal) 0 60%,var(--brand-lime) 60% 100%);
+  -webkit-background-clip:text;background-clip:text;
+  font-weight:800!important;
+}
+.appBrand strong{font-size:17px!important;letter-spacing:-.025em}
+.authBrand small{color:#7c878d!important;letter-spacing:.11em}
+
+/* Login becomes a real branded landing page */
+.authScreen{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  padding:72px max(6vw,28px)!important;
+  background:
+    radial-gradient(circle at 17% 22%,rgba(183,255,0,.14),transparent 28%),
+    linear-gradient(135deg,#ffffff 0%,#f7f9f9 58%,#f2f5f5 100%)!important;
+  overflow:auto;
+}
+.authScreen:before{
+  content:"";position:absolute;left:max(6vw,30px);top:50%;transform:translateY(-52%);
+  width:min(48vw,700px);height:min(66vh,570px);
+  background:url('seasoncrew-logo.svg?v=20260817-1') center/contain no-repeat;
+  pointer-events:none;
+}
+.authScreen:after{
+  content:"Dauerkarten gemeinsam organisieren. Klar, schnell und ohne Chat-Chaos.";
+  position:absolute;left:max(8vw,52px);top:calc(50% + 220px);max-width:520px;
+  color:#6e7a80;font-size:15px;line-height:1.55;text-align:center;font-weight:650;
+}
+.authShell{
+  position:relative;z-index:2;width:min(465px,43vw)!important;margin:0!important;
+  background:rgba(255,255,255,.98)!important;border:1px solid #e1e6e7!important;border-radius:24px!important;
+  padding:30px!important;box-shadow:0 30px 80px rgba(31,42,48,.14)!important;
+}
+.authBrand{display:none!important}
+.authTabs{background:#f0f3f3!important;border:1px solid #e5e9ea!important}
+.authTabs button{color:#7a858b!important}
+.authTabs button.active{background:#fff!important;color:var(--brand-charcoal)!important;box-shadow:0 4px 12px rgba(31,42,48,.07)!important}
+.authForm h1{color:var(--brand-charcoal)!important}
+.authForm>p{color:#6f7b81!important}
+.authForm label,.dialogCard label{color:#5f6b71!important}
+.authForm input,.dialogCard input,.dialogCard select,.historyTools select,.historyTools input{
+  border-color:#dce3e5!important;background:#fff!important;color:var(--brand-charcoal)!important;
+}
+.authForm input:focus,.dialogCard input:focus,.dialogCard select:focus,.historyTools select:focus,.historyTools input:focus{
+  border-color:var(--brand-lime)!important;box-shadow:0 0 0 3px rgba(183,255,0,.18)!important;
+}
+.authFoot{color:#99a2a6!important}
+.authStatus,.dialogStatus{color:var(--brand-charcoal)!important}
+.authStatus.ok,.dialogStatus.ok{color:#608600!important}
+
+/* Core actions */
+.primaryButton{
+  background:var(--brand-lime)!important;color:var(--brand-charcoal)!important;
+  border:1px solid rgba(31,42,48,.04)!important;
+  box-shadow:0 10px 24px rgba(183,255,0,.24)!important;
+}
+.primaryButton:hover{background:var(--brand-lime-hover)!important;transform:translateY(-1px)}
+.secondaryButton,.headerButton,.iconButton,.crewSettingsButton{
+  background:#fff!important;color:var(--brand-charcoal)!important;border-color:#dce2e4!important;
+}
+.secondaryButton:hover,.headerButton:hover,.crewSettingsButton:hover{
+  background:var(--brand-lime-pale)!important;border-color:rgba(183,255,0,.8)!important;color:var(--brand-charcoal)!important;
+}
+
+/* Header */
+.topbar{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e0e5e6!important;box-shadow:0 5px 18px rgba(31,42,48,.035)}
+.groupSwitch select{color:var(--brand-charcoal)!important;border-color:#dce2e4!important}
+.groupSwitch label{color:#7d888d!important}
+.onlineBadge{background:#f8faf9!important;border-color:#dfe5e6!important;color:#59656b!important}
+.onlineBadge i{background:var(--brand-lime)!important;box-shadow:0 0 0 4px rgba(183,255,0,.15)!important}
+.crewSettingsGear{color:var(--brand-charcoal)!important}
+.profileButton{border-color:#dce2e4!important;color:var(--brand-charcoal)!important}
+.profileButton:hover{border-color:var(--brand-lime)!important}
+.profileAvatar{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.superadminBadge{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important;border-color:rgba(183,255,0,.55)!important}
+
+/* Logged-in hero */
+.groupHero{
+  background:
+    radial-gradient(circle at 91% 12%,rgba(183,255,0,.35),transparent 25%),
+    linear-gradient(135deg,var(--brand-charcoal-3),var(--brand-charcoal) 58%,#29363c)!important;
+  box-shadow:0 24px 70px rgba(31,42,48,.18)!important;
+  border:1px solid rgba(255,255,255,.05);
+}
+.groupHero:before{background:radial-gradient(circle,rgba(183,255,0,.55) 0,transparent 70%)!important;opacity:.42!important}
+.groupHero:after{background:radial-gradient(circle,rgba(183,255,0,.28) 0,transparent 68%)!important;opacity:.48!important}
+.groupHero .hello{color:#c2cbce!important}
+.groupHero p{color:#aeb8bc!important}
+.seasonPill{background:rgba(183,255,0,.13)!important;border-color:rgba(183,255,0,.42)!important;color:var(--brand-lime)!important}
+.groupHero .secondaryButton{background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important}
+.groupHero .secondaryButton:hover{background:rgba(183,255,0,.14)!important;border-color:rgba(183,255,0,.65)!important;color:#fff!important}
+.groupHero .primaryButton{box-shadow:none!important}
+
+/* Dashboard/stat cards */
+.statCard,.scheduleShell,.gameCard,.dialogCard,.noGroups,.historyTools,.historyItem,.loadingCard{
+  border-color:#e0e5e6!important;box-shadow:0 8px 30px rgba(31,42,48,.045)!important;
+}
+.statCard.primary,.statCard.warn,.statCard.money{border-top-color:var(--brand-lime)!important}
+.statCard.warn strong,.statCard.money strong{color:var(--brand-charcoal)!important}
+.statCard strong{color:var(--brand-charcoal)}
+.statCard small,.statCard span{color:#7f898e!important}
+.sectionLabel{color:#7d888d!important}
+.scheduleHead h2,.historyHero h1{color:var(--brand-charcoal)!important}
+
+/* Filters and schedule */
+.filterGroup button{color:#667278!important;border-color:#dde3e5!important;background:#fff!important}
+.filterGroup button:hover{border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.filterGroup button.active{background:var(--brand-charcoal)!important;border-color:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.searchBox{border-color:#dfe4e6!important}
+.searchBox:focus-within{border-color:var(--brand-lime)!important;box-shadow:0 0 0 3px rgba(183,255,0,.12)}
+.monthTitle{color:var(--brand-charcoal)!important}
+.monthTitle:after{background:#e2e6e7!important}
+.gameCard:hover{border-color:#c8d1d4!important;box-shadow:0 10px 28px rgba(31,42,48,.07)!important}
+.gameCard.nextGame{border-color:var(--brand-lime)!important;box-shadow:0 0 0 2px rgba(183,255,0,.16)!important}
+.gameCard.nextGame:before{background:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.gameCard.allPaid{background:var(--brand-lime-pale)!important;border-color:rgba(183,255,0,.7)!important}
+.fixtureMeta .competition{color:#758086!important}
+.fixtureMeta h3{color:var(--brand-charcoal)!important}
+.fixtureMeta p,.gameDate span,.fixtureCount{color:#7c878c!important}
+
+/* Ticket states: only charcoal + lime + neutrals */
+.ticketCard{border-color:#e0e5e6!important;background:#fafbfb!important}
+.ticketCard.unassigned:hover{border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.ticketCard.assigned{background:var(--brand-charcoal)!important;border-color:var(--brand-charcoal)!important;color:#fff!important}
+.ticketCard.paid{background:var(--brand-lime)!important;border-color:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.ticketCard.unpaid{background:var(--brand-charcoal)!important;border:2px solid var(--brand-lime)!important;color:#fff!important}
+.ticketCard.paid .ticketHead small{color:#536300!important}
+.ticketCard.assigned .ticketHead small,.ticketCard.unpaid .ticketHead small{color:#c8d0d3!important}
+.ticketCard.paid .releaseBtn{border-color:rgba(31,42,48,.25)!important;color:var(--brand-charcoal)!important}
+.ticketCard.paid .ticketActions{border-top-color:rgba(31,42,48,.25)!important}
+.ticketCard.paid .ticketActions button{border-right-color:rgba(31,42,48,.25)!important}
+.ticketCard.paid .paidToggle input{accent-color:var(--brand-charcoal)!important}
+.guestNoteSave{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.guestNotePrefix{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
+
+/* Empty states and dialogs */
+.emptyIcon{
+  width:68px!important;height:48px!important;border-radius:0!important;transform:none!important;font-size:0!important;
+  background:transparent url('seasoncrew-mark.svg?v=20260817-1') center/contain no-repeat!important;box-shadow:none!important;
+}
+.emptyIcon:before{content:none!important}
+.dialog::backdrop{background:rgba(17,25,29,.66)!important}
+.dialogHead small,.settingsSectionHead p,.dialogIntro{color:#778389!important}
+.closeButton:hover{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
+.inviteBox,.ticketSettingRow,.memberRow,.joinRequestRow{border-color:#e0e5e6!important}
+.inviteCodeRow code{background:var(--brand-charcoal)!important;color:var(--brand-lime)!important}
+.roleBadge.owner,.roleBadge.admin{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important;border-color:rgba(183,255,0,.55)!important}
+
+/* Notifications */
+.notificationButton:has(#notificationCount:not(.hidden)){border-color:var(--brand-lime)!important;background:var(--brand-lime-pale)!important}
+.notificationButton b,#notificationCount{background:var(--brand-lime)!important;color:var(--brand-charcoal)!important}
+.notificationBell,.notificationUnreadIcon{color:var(--brand-charcoal)!important}
+.notificationItem.unread{background:var(--brand-lime-pale)!important}
+.notificationItem.unread:before{background:var(--brand-lime)!important}
+
+/* History */
+.historyPage{color:var(--brand-charcoal)!important}
+.historyHero{
+  background:linear-gradient(135deg,var(--brand-charcoal-3),var(--brand-charcoal))!important;color:#fff!important;
+  border-radius:22px!important;padding:26px 28px!important;margin-bottom:14px!important;
+  box-shadow:0 20px 55px rgba(31,42,48,.14)!important;
+}
+.historyHero .sectionLabel{color:var(--brand-lime)!important}
+.historyHero h1{color:#fff!important}
+.historyHero p{color:#b7c0c4!important}
+.historyTools{background:#fff!important}
+.historyType,.historyBadge,.historyAction{background:var(--brand-lime-soft)!important;color:var(--brand-charcoal)!important}
+
+/* Lime focus/accent consistency */
+input[type='checkbox'],input[type='radio']{accent-color:var(--brand-lime)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand-lime)!important;outline-offset:2px}
+
+@media(max-width:900px){
+  .authScreen{justify-content:center!important;padding:24px!important}
+  .authScreen:before{left:50%;top:18px;transform:translateX(-50%);width:340px;height:220px;opacity:.12}
+  .authScreen:after{display:none}
+  .authShell{width:min(470px,100%)!important;margin:auto!important}
+  .authBrand{display:flex!important}
+}
+@media(max-width:760px){
+  .brandMark{width:46px;height:32px}.brandMark.small{width:36px;height:26px}
+  .appBrand strong{font-size:15px!important}.appBrand{gap:7px}
+  .authScreen{align-items:flex-start!important;padding-top:20px!important}
+  .authShell{border-radius:20px!important;padding:22px!important}
+  .groupHero{border-radius:19px!important}
+}
+
+/* calm-saas-v2 */
+/* Less visual noise: compact, centered SaaS layout with lime used as an accent. */
+main,.topbarInner{max-width:1120px!important}
+.authScreen{
+  justify-content:center!important;align-items:center!important;
+  padding:28px 18px!important;
+  background:linear-gradient(180deg,#fbfcfc 0%,#f4f7f6 100%)!important;
+}
+.authScreen:before{
+  left:50%!important;top:42px!important;transform:translateX(-50%)!important;
+  width:230px!important;height:112px!important;opacity:1!important;
+  background:url('seasoncrew-logo.svg?v=20260817-2') center/contain no-repeat!important;
+  pointer-events:none!important;
+}
+.authScreen:after{display:none!important;pointer-events:none!important}
+.authShell{
+  width:min(410px,calc(100vw - 32px))!important;
+  margin:108px auto 0!important;padding:23px!important;
+  border-radius:18px!important;border:1px solid #e3e8e8!important;
+  box-shadow:0 16px 46px rgba(31,42,48,.09)!important;
+}
+.authForm h1{font-size:25px!important;text-align:center!important;letter-spacing:-.035em!important}
+.authForm>p{text-align:center!important;max-width:330px;margin-left:auto!important;margin-right:auto!important}
+.authTabs{margin-bottom:19px!important}
+.authForm input{padding:10px 11px!important}
+.authForm .primaryButton{margin-top:7px!important}
+.primaryButton{padding:10px 14px!important;box-shadow:none!important;border-radius:9px!important}
+.secondaryButton,.headerButton{padding:9px 11px!important;border-radius:9px!important}
+
+.groupHero{
+  padding:21px 23px!important;border-radius:18px!important;
+  background:linear-gradient(135deg,#182126,#243036)!important;
+  box-shadow:0 14px 38px rgba(31,42,48,.12)!important;
+}
+.groupHero:before{width:230px!important;height:230px!important;right:-125px!important;top:-145px!important;opacity:.16!important}
+.groupHero:after{display:none!important}
+.groupHero h1{font-size:clamp(31px,4vw,45px)!important;margin:9px 0 7px!important}
+.seasonPill{background:rgba(183,255,0,.08)!important;border-color:rgba(183,255,0,.25)!important}
+.statsGrid{gap:9px!important;margin:12px 0 18px!important}
+.statCard{padding:13px 14px!important;border-radius:13px!important;box-shadow:0 4px 16px rgba(31,42,48,.03)!important}
+.statCard.primary,.statCard.warn,.statCard.money{border-top-width:2px!important}
+.scheduleShell{padding:18px!important;border-radius:18px!important;box-shadow:0 10px 34px rgba(31,42,48,.045)!important}
+.gameCard{border-radius:13px!important}
+.filterGroup button.active{color:#fff!important}
+.filterGroup button.active:after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--brand-lime);margin-left:6px;vertical-align:middle}
+
+@media(max-width:900px){
+  .authScreen{align-items:center!important;padding:20px!important}
+  .authScreen:before{top:24px!important;width:190px!important;height:92px!important;opacity:1!important}
+  .authShell{width:min(400px,100%)!important;margin:88px auto 0!important;padding:21px!important}
+}
+@media(max-width:760px){
+  main{padding-left:12px!important;padding-right:12px!important}
+  .authScreen{padding:14px!important}
+  .authScreen:before{top:15px!important;width:165px!important;height:78px!important}
+  .authShell{margin-top:72px!important;padding:19px!important;border-radius:16px!important}
+  .authForm h1{font-size:23px!important}
+  .groupHero{padding:18px!important;border-radius:16px!important}
+  .scheduleShell{padding:14px!important;border-radius:16px!important}
+}
+
