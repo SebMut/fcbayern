@@ -1,0 +1,30 @@
+name: SeasonCrew emergency rollback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/seasoncrew-emergency-rollback.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore last stable frontend
+        run: |
+          git checkout b6d56c0c9ccc70787d2932b044a4c4f9d991fba4 -- SeasonCrew/index.html SeasonCrew/ui-v2.css
+          git rm -f SeasonCrew/guest-ticket-interest.js || true
+          git rm -f .github/workflows/seasoncrew-guest-ticket-interest.yml || true
+      - name: Commit rollback
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html SeasonCrew/ui-v2.css
+          git diff --cached --quiet || git commit -m "Rollback broken guest ticket frontend"
+          git push
