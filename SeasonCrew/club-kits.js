@@ -49,7 +49,7 @@ function canonicalName(name=''){
 }
 function getKit(name){return CLUB_KITS[canonicalName(name)]||DEFAULT_KIT}
 function isLight(hex=''){const c=hex.replace('#','');if(c.length!==6)return false;const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);return ((r*299+g*587+b*114)/1000)>210}
-function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
 function html(name,extraClass=''){
   const canonical=canonicalName(name),kit=getKit(canonical),light=isLight(kit.primary)?' kit-light':'';
   return `<span class="clubJersey${light}${extraClass?' '+escapeHtml(extraClass):''}" data-kit-ready="1" data-club="${escapeHtml(canonical)}" title="${escapeHtml(canonical)}" aria-label="${escapeHtml(canonical)}" role="img" style="--kit-primary:${kit.primary};--kit-secondary:${kit.secondary}"></span>`;
@@ -66,14 +66,13 @@ function inferClub(el){
   if(el.tagName==='IMG'){const byUrl=clubFromLogoUrl(el.getAttribute('src')||'');if(byUrl)return byUrl}
   const next=el.nextElementSibling?.textContent?.trim();if(next&&next!=='–')return canonicalName(next);
   const prev=el.previousElementSibling?.textContent?.trim();if(prev&&prev!=='–')return canonicalName(prev);
-  const club=el.closest?.('.club');const nearby=club?.querySelector?.('span')?.textContent?.trim();if(nearby)return canonicalName(nearby);
+  const club=el.closest?.('.club');const nearby=club?.querySelector?.('span:not(.clubJersey)')?.textContent?.trim();if(nearby)return canonicalName(nearby);
   return '';
 }
 function replaceNode(el,name){
   if(!name||el.dataset?.kitReady==='1')return;
   const jersey=element(name);
-  if(el.classList?.contains('clubLogo'))jersey.classList.add('clubLogo');
-  if(el.classList?.contains('logo'))jersey.classList.add('logo');
+  el.classList?.forEach(c=>{if(c!=='clubJersey')jersey.classList.add(c)});
   el.replaceWith(jersey);
 }
 function hydrate(root=document){
@@ -83,7 +82,7 @@ function hydrate(root=document){
 }
 function ensureStyles(){
   if(document.querySelector('link[data-seasoncrew-club-kits]'))return;
-  const current=document.currentScript?.src||import.meta.url;const link=document.createElement('link');link.rel='stylesheet';link.href=new URL('./club-kits.css?v=20260817-1',current).href;link.dataset.seasoncrewClubKits='1';document.head.append(link);
+  const current=document.currentScript?.src||import.meta.url;const link=document.createElement('link');link.rel='stylesheet';link.href=new URL('./club-kits.css?v=20260817-2',current).href;link.dataset.seasoncrewClubKits='1';document.head.append(link);
 }
 
 ensureStyles();
