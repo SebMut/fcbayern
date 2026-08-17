@@ -57,10 +57,13 @@ document.querySelectorAll('[data-auth-tab]').forEach(b=>b.addEventListener('clic
 
 els.loginForm.addEventListener('submit',async e=>{
   e.preventDefault();setStatus(els.authStatus,'Einloggen …');
-  const {data,error}=await sb.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
-  if(error){setStatus(els.authStatus,'Login fehlgeschlagen: '+error.message);return}
-  if(!data.user?.email_confirmed_at){await sb.auth.signOut();setStatus(els.authStatus,'Bitte bestätige zuerst deine E-Mail-Adresse.');return}
-  session=data.session;user=data.user;await enterApp();
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
+    if(error){setStatus(els.authStatus,/invalid login credentials/i.test(error.message||'')?'E-Mail oder Passwort ist falsch.':'Login fehlgeschlagen: '+error.message);return}
+    session=data.session;user=data.user;
+    if(!session||!user){setStatus(els.authStatus,'Login fehlgeschlagen. Bitte erneut versuchen.');return}
+    await enterApp();
+  }catch(error){setStatus(els.authStatus,'Login fehlgeschlagen: '+(error?.message||String(error)))}
 });
 
 els.signupForm.addEventListener('submit',async e=>{
@@ -75,16 +78,17 @@ els.signupForm.addEventListener('submit',async e=>{
   const redirectTo=new URL('./',location.href);redirectTo.search='';redirectTo.hash='';
   const {data,error}=await sb.auth.signUp({email,password:$('signupPassword').value,options:{emailRedirectTo:redirectTo.href,data:{username}}});
   if(error){setStatus(els.authStatus,error.message);return}
+  if(data.session&&data.user){
+    session=data.session;user=data.user;setStatus(els.authStatus,'Account erstellt. App wird geladen …',true);await enterApp();return
+  }
   setAuthTab('login');
-  if(!data.session){setStatus(els.authStatus,'Account angelegt. Bitte öffne jetzt die Bestätigungs-Mail und bestätige deine E-Mail-Adresse.',true);return}
-  await sb.auth.signOut();
-  setStatus(els.authStatus,'Account angelegt. Für den Live-Betrieb muss die E-Mail-Bestätigung im Supabase-Projekt aktiviert sein.',true);
+  setStatus(els.authStatus,'Account angelegt. Bitte logge dich jetzt ein.',true);
 });
 
 $('logoutBtn').addEventListener('click',async()=>{await cleanupChannels();await sb.auth.signOut();location.reload()});
 
 async function enterApp(){
-  if(!user?.email_confirmed_at){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');setStatus(els.authStatus,'Bitte bestätige zuerst deine E-Mail-Adresse.');return}
+  if(!user){document.body.classList.add('auth-locked');els.authScreen.classList.remove('hidden');return}
   document.body.classList.remove('auth-locked');els.authScreen.classList.add('hidden');
   await loadProfile();await loadGroups();await processPendingInvite();
 }
