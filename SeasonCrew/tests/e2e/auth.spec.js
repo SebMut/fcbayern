@@ -27,3 +27,13 @@ test('recovery callback opens the new-password form',async({page})=>{
   await expect(page.locator('#recoveryPassword')).toBeVisible();
   await expect(page.locator('#recoveryPasswordConfirm')).toBeVisible();
 });
+
+
+test('new crews can select another club and expose a custom club name',async({page})=>{
+  await stubPublicServices(page);
+  await page.goto('/SeasonCrew/index.html',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('#newGroupClub option[value="custom"]')).toHaveCount(1);
+  await page.locator('#newGroupClub').evaluate(el=>{el.value='custom';el.dispatchEvent(new Event('change',{bubbles:true}))});
+  await expect(page.locator('#newGroupClubNameRow')).not.toHaveClass(/hidden/);
+  await expect(page.locator('#newGroupClubName')).toHaveAttribute('placeholder','z. B. TSV Feldkirchen');
+});

@@ -253,6 +253,7 @@
   var allocations = [];
   var notes = [];
   var fixtures = [];
+  var manualFixtures = [];
   var members = [];
   var filter = "all";
   var activeInvite = null;
@@ -358,8 +359,9 @@
     if (m.s === m.e || !m.e) return [`${String(a.getDate()).padStart(2, "0")}.${String(a.getMonth() + 1).padStart(2, "0")}.${String(a.getFullYear()).slice(2)}`, m.t ? `${m.t} Uhr` : ""];
     return [`${a.getDate()}.\u2013${b.getDate()}. ${MON[a.getMonth()]}`, String(a.getFullYear())];
   }
-  function competitionName(c) {
-    return c === "bl" ? "Bundesliga" : c === "dfb" ? "DFB-Pokal" : "Champions League";
+  function competitionName(c, m = null) {
+    if (m?.manual) return c === "league" ? "Liga" : c === "cup" ? "Pokal" : c === "intl" ? "International" : "Sonstiges";
+    return c === "bl" ? "Bundesliga" : c === "dfb" ? "DFB-Pokal" : c === "cl" ? "Champions League" : "Sonstiges";
   }
   function clubLogo(name) {
     const domain = D[name];
@@ -674,13 +676,24 @@
     activeInvite = inv || null;
   }
   async function loadOverrides() {
-    const { data, error } = await sb.from("match_overrides").select("*").eq("season", currentGroup.season).eq("active", true);
+    const { data: groupRows, error: groupError } = await sb.from("sc_fixtures").select("group_id,fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,price_override,active,source").eq("group_id", currentGroup.id).eq("active", true).order("date_start");
+    if (groupError) console.error(groupError);
+    manualFixtures = groupRows || [];
+    const manual = manualFixtures.map((f) => ({ id: f.fixture_id, c: f.competition_key || "other", l: f.label, s: f.date_start, e: f.date_end || f.date_start, t: f.time_text ? String(f.time_text).slice(0, 5) : "", o: f.opponent, h: f.is_home !== false, pos: !!f.possible, n: f.always_show !== false, p: f.phase_label || "", manual: true, price_override: f.price_override }));
+    if (currentGroup.club_key !== "fcbayern") {
+      fixtures = manual;
+      return;
+    }
+    const { data, error } = await sb.from("match_overrides").select("id,start_date,end_date,kickoff_time,opponent,home,possible,active").eq("season", currentGroup.season);
     if (error) console.error(error);
     const ov = new Map((data || []).map((x) => [x.id, x]));
-    fixtures = BASE_M.map((m) => {
+    const legacy = BASE_M.map((m) => {
       const x = ov.get(m.id);
-      return x ? { ...m, o: x.opponent || m.o, s: x.date_start || m.s, e: x.date_end || m.e, t: x.time_text ?? m.t, h: x.is_home ?? m.h, p: x.phase_label || m.p, n: x.always_show ?? m.n } : m;
-    });
+      if (x?.active === false) return null;
+      return x ? { ...m, o: x.opponent || m.o, s: x.start_date || m.s, e: x.end_date || x.start_date || m.e, t: x.kickoff_time ? String(x.kickoff_time).slice(0, 5) : m.t, h: x.home ?? m.h, pos: x.possible ?? m.pos } : m;
+    }).filter(Boolean);
+    const manualIds = new Set(manual.map((x) => x.id));
+    fixtures = [...legacy.filter((x) => !manualIds.has(x.id)), ...manual];
   }
   async function loadOwnRequests() {
     if (!user) {
@@ -785,7 +798,7 @@
   function renderGame(m, amap, nmap, isNext) {
     const allocated = tickets.map((t) => amap.get(allocationKey(m.id, t.id))).filter(Boolean), allPaid = tickets.length > 0 && allocated.length === tickets.length && allocated.every((a) => a.paid), [date, time] = gameDate(m);
     const cols = Math.max(1, Math.min(tickets.length, 4));
-    return `<article class="gameCard ${isNext ? "nextGame" : ""} ${allPaid ? "allPaid" : ""}" id="game-${m.id}"><div class="gameTop"><div class="gameDate"><strong>${date}</strong><span>${esc(time || "Termin offen")}</span></div><div class="fixtureMeta"><span class="competition">${competitionName(m.c)}</span><h3>${clubLogo("FC Bayern")}<span>FC Bayern</span><span>\u2013</span>${clubLogo(m.o)}<span>${esc(m.o)}</span></h3><p>${esc(m.l)} \xB7 ${esc(m.p || "")}</p></div><div class="fixtureCount">${allocated.length}/${tickets.length}</div></div><div class="ticketGrid" style="grid-template-columns:repeat(${cols},1fr)">${tickets.length ? tickets.map((t) => renderTicket(m, t, amap.get(allocationKey(m.id, t.id)))).join("") : '<div class="noGames">Noch keine Dauerkarten angelegt. \xD6ffne Einstellungen.</div>'}</div><textarea class="gameNote" data-note-fixture="${m.id}" placeholder="Notiz zum Spiel">${esc(nmap.get(m.id)?.note || "")}</textarea></article>`;
+    return `<article class="gameCard ${isNext ? "nextGame" : ""} ${allPaid ? "allPaid" : ""}" id="game-${m.id}"><div class="gameTop"><div class="gameDate"><strong>${date}</strong><span>${esc(time || "Termin offen")}</span></div><div class="fixtureMeta"><span class="competition">${competitionName(m.c, m)}</span><h3>${clubLogo(currentGroup.club_name || "Heimverein")}<span>${esc(currentGroup.club_name || "Heimverein")}</span><span>\u2013</span>${clubLogo(m.o)}<span>${esc(m.o)}</span></h3><p>${esc(m.l)} \xB7 ${esc(m.p || "")}</p></div><div class="fixtureCount">${allocated.length}/${tickets.length}</div></div><div class="ticketGrid" style="grid-template-columns:repeat(${cols},1fr)">${tickets.length ? tickets.map((t) => renderTicket(m, t, amap.get(allocationKey(m.id, t.id)))).join("") : '<div class="noGames">Noch keine Dauerkarten angelegt. \xD6ffne Einstellungen.</div>'}</div><textarea class="gameNote" data-note-fixture="${m.id}" placeholder="Notiz zum Spiel">${esc(nmap.get(m.id)?.note || "")}</textarea></article>`;
   }
   function renderTicket(m, t, a) {
     const label = ticketLabel(t);
@@ -1128,7 +1141,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
   $("saveGroupBtn").addEventListener("click", async () => {
     if (!isAdmin()) return;
     const price = parseMoney($("settingsPrice").value);
-    const update = { name: $("settingsGroupName").value.trim(), paypal_me: cleanPaypal($("settingsPaypal").value) || null, default_price: price ?? 50, updated_at: (/* @__PURE__ */ new Date()).toISOString() };
+    const update = { name: $("settingsGroupName").value.trim(), club_name: $("settingsClubName")?.value.trim() || currentGroup.club_name, paypal_me: cleanPaypal($("settingsPaypal").value) || null, default_price: price ?? 50, updated_at: (/* @__PURE__ */ new Date()).toISOString() };
     const { data, error } = await sb.from("sc_groups").update(update).eq("id", currentGroup.id).select().single();
     if (error) {
       setStatus($("settingsStatus"), error.message);
@@ -1228,10 +1241,15 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
   document.querySelectorAll("[data-open-join]").forEach((b) => b.addEventListener("click", openJoin));
   $("createGroupForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = $("newGroupName").value.trim(), price = parseMoney($("newGroupPrice").value);
+    const name = $("newGroupName").value.trim(), price = parseMoney($("newGroupPrice").value), clubKey = $("newGroupClub")?.value || "fcbayern";
+    const clubName = clubKey === "fcbayern" ? "FC Bayern M\xFCnchen" : $("newGroupClubName")?.value.trim();
     if (!name) return;
+    if (!clubName) {
+      setStatus($("createGroupStatus"), "Bitte Vereinsname angeben.");
+      return;
+    }
     setStatus($("createGroupStatus"), "Crew wird erstellt \u2026");
-    const { data, error } = await sb.from("sc_groups").insert({ name, club_key: $("newGroupClub").value, club_name: "FC Bayern M\xFCnchen", season: $("newGroupSeason").value.trim() || "2026-27", paypal_me: cleanPaypal($("newGroupPaypal").value) || null, default_price: price ?? 50, created_by: user.id }).select().single();
+    const { data, error } = await sb.from("sc_groups").insert({ name, club_key: clubKey, club_name: clubName, season: $("newGroupSeason").value.trim() || "2026-27", paypal_me: cleanPaypal($("newGroupPaypal").value) || null, default_price: price ?? 50, created_by: user.id }).select().single();
     if (error) {
       setStatus($("createGroupStatus"), error.message);
       return;
@@ -1240,6 +1258,7 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
     $("createGroupForm").reset();
     $("newGroupSeason").value = "2026-27";
     $("newGroupPrice").value = "50,00";
+    $("newGroupClub")?.dispatchEvent(new Event("change"));
     await loadGroups(data.id);
     showToast("Crew erstellt");
   });
@@ -1283,7 +1302,9 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
   }
   async function setupRealtime() {
     if (!currentGroup) return;
-    realtimeChannel = sb.channel(`seasoncrew-data-${currentGroup.id}`).on("postgres_changes", { event: "*", schema: "public", table: "sc_allocations", select: ["group_id", "fixture_id", "ticket_id", "attendee_name", "attendee_user_id", "updated_by", "updated_at"], filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_fixture_notes", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_join_requests", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_group_members", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).subscribe();
+    realtimeChannel = sb.channel(`seasoncrew-data-${currentGroup.id}`).on("postgres_changes", { event: "*", schema: "public", table: "sc_allocations", select: ["group_id", "fixture_id", "ticket_id", "attendee_name", "attendee_user_id", "updated_by", "updated_at"], filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_fixture_notes", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_fixtures", filter: `group_id=eq.${currentGroup.id}` }, () => {
+      loadOverrides().then(render);
+    }).on("postgres_changes", { event: "*", schema: "public", table: "sc_join_requests", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).on("postgres_changes", { event: "*", schema: "public", table: "sc_group_members", filter: `group_id=eq.${currentGroup.id}` }, scheduleReload).subscribe();
   }
   function scheduleReload() {
     clearTimeout(reloadTimer);
@@ -1315,6 +1336,11 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
     if (next) document.getElementById(`game-${next.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   window.addEventListener("seasoncrew:role-view-change", () => render());
+  window.addEventListener("seasoncrew:fixtures-updated", async (e) => {
+    if (!currentGroup || e.detail?.groupId !== currentGroup.id) return;
+    await loadOverrides();
+    render();
+  });
   async function boot() {
     const invite = extractInviteToken(new URL(location.href).searchParams.get("invite"));
     if (invite) localStorage.setItem("seasoncrew-pending-invite", invite);

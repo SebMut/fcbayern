@@ -16,11 +16,17 @@
   function dateLabel(m){if(!m)return 'Termin offen';const d=new Date(`${m.s}T12:00:00`);return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d)+(m.t?` · ${m.t} Uhr`:'')}
   function nextSeason(s){const m=String(s||'').match(/^(\d{4})-(\d{2})$/);if(!m)return '';const y=Number(m[1])+1;return `${y}-${String((y+1)%100).padStart(2,'0')}`}
 
-  async function loadFixtures(season){
+  async function loadFixtures(group){
     try{
-      const mod=await import('./schedule.js');let list=(mod.BASE_M||[]).map(x=>({...x}));
-      const {data}=await client().from('match_overrides').select('id,start_date,end_date,kickoff_time,opponent,home,possible,active').eq('season',season);
-      if(data){const map=new Map(data.map(x=>[x.id,x]));list=list.map(base=>{const x=map.get(base.id);if(x?.active===false)return null;if(!x)return base;return{...base,s:x.start_date||base.s,e:x.end_date||x.start_date||base.e,t:x.kickoff_time?String(x.kickoff_time).slice(0,5):(x.start_date?'':base.t),o:x.opponent||base.o,h:x.home??base.h,pos:x.possible??base.pos}}).filter(Boolean)}
+      const c=client(),{data:custom,error:ce}=await c.from('sc_fixtures').select('fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,active').eq('group_id',group.id).eq('active',true).order('date_start');if(ce)throw ce;
+      const manual=(custom||[]).map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.phase_label||'',manual:true}));
+      let list=manual;
+      if(group.club_key==='fcbayern'){
+        const mod=await import('./schedule.js');let legacy=(mod.BASE_M||[]).map(x=>({...x}));
+        const {data}=await c.from('match_overrides').select('id,start_date,end_date,kickoff_time,opponent,home,possible,active').eq('season',group.season);
+        if(data){const map=new Map(data.map(x=>[x.id,x]));legacy=legacy.map(base=>{const x=map.get(base.id);if(x?.active===false)return null;if(!x)return base;return{...base,s:x.start_date||base.s,e:x.end_date||x.start_date||base.e,t:x.kickoff_time?String(x.kickoff_time).slice(0,5):base.t,o:x.opponent||base.o,h:x.home??base.h,pos:x.possible??base.pos}}).filter(Boolean)}
+        const manualIds=new Set(manual.map(x=>x.id));list=[...legacy.filter(x=>!manualIds.has(x.id)),...manual];
+      }
       fixtureMap=new Map(list.map(m=>[m.id,m]));
     }catch(e){console.warn('SeasonCrew fixture helper',e);fixtureMap=new Map()}
   }
@@ -31,7 +37,7 @@
       const {data:{session:s}}=await c.auth.getSession();session=s;if(!session)return;const uid=session.user.id;
       const [{data:profile},{data:g,error:ge},{data:members,error:me},{data:tickets,error:te},{data:allocs,error:ae},{data:wishes,error:we},{data:notes,error:ne},{data:notifications,error:noe},{data:archives,error:are}]=await Promise.all([
         c.from('sc_profiles').select('id,username,is_superadmin').eq('id',uid).maybeSingle(),
-        c.from('sc_groups').select('id,name,season,paypal_me,default_price').eq('id',group).maybeSingle(),
+        c.from('sc_groups').select('id,name,club_key,club_name,season,paypal_me,default_price').eq('id',group).maybeSingle(),
         c.from('sc_group_members').select('group_id,user_id,role,joined_at').eq('group_id',group).order('joined_at'),
         c.from('sc_tickets').select('id,label,block,row_label,seat,sort_order').eq('group_id',group).eq('active',true).order('sort_order').order('created_at'),
         c.rpc('sc_get_allocations',{p_group:group}),
@@ -44,7 +50,7 @@
       const ids=[...new Set((members||[]).map(m=>m.user_id))];let profiles=[];
       if(ids.length){const {data}=await c.from('sc_profiles').select('id,username').in('id',ids);profiles=data||[]}
       const pmap=new Map(profiles.map(p=>[p.id,p]));
-      await loadFixtures(g?.season||'2026-27');
+      await loadFixtures(g||{id:group,club_key:'fcbayern',club_name:'FC Bayern München',season:'2026-27'});
       const enriched=(members||[]).map(m=>({...m,username:pmap.get(m.user_id)?.username||'Mitglied'}));
       let pending=[];const ownRole=enriched.find(m=>m.user_id===uid)?.role;
       if(profile?.is_superadmin||['owner','admin'].includes(ownRole)){const {data}=await c.from('sc_join_requests').select('id,user_id,status').eq('group_id',group).eq('status','pending');pending=data||[]}
@@ -95,9 +101,9 @@
     const mine=state.allocs.filter(a=>a.attendee_user_id===uid||(!a.attendee_user_id&&String(a.attendee_name||'').trim().toLowerCase()===ownName)).sort((a,b)=>(fixture(a.fixture_id)?.s||'9999').localeCompare(fixture(b.fixture_id)?.s||'9999'));
     const wishes=state.wishes.filter(w=>w.user_id===uid).sort((a,b)=>(fixture(a.fixture_id)?.s||'9999').localeCompare(fixture(b.fixture_id)?.s||'9999'));
     const open=mine.filter(a=>a.paid===false),unknownOpen=open.filter(a=>amountValue(a)==null).length,openSum=open.reduce((sum,a)=>sum+(amountValue(a)??0),0),future=mine.filter(a=>upcoming(fixture(a.fixture_id))),past=mine.filter(a=>!upcoming(fixture(a.fixture_id)));
-    const card=a=>{const f=fixture(a.fixture_id);return `<div class="myTicketCard ${a.paid===true?'paid':'unpaid'}"><div><small>${esc(f?.l||'Spiel')}</small><b>FC Bayern – ${esc(f?.o||a.fixture_id)}</b><span>${esc(dateLabel(f))} · ${esc(ticketLabel(a.ticket_id))}</span></div><div class="myTicketPay"><strong>${esc(amountLabel(a))}</strong><span>${a.paid===true?'bezahlt':'offen'}</span></div></div>`};
+    const card=a=>{const f=fixture(a.fixture_id);return `<div class="myTicketCard ${a.paid===true?'paid':'unpaid'}"><div><small>${esc(f?.l||'Spiel')}</small><b>${esc(state.group?.club_name||'Heimverein')} – ${esc(f?.o||a.fixture_id)}</b><span>${esc(dateLabel(f))} · ${esc(ticketLabel(a.ticket_id))}</span></div><div class="myTicketPay"><strong>${esc(amountLabel(a))}</strong><span>${a.paid===true?'bezahlt':'offen'}</span></div></div>`};
     const paypal=cleanPaypal(state.group.paypal_me),payLink=paypal&&open.length&&unknownOpen===0&&openSum>0?`https://paypal.me/${encodeURIComponent(paypal)}/${openSum.toFixed(2)}`:'';
-    body.innerHTML=`<div class="personalSummary"><div><small>Offene Zahlungen</small><strong>${money(openSum)}</strong><span>${open.length} Ticket${open.length===1?'':'s'}${unknownOpen?` · ${unknownOpen} Preis${unknownOpen===1?'':'e'} offen`:''}</span></div><div><small>Nächste Tickets</small><strong>${future.length}</strong><span>zugeteilt</span></div><div><small>Ticketwünsche</small><strong>${wishes.length}</strong><span>gemerkt</span></div>${payLink?`<a class="primaryButton payAllButton" href="${payLink}" target="_blank" rel="noopener">Offenen Betrag via PayPal</a>`:''}</div><section class="productSection"><h4>Meine nächsten Spiele</h4>${future.length?future.map(card).join(''):'<div class="productEmpty">Noch keine kommenden Karten zugeteilt.</div>'}</section><section class="productSection"><h4>Meine Ticketwünsche</h4>${wishes.length?wishes.map(w=>{const f=fixture(w.fixture_id);return `<div class="wishOverviewRow"><span>🎟</span><div><b>FC Bayern – ${esc(f?.o||w.fixture_id)}</b><small>${esc(dateLabel(f))}</small></div></div>`}).join(''):'<div class="productEmpty">Keine offenen Ticketwünsche.</div>'}</section>${past.length?`<details class="pastTickets"><summary>Vergangene Tickets (${past.length})</summary>${past.map(card).join('')}</details>`:''}`;
+    body.innerHTML=`<div class="personalSummary"><div><small>Offene Zahlungen</small><strong>${money(openSum)}</strong><span>${open.length} Ticket${open.length===1?'':'s'}${unknownOpen?` · ${unknownOpen} Preis${unknownOpen===1?'':'e'} offen`:''}</span></div><div><small>Nächste Tickets</small><strong>${future.length}</strong><span>zugeteilt</span></div><div><small>Ticketwünsche</small><strong>${wishes.length}</strong><span>gemerkt</span></div>${payLink?`<a class="primaryButton payAllButton" href="${payLink}" target="_blank" rel="noopener">Offenen Betrag via PayPal</a>`:''}</div><section class="productSection"><h4>Meine nächsten Spiele</h4>${future.length?future.map(card).join(''):'<div class="productEmpty">Noch keine kommenden Karten zugeteilt.</div>'}</section><section class="productSection"><h4>Meine Ticketwünsche</h4>${wishes.length?wishes.map(w=>{const f=fixture(w.fixture_id);return `<div class="wishOverviewRow"><span>🎟</span><div><b>${esc(state.group?.club_name||'Heimverein')} – ${esc(f?.o||w.fixture_id)}</b><small>${esc(dateLabel(f))}</small></div></div>`}).join(''):'<div class="productEmpty">Keine offenen Ticketwünsche.</div>'}</section>${past.length?`<details class="pastTickets"><summary>Vergangene Tickets (${past.length})</summary>${past.map(card).join('')}</details>`:''}`;
   }
 
   function renderCockpit(){
@@ -155,6 +161,7 @@
     channel=c.channel(`seasoncrew-product-${group}`)
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_notifications',filter:`user_id=eq.${session.user.id}`},()=>schedule(80))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_ticket_wishes',filter:`group_id=eq.${group}`},()=>schedule(100))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sc_fixtures',filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','updated_by','updated_at'],filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${group}`},()=>schedule(100))
       .on('postgres_changes',{event:'*',schema:'public',table:'sc_join_requests',filter:`group_id=eq.${group}`},()=>schedule(100))

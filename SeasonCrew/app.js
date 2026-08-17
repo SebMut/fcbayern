@@ -4,7 +4,7 @@ const sb=window.SeasonCrewCore?.client?.();
 if(!sb){const status=document.getElementById('authStatus');if(status)status.textContent='Die Login-Komponente konnte nicht geladen werden. Bitte Seite neu laden.';throw new Error('SeasonCrew Supabase core unavailable')}
 const $=id=>document.getElementById(id);
 
-let session=null,user=null,profile=null,groups=[],memberships=new Map(),currentGroup=null,tickets=[],allocations=[],notes=[],fixtures=[],members=[],filter='all';
+let session=null,user=null,profile=null,groups=[],memberships=new Map(),currentGroup=null,tickets=[],allocations=[],notes=[],fixtures=[],manualFixtures=[],members=[],filter='all';
 let activeInvite=null,pendingRequests=[],ownPendingRequests=[];
 let presenceChannel=null,realtimeChannel=null,paymentContext=null,assignmentContext=null,reloadTimer=null;
 
@@ -39,7 +39,7 @@ function gameDate(m){
   if(m.s===m.e||!m.e)return [`${String(a.getDate()).padStart(2,'0')}.${String(a.getMonth()+1).padStart(2,'0')}.${String(a.getFullYear()).slice(2)}`,m.t?`${m.t} Uhr`:'' ];
   return [`${a.getDate()}.–${b.getDate()}. ${MON[a.getMonth()]}`,String(a.getFullYear())];
 }
-function competitionName(c){return c==='bl'?'Bundesliga':c==='dfb'?'DFB-Pokal':'Champions League'}
+function competitionName(c,m=null){if(m?.manual)return c==='league'?'Liga':c==='cup'?'Pokal':c==='intl'?'International':'Sonstiges';return c==='bl'?'Bundesliga':c==='dfb'?'DFB-Pokal':c==='cl'?'Champions League':'Sonstiges'}
 function clubLogo(name){const domain=D[name];return domain?`<img class="clubLogo" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128" alt="">`:`<span class="clubLogo"></span>`}
 function relevantFixture(m){if(m.c==='bl')return m.h===true;if(m.n)return true;return m.h===true||m.pos===true}
 function ticketLabel(t){return t.label||[t.block,t.row_label,t.seat].filter(Boolean).join('/')||'Karte'}
@@ -209,8 +209,13 @@ async function loadAdminData(){
 }
 
 async function loadOverrides(){
-  const {data,error}=await sb.from('match_overrides').select('*').eq('season',currentGroup.season).eq('active',true);if(error)console.error(error);
-  const ov=new Map((data||[]).map(x=>[x.id,x]));fixtures=BASE_M.map(m=>{const x=ov.get(m.id);return x?{...m,o:x.opponent||m.o,s:x.date_start||m.s,e:x.date_end||m.e,t:x.time_text??m.t,h:x.is_home??m.h,p:x.phase_label||m.p,n:x.always_show??m.n}:m});
+  const {data:groupRows,error:groupError}=await sb.from('sc_fixtures').select('group_id,fixture_id,competition_key,label,date_start,date_end,time_text,opponent,is_home,phase_label,possible,always_show,price_override,active,source').eq('group_id',currentGroup.id).eq('active',true).order('date_start');
+  if(groupError)console.error(groupError);manualFixtures=groupRows||[];
+  const manual=manualFixtures.map(f=>({id:f.fixture_id,c:f.competition_key||'other',l:f.label,s:f.date_start,e:f.date_end||f.date_start,t:f.time_text?String(f.time_text).slice(0,5):'',o:f.opponent,h:f.is_home!==false,pos:!!f.possible,n:f.always_show!==false,p:f.phase_label||'',manual:true,price_override:f.price_override}));
+  if(currentGroup.club_key!=='fcbayern'){fixtures=manual;return}
+  const {data,error}=await sb.from('match_overrides').select('id,start_date,end_date,kickoff_time,opponent,home,possible,active').eq('season',currentGroup.season);if(error)console.error(error);
+  const ov=new Map((data||[]).map(x=>[x.id,x]));const legacy=BASE_M.map(m=>{const x=ov.get(m.id);if(x?.active===false)return null;return x?{...m,o:x.opponent||m.o,s:x.start_date||m.s,e:x.end_date||x.start_date||m.e,t:x.kickoff_time?String(x.kickoff_time).slice(0,5):m.t,h:x.home??m.h,pos:x.possible??m.pos}:m}).filter(Boolean);
+  const manualIds=new Set(manual.map(x=>x.id));fixtures=[...legacy.filter(x=>!manualIds.has(x.id)),...manual];
 }
 
 async function loadOwnRequests(){
@@ -278,7 +283,7 @@ function renderGames(){
 function renderGame(m,amap,nmap,isNext){
   const allocated=tickets.map(t=>amap.get(allocationKey(m.id,t.id))).filter(Boolean),allPaid=tickets.length>0&&allocated.length===tickets.length&&allocated.every(a=>a.paid),[date,time]=gameDate(m);
   const cols=Math.max(1,Math.min(tickets.length,4));
-  return `<article class="gameCard ${isNext?'nextGame':''} ${allPaid?'allPaid':''}" id="game-${m.id}"><div class="gameTop"><div class="gameDate"><strong>${date}</strong><span>${esc(time||'Termin offen')}</span></div><div class="fixtureMeta"><span class="competition">${competitionName(m.c)}</span><h3>${clubLogo('FC Bayern')}<span>FC Bayern</span><span>–</span>${clubLogo(m.o)}<span>${esc(m.o)}</span></h3><p>${esc(m.l)} · ${esc(m.p||'')}</p></div><div class="fixtureCount">${allocated.length}/${tickets.length}</div></div><div class="ticketGrid" style="grid-template-columns:repeat(${cols},1fr)">${tickets.length?tickets.map(t=>renderTicket(m,t,amap.get(allocationKey(m.id,t.id)))).join(''):'<div class="noGames">Noch keine Dauerkarten angelegt. Öffne Einstellungen.</div>'}</div><textarea class="gameNote" data-note-fixture="${m.id}" placeholder="Notiz zum Spiel">${esc(nmap.get(m.id)?.note||'')}</textarea></article>`;
+  return `<article class="gameCard ${isNext?'nextGame':''} ${allPaid?'allPaid':''}" id="game-${m.id}"><div class="gameTop"><div class="gameDate"><strong>${date}</strong><span>${esc(time||'Termin offen')}</span></div><div class="fixtureMeta"><span class="competition">${competitionName(m.c,m)}</span><h3>${clubLogo(currentGroup.club_name||'Heimverein')}<span>${esc(currentGroup.club_name||'Heimverein')}</span><span>–</span>${clubLogo(m.o)}<span>${esc(m.o)}</span></h3><p>${esc(m.l)} · ${esc(m.p||'')}</p></div><div class="fixtureCount">${allocated.length}/${tickets.length}</div></div><div class="ticketGrid" style="grid-template-columns:repeat(${cols},1fr)">${tickets.length?tickets.map(t=>renderTicket(m,t,amap.get(allocationKey(m.id,t.id)))).join(''):'<div class="noGames">Noch keine Dauerkarten angelegt. Öffne Einstellungen.</div>'}</div><textarea class="gameNote" data-note-fixture="${m.id}" placeholder="Notiz zum Spiel">${esc(nmap.get(m.id)?.note||'')}</textarea></article>`;
 }
 
 function renderTicket(m,t,a){
@@ -441,7 +446,7 @@ $('saveProfileBtn').addEventListener('click',async()=>{
   const {error}=await sb.from('sc_profiles').update({username,updated_at:new Date().toISOString()}).eq('id',user.id);if(error){setStatus($('settingsStatus'),error.message);return}
   await sb.auth.updateUser({data:{username}});profile.username=username;setStatus($('settingsStatus'),'Profil gespeichert ✓',true);render();
 });
-$('saveGroupBtn').addEventListener('click',async()=>{if(!isAdmin())return;const price=parseMoney($('settingsPrice').value);const update={name:$('settingsGroupName').value.trim(),paypal_me:cleanPaypal($('settingsPaypal').value)||null,default_price:price??50,updated_at:new Date().toISOString()};const {data,error}=await sb.from('sc_groups').update(update).eq('id',currentGroup.id).select().single();if(error){setStatus($('settingsStatus'),error.message);return}currentGroup=data;groups=groups.map(g=>g.id===data.id?data:g);renderGroupSelector();els.groupSelect.value=data.id;setStatus($('settingsStatus'),'Crew gespeichert ✓',true);render();window.dispatchEvent(new CustomEvent('seasoncrew:prices-updated',{detail:{groupId:currentGroup.id}}))});
+$('saveGroupBtn').addEventListener('click',async()=>{if(!isAdmin())return;const price=parseMoney($('settingsPrice').value);const update={name:$('settingsGroupName').value.trim(),club_name:$('settingsClubName')?.value.trim()||currentGroup.club_name,paypal_me:cleanPaypal($('settingsPaypal').value)||null,default_price:price??50,updated_at:new Date().toISOString()};const {data,error}=await sb.from('sc_groups').update(update).eq('id',currentGroup.id).select().single();if(error){setStatus($('settingsStatus'),error.message);return}currentGroup=data;groups=groups.map(g=>g.id===data.id?data:g);renderGroupSelector();els.groupSelect.value=data.id;setStatus($('settingsStatus'),'Crew gespeichert ✓',true);render();window.dispatchEvent(new CustomEvent('seasoncrew:prices-updated',{detail:{groupId:currentGroup.id}}))});
 $('addTicketBtn').addEventListener('click',async()=>{if(!isAdmin())return;const block=$('ticketBlock').value.trim(),row=$('ticketRow').value.trim(),seat=$('ticketSeat').value.trim();if(!block&&!row&&!seat){setStatus($('settingsStatus'),'Bitte Block, Reihe oder Sitz angeben.');return}const label=[block,row,seat].filter(Boolean).join('/');const {data,error}=await sb.from('sc_tickets').insert({group_id:currentGroup.id,label,block:block||null,row_label:row||null,seat:seat||null,sort_order:tickets.length+1}).select().single();if(error){setStatus($('settingsStatus'),error.message);return}tickets.push(data);$('ticketBlock').value=$('ticketRow').value=$('ticketSeat').value='';setStatus($('settingsStatus'),'Karte hinzugefügt ✓',true);render()});
 $('createInviteBtn').addEventListener('click',async()=>{
   if(!isAdmin())return;setStatus($('settingsStatus'),'Einladung wird erstellt …');
@@ -471,7 +476,14 @@ async function deleteTicket(id){if(!confirm('Dauerkarte wirklich löschen? Vorha
 
 function openCreate(){setStatus($('createGroupStatus'),'');els.createDialog.showModal()}function openJoin(){setStatus($('joinGroupStatus'),'');els.joinDialog.showModal()}
 document.querySelectorAll('[data-open-create]').forEach(b=>b.addEventListener('click',openCreate));document.querySelectorAll('[data-open-join]').forEach(b=>b.addEventListener('click',openJoin));
-$('createGroupForm').addEventListener('submit',async e=>{e.preventDefault();const name=$('newGroupName').value.trim(),price=parseMoney($('newGroupPrice').value);if(!name)return;setStatus($('createGroupStatus'),'Crew wird erstellt …');const {data,error}=await sb.from('sc_groups').insert({name,club_key:$('newGroupClub').value,club_name:'FC Bayern München',season:$('newGroupSeason').value.trim()||'2026-27',paypal_me:cleanPaypal($('newGroupPaypal').value)||null,default_price:price??50,created_by:user.id}).select().single();if(error){setStatus($('createGroupStatus'),error.message);return}els.createDialog.close();$('createGroupForm').reset();$('newGroupSeason').value='2026-27';$('newGroupPrice').value='50,00';await loadGroups(data.id);showToast('Crew erstellt')});
+$('createGroupForm').addEventListener('submit',async e=>{
+  e.preventDefault();const name=$('newGroupName').value.trim(),price=parseMoney($('newGroupPrice').value),clubKey=$('newGroupClub')?.value||'fcbayern';
+  const clubName=clubKey==='fcbayern'?'FC Bayern München':$('newGroupClubName')?.value.trim();
+  if(!name)return;if(!clubName){setStatus($('createGroupStatus'),'Bitte Vereinsname angeben.');return}
+  setStatus($('createGroupStatus'),'Crew wird erstellt …');
+  const {data,error}=await sb.from('sc_groups').insert({name,club_key:clubKey,club_name:clubName,season:$('newGroupSeason').value.trim()||'2026-27',paypal_me:cleanPaypal($('newGroupPaypal').value)||null,default_price:price??50,created_by:user.id}).select().single();
+  if(error){setStatus($('createGroupStatus'),error.message);return}els.createDialog.close();$('createGroupForm').reset();$('newGroupSeason').value='2026-27';$('newGroupPrice').value='50,00';$('newGroupClub')?.dispatchEvent(new Event('change'));await loadGroups(data.id);showToast('Crew erstellt')
+});
 $('joinGroupForm').addEventListener('submit',async e=>{e.preventDefault();await requestInvite(extractInviteToken($('joinCode').value))});
 
 async function requestInvite(token){
@@ -494,6 +506,7 @@ async function setupRealtime(){
   realtimeChannel=sb.channel(`seasoncrew-data-${currentGroup.id}`)
     .on('postgres_changes',{event:'*',schema:'public',table:'sc_allocations',select:['group_id','fixture_id','ticket_id','attendee_name','attendee_user_id','updated_by','updated_at'],filter:`group_id=eq.${currentGroup.id}`},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'sc_fixture_notes',filter:`group_id=eq.${currentGroup.id}`},scheduleReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'sc_fixtures',filter:`group_id=eq.${currentGroup.id}`},()=>{loadOverrides().then(render)})
     .on('postgres_changes',{event:'*',schema:'public',table:'sc_join_requests',filter:`group_id=eq.${currentGroup.id}`},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'sc_group_members',filter:`group_id=eq.${currentGroup.id}`},scheduleReload)
     .subscribe();
@@ -506,6 +519,7 @@ els.searchInput.addEventListener('input',renderGames);
 document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderGames()}));
 $('nextMatchBtn').addEventListener('click',()=>{const today=todayBerlin(),next=filteredFixtures().find(m=>(m.e||m.s)>=today)||filteredFixtures()[0];if(next)document.getElementById(`game-${next.id}`)?.scrollIntoView({behavior:'smooth',block:'start'})});
 window.addEventListener('seasoncrew:role-view-change',()=>render());
+window.addEventListener('seasoncrew:fixtures-updated',async e=>{if(!currentGroup||e.detail?.groupId!==currentGroup.id)return;await loadOverrides();render()});
 
 async function boot(){
   const invite=extractInviteToken(new URL(location.href).searchParams.get('invite'));if(invite)localStorage.setItem('seasoncrew-pending-invite',invite);
