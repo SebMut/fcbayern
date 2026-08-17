@@ -1,14 +1,12 @@
 name: SeasonCrew browser bundle
 
-# Rebuild marker: invite-mainflow-20260817
 on:
   push:
     branches: [main]
     paths:
       - 'SeasonCrew/app.js'
       - 'SeasonCrew/schedule.js'
-      - 'FcBayern_Tom/schedule.js'
-      - '.github/workflows/seasoncrew-bundle.yml'
+      - 'SeasonCrew/seasoncrew-core.js'
   workflow_dispatch:
 
 permissions:
@@ -21,101 +19,39 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Replace Supabase ESM import for browser bundle
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('SeasonCrew/app.js')
-          s = p.read_text()
-          old = "import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/+esm';"
-          new = "const createClient = (...args) => window.supabase.createClient(...args);"
-          if old not in s:
-              raise SystemExit('Supabase import line not found')
-          p.write_text(s.replace(old, new, 1))
-          PY
-
       - name: Build Safari-compatible bundle
-        run: |
-          npx --yes esbuild@0.25.9 SeasonCrew/app.js \
-            --bundle \
-            --format=iife \
-            --target=safari15 \
-            --external:https://cdn.jsdelivr.net/* \
-            --outfile=SeasonCrew/app.bundle.js
-
-      - name: Restore source and install robust app loader
+        working-directory: SeasonCrew
+        run: npx --yes esbuild@0.25.9 app.js --bundle --format=iife --target=safari15 --outfile=app.bundle.js
+      - name: Cache-bust generated app assets
         env:
           SOURCE_SHA: ${{ github.sha }}
         run: |
-          git checkout -- SeasonCrew/app.js
           python - <<'PY'
           from pathlib import Path
-          import os, re
-
-          p = Path('SeasonCrew/index.html')
-          s = p.read_text()
-          short = os.environ.get('SOURCE_SHA', 'build')[:7]
-
-          s = re.sub(r'\n\s*<script type="importmap">.*?</script>', '', s, flags=re.S)
-          s = re.sub(r'\n\s*<script type="module">\s*import\(.*?</script>', '', s, flags=re.S)
-          s = re.sub(r'\n\s*<!-- SEASONCREW_APP_LOADER_START -->.*?<!-- SEASONCREW_APP_LOADER_END -->', '', s, flags=re.S)
-          s = re.sub(r'\n\s*<script src="auth-fallback-v6\.js[^\"]*"></script>', '', s)
-          s = re.sub(r'\n\s*<script src="app\.bundle\.js[^\"]*"[^>]*></script>', '', s)
-          s = re.sub(r'\n\s*<script>window\.seasonCrewModuleLoaded=true;window\.seasonCrewModuleFailed=false;</script>', '', s)
-
-          loader = f'''\n  <!-- SEASONCREW_APP_LOADER_START -->
-          <script>
-            window.seasonCrewModuleLoaded=false;
-            window.seasonCrewModuleFailed=false;
-            window.seasonCrewLoadFallback=function(){{
-              if(document.querySelector('script[data-seasoncrew-auth-fallback]'))return;
-              window.seasonCrewModuleFailed=true;
-              const script=document.createElement('script');
-              script.src='auth-fallback-v6.js?v={short}';
-              script.dataset.seasoncrewAuthFallback='1';
-              document.body.appendChild(script);
-            }};
-          </script>
-          <script src="app.bundle.js?v={short}"
-            onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
-            onerror="window.seasonCrewLoadFallback()"></script>
-          <script type="module" src="club-kits.js?v={short}"></script>
-          <!-- SEASONCREW_APP_LOADER_END -->'''
-
-          if '</body>' not in s:
-              raise SystemExit('Closing body tag not found')
-          s = s.replace('\n</body>', loader + '\n</body>', 1)
+          import os,re
+          p=Path('SeasonCrew/index.html');s=p.read_text();short=os.environ.get('SOURCE_SHA','build')[:7]
+          s=re.sub(r'app\.bundle\.js\?v=[^\"]+',f'app.bundle.js?v={short}',s)
+          s=re.sub(r'club-kits\.js\?v=[^\"]+',f'club-kits.js?v={short}',s)
+          if 'auth-fallback-v' in s:
+              raise SystemExit('Legacy auth fallback script reference remains')
           p.write_text(s)
           PY
-
       - name: Verify generated JavaScript
         run: |
           node --check SeasonCrew/app.bundle.js
-          node --check SeasonCrew/auth-fallback-v6.js
-
-      - name: Verify app loader exists
-        run: |
-          grep -q 'SEASONCREW_APP_LOADER_START' SeasonCrew/index.html
-          grep -q 'app.bundle.js' SeasonCrew/index.html
-          grep -q 'club-kits.js' SeasonCrew/index.html
-          if grep -q '<script src="auth-fallback-v6.js' SeasonCrew/index.html; then
-            echo 'Fallback must not be loaded directly on the normal path'
-            exit 1
-          fi
-
+          node --check SeasonCrew/seasoncrew-core.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/pricing-runtime-v2.js
+          node --check SeasonCrew/wish-actions-v2.js
       - name: Commit generated browser bundle
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add SeasonCrew/app.bundle.js SeasonCrew/index.html
-          if git diff --cached --quiet; then
-            echo "No generated changes"
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "[skip ci] Build SeasonCrew Safari bundle"
           git push
