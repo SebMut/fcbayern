@@ -69,7 +69,6 @@
   }
 
   window.addEventListener('seasoncrew:games-rendered',()=>scheduleDecorate(0));
-  window.addEventListener('seasoncrew:rendered',()=>scheduleDecorate(0));
 
   if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>scheduleDecorate(100),{once:true});
   else scheduleDecorate(0);

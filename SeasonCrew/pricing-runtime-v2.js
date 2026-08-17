@@ -6,7 +6,7 @@
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   const $=id=>document.getElementById(id);
-  let client=null,pricing=null,ticketMap=new Map(),loadTimer=null,loading=false;
+  let client=null,pricing=null,ticketMap=new Map(),loadTimer=null,statsTimer=null,loading=false;
 
   function sb(){
     if(client)return client;
@@ -132,6 +132,7 @@
     }finally{loading=false}
   }
   function scheduleLoad(delay=50){clearTimeout(loadTimer);loadTimer=setTimeout(loadPricing,delay)}
+  function scheduleStats(delay=250){clearTimeout(statsTimer);statsTimer=setTimeout(refreshUnpaidStats,delay)}
 
   document.addEventListener('click',event=>{
     const btn=event.target.closest?.('[data-paypal-fixture]');if(!btn)return;
@@ -141,8 +142,7 @@
   $('groupSelect')?.addEventListener('change',()=>{pricing=null;ticketMap=new Map();scheduleLoad(80)});
   window.addEventListener('seasoncrew:prices-updated',()=>scheduleLoad(0));
   window.addEventListener('seasoncrew:games-rendered',()=>pricing?.groupId===groupId()?decorateAll():scheduleLoad(30));
-  window.addEventListener('seasoncrew:rendered',()=>pricing?.groupId===groupId()?(decorateAll(),refreshUnpaidStats()):scheduleLoad(30));
+  window.addEventListener('seasoncrew:rendered',()=>pricing?.groupId===groupId()?(decorateAll(),scheduleStats(250)):scheduleLoad(30));
 
   if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>scheduleLoad(250),{once:true});else scheduleLoad(20);
-  setTimeout(()=>scheduleLoad(0),700);
 })();
