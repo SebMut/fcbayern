@@ -1,0 +1,67 @@
+name: SeasonCrew settings layout fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-settings-layout-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Wire repaired settings layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('SeasonCrew/index.html')
+          s=p.read_text()
+          css='  <link rel="stylesheet" href="settings-layout.css?v=20260817-settings1">\n'
+          marker='  <link rel="stylesheet" href="assignment-dialog.css?v=20260817-priorities1">\n'
+          if css not in s:
+              if marker not in s: raise SystemExit('assignment stylesheet marker missing')
+              s=s.replace(marker,marker+css,1)
+          s=s.replace('club-fixtures-v1.js?v=20260817-club2','club-fixtures-v1.js?v=20260817-settings1')
+          s=s.replace('Pilot V1 · Build club-independent-1 · Multi-User','Pilot V1 · Build settings-layout-1 · Multi-User')
+          p.write_text(s)
+          PY
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Build production artifact
+        working-directory: SeasonCrew
+        run: npm run build:site
+      - name: Verify repaired settings assets
+        run: |
+          node --check SeasonCrew/club-fixtures-v1.js
+          grep -q 'settings-layout.css?v=20260817-settings1' SeasonCrew/index.html
+          grep -q 'settings-layout.css?v=20260817-settings1' SeasonCrew/dist/index.html
+          grep -q 'club-fixtures-v1.js?v=20260817-settings1' SeasonCrew/index.html
+          grep -q 'manualFixtureField fixtureFieldCompetition' SeasonCrew/club-fixtures-v1.js
+          grep -q '#settingsDialog .settingsCard' SeasonCrew/settings-layout.css
+          test -f SeasonCrew/dist/settings-layout.css
+          if grep -q "style.textContent='.manualFixtureForm" SeasonCrew/club-fixtures-v1.js; then
+            echo 'Legacy inline fixture layout still exists.'
+            exit 1
+          fi
+      - name: Commit tested settings fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/index.html SeasonCrew/app.bundle.js
+          git diff --cached --check
+          git commit -m "Repair SeasonCrew crew settings layout"
+          git pull --rebase origin main
+          git push origin main
