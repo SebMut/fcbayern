@@ -63,10 +63,13 @@ jobs:
             exit 1
           fi
           git check-ignore -q SeasonCrew/node_modules
-          git check-ignore -q SeasonCrew/test-results
       - name: Browser regression tests
         working-directory: SeasonCrew
         run: npm run test:e2e
+      - name: Verify generated test artefacts stay ignored
+        run: |
+          git check-ignore -q SeasonCrew/test-results/.last-run.json
+          git status --short --ignored SeasonCrew/node_modules SeasonCrew/test-results | grep -q '^!!'
       - name: Commit tested refactor
         run: |
           git config user.name "github-actions[bot]"
