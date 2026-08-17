@@ -4,6 +4,9 @@
   const $=id=>document.getElementById(id);
   let noteClient=null;
 
+  if(!document.querySelector('link[data-seasoncrew-brand-v2]')){
+    const link=document.createElement('link');link.rel='stylesheet';link.href='./brand-v2.css?v=20260817-1';link.dataset.seasoncrewBrandV2='1';document.head.appendChild(link);
+  }
   if(!document.querySelector('link[data-seasoncrew-crew-delete]')){
     const link=document.createElement('link');link.rel='stylesheet';link.href='./crew-delete.css?v=1';link.dataset.seasoncrewCrewDelete='1';document.head.appendChild(link);
   }
