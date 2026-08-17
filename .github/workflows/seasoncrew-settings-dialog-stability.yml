@@ -1,0 +1,108 @@
+name: SeasonCrew settings dialog stability
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-settings-dialog-stability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: SeasonCrew/package-lock.json
+      - name: Harden settings dialog interaction
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('SeasonCrew/ui-v2.js')
+          s=p.read_text()
+          old="""    const dialog=e.target instanceof Element?e.target.closest('dialog'):null;
+    if(dialog?.open){
+      const card=dialog.querySelector(':scope > .dialogCard, :scope > form.dialogCard');
+      if(card){
+        const rect=card.getBoundingClientRect();
+        const outside=e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom;
+        if(e.target===dialog||outside){
+          e.preventDefault();
+          closeDialog(dialog);
+          return;
+        }
+      }
+    }
+"""
+          new="""    const dialog=e.target instanceof Element?e.target.closest('dialog'):null;
+    if(dialog?.open){
+      const card=dialog.querySelector(':scope > .dialogCard, :scope > form.dialogCard');
+      if(card){
+        const targetInside=e.target instanceof Node&&card.contains(e.target);
+        const rect=card.getBoundingClientRect();
+        const hasUsablePoint=Number.isFinite(e.clientX)&&Number.isFinite(e.clientY)&&(e.clientX!==0||e.clientY!==0);
+        const outsideByPoint=hasUsablePoint&&(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom);
+        if(e.target===dialog||(!targetInside&&outsideByPoint)){
+          e.preventDefault();
+          closeDialog(dialog);
+          return;
+        }
+      }
+    }
+"""
+          if old not in s:
+              raise SystemExit('dialog outside-click block not found')
+          s=s.replace(old,new,1)
+
+          marker="""  document.addEventListener('change',e=>{
+"""
+          guard="""  document.addEventListener('submit',e=>{
+    if(e.target?.id==='settingsForm'){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  },true);
+"""
+          if guard not in s:
+              if marker not in s: raise SystemExit('change listener marker missing')
+              s=s.replace(marker,guard+marker,1)
+          p.write_text(s)
+
+          p=Path('SeasonCrew/index.html')
+          html=p.read_text()
+          html=re.sub(r'ui-v2\.js\?v=[^\"\']+','ui-v2.js?v=20260817-dialogfix1',html)
+          html=re.sub(r'Pilot V1 · Build [^·<]+ · Multi-User','Pilot V1 · Build settings-dialog-1 · Multi-User',html)
+          p.write_text(html)
+          PY
+      - name: Install dependencies
+        working-directory: SeasonCrew
+        run: npm ci
+      - name: Build production artifact
+        working-directory: SeasonCrew
+        run: npm run build:site
+      - name: Verify dialog protection
+        run: |
+          node --check SeasonCrew/ui-v2.js
+          grep -q 'const targetInside=e.target instanceof Node&&card.contains(e.target)' SeasonCrew/ui-v2.js
+          grep -q "e.target?.id==='settingsForm'" SeasonCrew/ui-v2.js
+          grep -q 'ui-v2.js?v=20260817-dialogfix1' SeasonCrew/index.html
+          grep -q 'ui-v2.js?v=20260817-dialogfix1' SeasonCrew/dist/index.html
+      - name: Commit tested dialog fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/ui-v2.js SeasonCrew/index.html SeasonCrew/app.bundle.js
+          git diff --cached --check
+          git commit -m "Keep SeasonCrew settings open for internal controls"
+          git pull --rebase origin main
+          git push origin main
