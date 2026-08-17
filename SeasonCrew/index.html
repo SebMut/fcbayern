@@ -207,6 +207,23 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
   <script src="pricing-runtime-v2.js?v=20260817-private2"></script>
   <script src="wish-actions-v2.js?v=20260817-2"></script>
-  <script src="auth-fallback-v6.js?v=20260817-audit1"></script>
+  <!-- SEASONCREW_APP_LOADER_START -->
+<script>
+  window.seasonCrewModuleLoaded=false;
+  window.seasonCrewModuleFailed=false;
+  window.seasonCrewLoadFallback=function(){
+    if(document.querySelector('script[data-seasoncrew-auth-fallback]'))return;
+    window.seasonCrewModuleFailed=true;
+    const script=document.createElement('script');
+    script.src='auth-fallback-v6.js?v=2f7db69';
+    script.dataset.seasoncrewAuthFallback='1';
+    document.body.appendChild(script);
+  };
+</script>
+<script src="app.bundle.js?v=2f7db69"
+  onload="window.seasonCrewModuleLoaded=true;window.seasonCrewModuleFailed=false"
+  onerror="window.seasonCrewLoadFallback()"></script>
+<script type="module" src="club-kits.js?v=2f7db69"></script>
+<!-- SEASONCREW_APP_LOADER_END -->
 </body>
 </html>
