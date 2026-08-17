@@ -1,0 +1,40 @@
+name: SeasonCrew performance optimization
+
+on:
+  push:
+    paths:
+      - 'SeasonCrew/performance-patch.py'
+      - '.github/workflows/seasoncrew-performance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply performance patch
+        run: python SeasonCrew/performance-patch.py
+      - name: Syntax check
+        run: |
+          node --check SeasonCrew/app.js
+          node --check SeasonCrew/ui-v2.js
+          node --check SeasonCrew/crew-delete.js
+          node --check SeasonCrew/features-v1.js
+          node --check SeasonCrew/product-v2.js
+          node --check SeasonCrew/role-switcher.js
+      - name: Ensure global MutationObservers are gone
+        run: |
+          ! grep -q "observer.observe(document.documentElement" SeasonCrew/ui-v2.js
+          ! grep -q "observer.observe(document.documentElement" SeasonCrew/crew-delete.js
+          ! grep -q "observer.observe(document.documentElement" SeasonCrew/features-v1.js
+          ! grep -q "observer.observe(document.documentElement" SeasonCrew/product-v2.js
+      - name: Commit optimized frontend
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/app.js SeasonCrew/ui-v2.js SeasonCrew/crew-delete.js SeasonCrew/features-v1.js SeasonCrew/product-v2.js SeasonCrew/role-switcher.js SeasonCrew/index.html
+          git diff --cached --quiet || git commit -m "Optimize SeasonCrew frontend rendering"
+          git push
