@@ -1,8 +1,14 @@
 (()=>{
   if(window.SeasonCrewCore)return;
-  // Stable shared client core · auth/core/CI/club-independent baseline · dependency audit clean · Actions v6 verification
-  const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
-  const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
+  const runtime=window.SeasonCrewConfig||null;
+  const status=document.getElementById('authStatus');
+  if(!runtime?.supabaseUrl||!runtime?.publishableKey){
+    if(status)status.textContent='SeasonCrew ist nicht vollständig konfiguriert. Bitte Seite neu laden.';
+    throw new Error('SeasonCrew runtime configuration unavailable');
+  }
+  const SUPABASE_URL=String(runtime.supabaseUrl);
+  const SUPABASE_KEY=String(runtime.publishableKey);
+  const ENVIRONMENT=String(runtime.environment||'production');
   let sharedClient=null;
 
   function client(){
@@ -26,6 +32,6 @@
   window.SeasonCrewCore=Object.freeze({
     client,
     appUrl,
-    config:Object.freeze({supabaseUrl:SUPABASE_URL,publishableKey:SUPABASE_KEY})
+    config:Object.freeze({environment:ENVIRONMENT,supabaseUrl:SUPABASE_URL,publishableKey:SUPABASE_KEY})
   });
 })();
