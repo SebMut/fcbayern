@@ -1,6 +1,6 @@
 (()=>{
   if(window.SeasonCrewCore)return;
-  // Stable shared client core · auth/core/CI refactor complete
+  // Stable shared client core · auth/core/CI/club-independence refactor complete
   const SUPABASE_URL='https://kmhadzujovvxvpgblgkk.supabase.co';
   const SUPABASE_KEY='sb_publishable_JDcJGMDybnrOZcSRqtpzDg_6Ul0jr2Y';
   let sharedClient=null;
