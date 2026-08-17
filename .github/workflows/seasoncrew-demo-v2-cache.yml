@@ -1,0 +1,63 @@
+name: SeasonCrew demo v2 publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-demo-v2-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bump demo cache keys and layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          demo = Path('SeasonCrew/demo.html')
+          s = demo.read_text()
+          s = s.replace('demo.css?v=1', 'demo.css?v=2')
+          s = s.replace('demo.js?v=1', 'demo.js?v=2')
+          demo.write_text(s)
+
+          index = Path('SeasonCrew/index.html')
+          s = index.read_text()
+          s = s.replace('demo-entry.js?v=1', 'demo-entry.js?v=2')
+          s = s.replace('Build demo-1', 'Build demo-2')
+          index.write_text(s)
+
+          css = Path('SeasonCrew/demo.css')
+          s = css.read_text()
+          marker = '/* demo-paypal-v2 */'
+          if marker not in s:
+              s += '''\n\n/* demo-paypal-v2 */\n.paymentRow{grid-template-columns:1fr auto auto auto}\n@media(max-width:680px){.paymentRow{grid-template-columns:1fr auto}.paymentRow .paymentPaypal,.paymentRow .payDone{min-height:30px}}\n'''
+          css.write_text(s)
+          PY
+
+      - name: Validate demo JavaScript
+        run: node --check SeasonCrew/demo.js && node --check SeasonCrew/demo-entry.js
+
+      - name: Commit published demo v2
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SeasonCrew/demo.html SeasonCrew/demo.css SeasonCrew/index.html
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "Publish SeasonCrew demo v2 interactions"
+          git push
