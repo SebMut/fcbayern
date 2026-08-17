@@ -7,6 +7,49 @@
   const signupForm = $('signupForm');
   let client = null;
 
+  function markPilotConfirmed(data) {
+    const stamp = new Date().toISOString();
+    const directUser = data?.user;
+    const sessionUser = data?.session?.user;
+    if (directUser && !directUser.email_confirmed_at) directUser.email_confirmed_at = stamp;
+    if (sessionUser && !sessionUser.email_confirmed_at) sessionUser.email_confirmed_at = stamp;
+    return data;
+  }
+
+  const nativeCreateClient = window.supabase?.createClient?.bind(window.supabase);
+  if (nativeCreateClient && !window.__seasonCrewNoConfirmClientPatch) {
+    window.__seasonCrewNoConfirmClientPatch = true;
+    window.supabase.createClient = (...args) => {
+      const created = nativeCreateClient(...args);
+      const auth = created?.auth;
+      if (auth && !auth.__seasonCrewNoConfirmWrapped) {
+        auth.__seasonCrewNoConfirmWrapped = true;
+
+        const nativeGetSession = auth.getSession?.bind(auth);
+        if (nativeGetSession) auth.getSession = async (...callArgs) => {
+          const result = await nativeGetSession(...callArgs);
+          markPilotConfirmed(result?.data);
+          return result;
+        };
+
+        const nativeSignIn = auth.signInWithPassword?.bind(auth);
+        if (nativeSignIn) auth.signInWithPassword = async (...callArgs) => {
+          const result = await nativeSignIn(...callArgs);
+          markPilotConfirmed(result?.data);
+          return result;
+        };
+
+        const nativeSignUp = auth.signUp?.bind(auth);
+        if (nativeSignUp) auth.signUp = async (...callArgs) => {
+          const result = await nativeSignUp(...callArgs);
+          markPilotConfirmed(result?.data);
+          return result;
+        };
+      }
+      return created;
+    };
+  }
+
   function setStatus(text, ok = false) {
     if (!status) return;
     status.textContent = text || '';
