@@ -6,6 +6,7 @@ on:
       - 'SeasonCrew/features-v1.js'
       - 'SeasonCrew/product-v2.js'
       - 'SeasonCrew/crew-delete.js'
+      - 'SeasonCrew/history.js'
       - '.github/workflows/seasoncrew-features-v1.yml'
   workflow_dispatch:
 
@@ -22,3 +23,4 @@ jobs:
           node --check SeasonCrew/features-v1.js
           node --check SeasonCrew/product-v2.js
           node --check SeasonCrew/crew-delete.js
+          node --check SeasonCrew/history.js
