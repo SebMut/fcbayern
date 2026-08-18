@@ -33,7 +33,7 @@ await writeFile(new URL('_headers', dist), `/*
 `);
 
 const distEntries = (await readdir(dist)).sort();
-const required = ['index.html', 'app.bundle.js', 'seasoncrew-core.js', 'styles.css', 'demo.html', 'history.html'];
+const required = ['index.html', 'app.bundle.js', 'seasoncrew-core.js', 'styles.css', 'demo.html', 'history.html', 'settings.html', 'settings-page.js', 'settings-page.css'];
 for (const file of required) {
   if (!distEntries.includes(file)) throw new Error(`Production build missing ${file}`);
 }

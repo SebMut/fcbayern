@@ -1108,19 +1108,13 @@ ${d.link}` : "\nPayPal.Me ist f\xFCr diese Crew noch nicht hinterlegt."}` : "Pre
       }
     });
   }
-  $("settingsBtn").addEventListener("click", () => {
-    renderSettings();
-    els.settingsDialog.showModal();
-  });
-  $("groupMenuBtn").addEventListener("click", () => {
-    renderSettings();
-    els.settingsDialog.showModal();
-  });
-  els.heroInviteBtn.addEventListener("click", () => {
-    renderSettings();
-    els.settingsDialog.showModal();
-    setTimeout(() => $("inviteAdminSettings")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
-  });
+  function openSettingsPage(section = "profile") {
+    if (currentGroup?.id) localStorage.setItem("seasoncrew-group", currentGroup.id);
+    location.href = `settings.html#${section}`;
+  }
+  $("settingsBtn").addEventListener("click", () => openSettingsPage("profile"));
+  $("groupMenuBtn").addEventListener("click", () => openSettingsPage("crew"));
+  els.heroInviteBtn.addEventListener("click", () => openSettingsPage("invites"));
   $("saveProfileBtn").addEventListener("click", async () => {
     const username = $("profileUsername").value.trim();
     if (!validUsername(username)) {

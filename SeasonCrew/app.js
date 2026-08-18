@@ -435,8 +435,9 @@ async function renderInviteAdmin(){
   box.querySelector('[data-share-invite]')?.addEventListener('click',async()=>{try{if(navigator.share)await navigator.share({title:`Einladung zu ${currentGroup.name}`,text:`SeasonCrew Einladungscode: ${activeInvite.token}`,url:link});else await navigator.clipboard.writeText(link)}catch(e){if(e?.name!=='AbortError')showToast('Teilen nicht möglich')}});
 }
 
-$('settingsBtn').addEventListener('click',()=>{renderSettings();els.settingsDialog.showModal()});$('groupMenuBtn').addEventListener('click',()=>{renderSettings();els.settingsDialog.showModal()});
-els.heroInviteBtn.addEventListener('click',()=>{renderSettings();els.settingsDialog.showModal();setTimeout(()=>$('inviteAdminSettings')?.scrollIntoView({behavior:'smooth',block:'start'}),120)});
+function openSettingsPage(section='profile'){if(currentGroup?.id)localStorage.setItem('seasoncrew-group',currentGroup.id);location.href=`settings.html#${section}`}
+$('settingsBtn').addEventListener('click',()=>openSettingsPage('profile'));$('groupMenuBtn').addEventListener('click',()=>openSettingsPage('crew'));
+els.heroInviteBtn.addEventListener('click',()=>openSettingsPage('invites'));
 
 $('saveProfileBtn').addEventListener('click',async()=>{
   const username=$('profileUsername').value.trim();if(!validUsername(username)){setStatus($('settingsStatus'),'Bitte einen gültigen Nutzernamen eingeben.');return}
