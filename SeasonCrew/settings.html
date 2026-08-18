@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1F2A30">
+  <meta name="description" content="SeasonCrew – Crew-Einstellungen verwalten.">
+  <title>SeasonCrew · Crew-Einstellungen</title>
+  <link rel="icon" href="seasoncrew-mark.svg?v=20260817-2" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="brand-v2.css?v=20260817-paidgreen2">
+  <link rel="stylesheet" href="settings-page.css?v=20260818-1">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbarInner">
+    <a class="appBrand" href="index.html"><span class="brandMark small"><i></i><i></i><i></i></span><strong>SeasonCrew</strong></a>
+    <div class="groupSwitch"><label for="groupSelect">Crew</label><select id="groupSelect"></select></div>
+    <div class="topActions"><a class="headerButton" href="history.html">History</a><a class="headerButton" href="index.html">← Übersicht</a></div>
+  </div>
+</header>
+
+<main class="settingsPage">
+  <section class="settingsHero">
+    <span class="sectionLabel">Crew-Einstellungen</span>
+    <h1 id="settingsPageTitle">Einstellungen</h1>
+    <p id="settingsPageSub">Profil und Crew werden geladen …</p>
+    <span class="settingsRole" id="memberRole">–</span>
+  </section>
+
+  <nav class="settingsNav" id="settingsNav" aria-label="Einstellungsbereiche">
+    <a href="#profile" data-nav="profile">Profil</a>
+    <a href="#crew" data-nav="crew" class="managerOnly">Crew</a>
+    <a href="#fixtures" data-nav="fixtures" class="managerOnly">Heimspiele</a>
+    <a href="#prices" data-nav="prices" class="managerOnly">Preise</a>
+    <a href="#invites" data-nav="invites" class="managerOnly">Einladungen</a>
+    <a href="#tickets" data-nav="tickets" class="managerOnly">Dauerkarten</a>
+    <a href="#members" data-nav="members">Mitglieder</a>
+    <a href="#security" data-nav="security">Sicherheit</a>
+  </nav>
+
+  <section class="settingsSection" id="profile">
+    <div class="settingsSectionHead"><div><h2>Mein Profil</h2><p>Dein Nutzername wird in der Crew, in Notizen und in der History angezeigt.</p></div></div>
+    <div class="settingsFields"><label class="settingsField">Nutzername<input id="profileUsername" maxlength="24"></label><label class="settingsField">E-Mail<input id="profileEmail" type="email" disabled></label></div>
+    <div class="settingsActions"><button class="primaryButton" id="saveProfileBtn" type="button">Profil speichern</button></div>
+    <div class="settingsStatus" id="profileStatus"></div>
+  </section>
+
+  <section class="settingsSection managerOnly" id="crew">
+    <div class="settingsSectionHead"><div><h2>Crew</h2><p>Allgemeine Angaben zur Crew. Diese Daten gelten für alle Mitglieder.</p></div></div>
+    <div class="settingsFields three">
+      <label class="settingsField">Crew-Name<input id="settingsGroupName" maxlength="80"></label>
+      <label class="settingsField">Verein / Club<input id="settingsClubName" maxlength="80"></label>
+      <label class="settingsField">Saison<input id="settingsSeason" maxlength="7" placeholder="2026-27"></label>
+      <label class="settingsField">PayPal.Me<input id="settingsPaypal" maxlength="120" placeholder="username"></label>
+      <label class="settingsField">Standardpreis<input id="settingsPrice" inputmode="decimal" placeholder="50,00"></label>
+    </div>
+    <div class="settingsActions"><button class="primaryButton" id="saveGroupBtn" type="button">Crew speichern</button></div>
+    <div class="settingsStatus" id="crewStatus"></div>
+  </section>
+
+  <section class="settingsSection managerOnly" id="fixtures">
+    <div class="settingsSectionHead"><div><h2>Eigene Heimspiele</h2><p>Zusätzliche oder vereinseigene Heimspiele verwalten. Ein eigener Spielpreis überschreibt den Standardpreis für dieses Spiel.</p></div></div>
+    <div class="settingsList" id="fixtureList"><div class="loadingCard">Heimspiele werden geladen …</div></div>
+    <div class="fixtureForm">
+      <label>Wettbewerb<select id="fixtureCompetition"><option value="league">Liga</option><option value="cup">Pokal</option><option value="intl">International</option><option value="other">Sonstiges</option></select></label>
+      <label class="wide">Bezeichnung<input id="fixtureLabel" maxlength="120" placeholder="z. B. Liga · 5. Spieltag"></label>
+      <label class="wide">Gegner<input id="fixtureOpponent" maxlength="120" placeholder="Gegner"></label>
+      <label class="wide">Spielort<input id="fixtureVenue" maxlength="120" placeholder="optional"></label>
+      <label>Datum<input id="fixtureDate" type="date"></label>
+      <label>Uhrzeit<input id="fixtureTime" type="time"></label>
+      <label>Preis<input id="fixturePrice" inputmode="decimal" placeholder="optional"></label>
+      <button class="primaryButton compact" id="addFixtureBtn" type="button">Hinzufügen</button>
+    </div>
+    <div class="settingsStatus" id="fixtureStatus"></div>
+  </section>
+
+  <section class="settingsSection managerOnly" id="prices">
+    <div class="settingsSectionHead"><div><h2>Preise</h2><p>Standardpreis sowie – bei der Bayern-Pilotlogik – Rundenpreise für Pokal und Champions League.</p></div></div>
+    <div class="priceLead">
+      <div class="priceCard"><h3>Standardpreis</h3><label class="settingsField">Preis pro Karte<input id="priceBl" inputmode="decimal" placeholder="50,00"></label></div>
+      <div class="priceCard" id="roundPriceCard"><h3>Rundenpreise</h3><div class="priceGrid" id="roundPriceGrid"></div></div>
+    </div>
+    <div class="settingsActions"><button class="primaryButton" id="savePricesBtn" type="button">Preise speichern</button></div>
+    <div class="settingsStatus" id="priceStatus"></div>
+  </section>
+
+  <section class="settingsSection managerOnly" id="invites">
+    <div class="settingsSectionHead"><div><h2>Einladungen</h2><p>Erstelle einen Link für neue Mitglieder und bearbeite offene Beitrittsanfragen.</p></div><button class="primaryButton compact" id="createInviteBtn" type="button">Neue Einladung</button></div>
+    <div class="inviteCard" id="inviteBox">Noch keine aktive Einladung.</div>
+    <div class="settingsSectionHead" style="margin-top:18px"><div><h2>Offene Bewerbungen</h2><p>Neue Nutzer werden erst nach deiner Freigabe Mitglied der Crew.</p></div></div>
+    <div class="settingsList" id="joinRequestList"><div class="loadingCard">Bewerbungen werden geladen …</div></div>
+    <div class="settingsStatus" id="inviteStatus"></div>
+  </section>
+
+  <section class="settingsSection managerOnly" id="tickets">
+    <div class="settingsSectionHead"><div><h2>Dauerkarten</h2><p>Block, Reihe und Sitz werden pro Dauerkarte gespeichert.</p></div></div>
+    <div class="settingsList" id="ticketList"><div class="loadingCard">Dauerkarten werden geladen …</div></div>
+    <div class="settingsFields three" style="margin-top:12px"><label class="settingsField">Block<input id="ticketBlock"></label><label class="settingsField">Reihe<input id="ticketRow"></label><label class="settingsField">Sitz<input id="ticketSeat"></label></div>
+    <div class="settingsActions"><button class="primaryButton" id="addTicketBtn" type="button">Dauerkarte hinzufügen</button></div>
+    <div class="settingsStatus" id="ticketStatus"></div>
+  </section>
+
+  <section class="settingsSection" id="members">
+    <div class="settingsSectionHead"><div><h2>Mitglieder</h2><p>Rollen und Zugriffe deiner Crew. Owner und Superadmin können Adminrechte verwalten.</p></div></div>
+    <div class="memberGrid" id="memberList"><div class="loadingCard">Mitglieder werden geladen …</div></div>
+    <div class="settingsStatus" id="memberStatus"></div>
+  </section>
+
+  <section class="settingsSection dangerSection" id="security">
+    <div class="settingsSectionHead"><div><h2>Sicherheit & Crew verlassen</h2><p>Diese Aktionen verändern deine Mitgliedschaft oder löschen die Crew dauerhaft.</p></div></div>
+    <div class="dangerBox" id="leaveCrewBox"><div><b>Crew verlassen</b><p>Als Owner musst du die Owner-Rolle vorher übertragen.</p></div><button class="dangerMini" id="leaveCrewBtn" type="button">Crew verlassen</button></div>
+    <div class="dangerBox ownerOnly"><div><b>Neue Saison starten</b><p>Archiviert den bisherigen Saisonstand und startet eine neue Saison.</p></div><div class="settingsRowActions"><input id="newSeasonValue" style="width:100px;border:1px solid #d7d8de;border-radius:9px;padding:8px" placeholder="2027-28"><button class="miniButton" id="rolloverBtn" type="button">Starten</button></div></div>
+    <div class="dangerBox ownerOnly"><div><b>Crew dauerhaft löschen</b><p>Entfernt Crew, Karten, Verteilungen und zugehörige Daten.</p></div><button class="dangerMini" id="deleteCrewBtn" type="button">Crew löschen</button></div>
+    <div class="settingsStatus" id="securityStatus"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
+<script src="seasoncrew-config.js?v=20260817-prod1"></script>
+<script src="seasoncrew-core.js?v=20260817-core1"></script>
+<script type="module" src="settings-page.js?v=20260818-1"></script>
+</body>
+</html>
