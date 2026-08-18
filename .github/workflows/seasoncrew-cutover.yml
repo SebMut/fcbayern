@@ -1,0 +1,74 @@
+name: SeasonCrew repository cutover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/seasoncrew-cutover.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cutover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Replace migrated SeasonCrew files with redirects
+        run: |
+          set -euo pipefail
+          rm -rf SeasonCrew Homepage
+          mkdir -p SeasonCrew Homepage
+          python - <<'PY'
+          from pathlib import Path
+
+          def redirect(path,target):
+              html=f'''<!doctype html>
+          <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta name="robots" content="noindex"><title>SeasonCrew ist umgezogen</title></head>
+          <body><p>SeasonCrew ist umgezogen. <a id="continue" href="{target}">Zur neuen Seite</a></p>
+          <script>(()=>{{const u=new URL({target!r});u.search=location.search;u.hash=location.hash;document.getElementById('continue').href=u.href;location.replace(u.href)}})();</script>
+          </body></html>'''
+              Path(path).write_text(html)
+
+          redirect('SeasonCrew/index.html','https://sebmut.github.io/seasoncrew/')
+          redirect('SeasonCrew/settings.html','https://sebmut.github.io/seasoncrew/settings.html')
+          redirect('SeasonCrew/history.html','https://sebmut.github.io/seasoncrew/history.html')
+          redirect('SeasonCrew/demo.html','https://sebmut.github.io/seasoncrew/demo.html')
+          redirect('Homepage/index.html','https://sebmut.github.io/seasoncrew/homepage/')
+          redirect('Homepage/impressum.html','https://sebmut.github.io/seasoncrew/homepage/impressum.html')
+          redirect('Homepage/datenschutz.html','https://sebmut.github.io/seasoncrew/homepage/datenschutz.html')
+          PY
+          rm -f .github/workflows/seasoncrew-ci.yml
+          rm -f .github/workflows/seasoncrew-bundle.yml
+          rm -f .github/workflows/pages-production.yml
+          git rm --cached -r SeasonCrew Homepage >/dev/null 2>&1 || true
+          git add SeasonCrew Homepage
+          git add -u .github/workflows
+          git rm .github/workflows/seasoncrew-cutover.yml
+      - name: Verify redirect cutover
+        run: |
+          test -f SeasonCrew/index.html
+          test -f SeasonCrew/settings.html
+          test -f SeasonCrew/history.html
+          test -f SeasonCrew/demo.html
+          test -f Homepage/index.html
+          grep -q 'https://sebmut.github.io/seasoncrew/' SeasonCrew/index.html
+          grep -q 'location.search' SeasonCrew/index.html
+          test ! -e SeasonCrew/app.js
+          test ! -e SeasonCrew/package.json
+          test ! -e Homepage/app.js
+          test ! -e .github/workflows/seasoncrew-ci.yml
+          test ! -e .github/workflows/seasoncrew-bundle.yml
+          test ! -e .github/workflows/pages-production.yml
+      - name: Commit cutover
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git diff --cached --check
+          git commit -m "Move SeasonCrew to standalone repository"
+          git pull --rebase origin main
+          git push origin main
