@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ortsschild & Kennzeichen Designer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="app">
+  <aside class="panel">
+    <h1>Ortsschild & Kennzeichen Designer</h1>
+    <p class="intro">Gestalte deutsche Ortsschilder sowie ein- und zweizeilige Kennzeichen.</p>
+
+    <section class="group">
+      <label for="type">Vorlage</label>
+      <select id="type">
+        <option value="town">Deutsches Ortsschild</option>
+        <option value="plate1">Kennzeichen – einzeilig</option>
+        <option value="plate2">Kennzeichen – zweizeilig</option>
+      </select>
+    </section>
+
+    <section class="group">
+      <div class="field">
+        <label for="text1">Text oben / Kennzeichen</label>
+        <textarea id="text1" rows="3">Ehehafen</textarea>
+        <div class="hint">Für mehrere Zeilen einfach Enter drücken.</div>
+      </div>
+      <div id="topLineSizes" class="line-size-list"></div>
+
+      <div class="field" id="text2Wrap">
+        <label for="text2">Text unten</label>
+        <textarea id="text2" rows="3">Singleleben</textarea>
+        <div class="hint">Jede Zeile kann unten separat skaliert werden.</div>
+      </div>
+      <div id="bottomLineSizes" class="line-size-list"></div>
+
+      <label class="check" id="slashWrap">
+        <input id="showSlash" type="checkbox" checked>
+        Roter Ortsausgangsbalken
+      </label>
+      <label class="check hidden" id="euroWrap">
+        <input id="showEuro" type="checkbox" checked>
+        Eurofeld anzeigen
+      </label>
+      <label class="check hidden" id="sealsWrap">
+        <input id="showSeals" type="checkbox" checked>
+        Plaketten anzeigen
+      </label>
+    </section>
+
+    <section class="group">
+      <div class="field">
+        <label for="format">Format</label>
+        <select id="format"></select>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="widthMm">Breite (mm)</label>
+          <input id="widthMm" type="number" min="20" value="225">
+        </div>
+        <div class="field">
+          <label for="heightMm">Höhe (mm)</label>
+          <input id="heightMm" type="number" min="20" value="150">
+        </div>
+      </div>
+      <div class="field">
+        <label for="dpi">PNG-Auflösung</label>
+        <select id="dpi">
+          <option value="150">150 DPI</option>
+          <option value="300" selected>300 DPI</option>
+          <option value="600">600 DPI</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="group">
+      <label for="borderWidth">Rahmenstärke</label>
+      <div class="slider">
+        <input id="borderWidth" type="range" min="0.5" max="6" step="0.1" value="2.4">
+        <output id="borderWidthVal">2.4 %</output>
+      </div>
+
+      <label for="radius">Eckenradius</label>
+      <div class="slider">
+        <input id="radius" type="range" min="0" max="10" step="0.1" value="3.5">
+        <output id="radiusVal">3.5 %</output>
+      </div>
+
+      <label for="tracking">Buchstabenabstand</label>
+      <div class="slider">
+        <input id="tracking" type="range" min="-2" max="8" step="0.2" value="0">
+        <output id="trackingVal">0</output>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="row">
+        <div class="field">
+          <label for="bgColor">Hintergrund</label>
+          <input id="bgColor" type="color" value="#c7a027">
+        </div>
+        <div class="field">
+          <label for="fgColor">Schrift/Rahmen</label>
+          <input id="fgColor" type="color" value="#202020">
+        </div>
+      </div>
+      <div class="field" id="accentWrap">
+        <label for="accentColor">Roter Balken</label>
+        <input id="accentColor" type="color" value="#c5281c">
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="resetBtn" class="secondary">Zurücksetzen</button>
+      <button id="svgBtn" class="secondary">SVG herunterladen</button>
+      <button id="pngBtn" class="primary">PNG herunterladen</button>
+    </section>
+
+    <p class="note">Für Kennzeichen wird eine schmalere Ersatzschrift verwendet: Bahnschrift Condensed, Arial Narrow oder DejaVu Sans Condensed – je nachdem, was auf dem Gerät verfügbar ist.</p>
+  </aside>
+
+  <section class="preview-card">
+    <div class="preview-head">
+      <h2>Live-Vorschau</h2>
+      <div id="meta"></div>
+    </div>
+    <div class="stage">
+      <svg id="preview" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>
