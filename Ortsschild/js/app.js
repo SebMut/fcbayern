@@ -260,10 +260,10 @@ function drawTownTopTextBlock(svg, lines, scales, x, yTop, blockH, maxWidth, fam
   const secondaryMax = primarySize * 0.84;
   secondarySize = Math.min(secondarySize, secondaryMax);
 
-  // Den Zweizeiler als gemeinsamen Block vertikal zentrieren. Der Abstand skaliert
-  // mit dem Feld und den tatsächlichen Schriftgrößen, ohne sich mit dem Textinhalt
-  // oder dem roten Balken zu koppeln.
-  const gap = Math.max(blockH * 0.045, Math.min(primarySize,secondarySize) * 0.18);
+  // Den Zweizeiler als gemeinsamen Block vertikal zentrieren.
+  // Zwischen Hauptzeile und Unterzeile liegt bewusst ein halber Zeilenabstand,
+  // bezogen auf die kleinere der beiden tatsächlichen Schriftgrößen.
+  const gap = Math.min(primarySize,secondarySize) * 0.50;
   const totalH = primarySize + gap + secondarySize;
   const centerY = yTop + blockH/2;
   const firstY = centerY - totalH/2 + primarySize/2;
